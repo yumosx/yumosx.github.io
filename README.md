@@ -40,6 +40,13 @@ git init
 git add .
 git commit -m "Initial commit"
 git remote add origin https://github.com/yumosx/yumosx.github.io.git
+# 检查当前分支
+current_branch=$(git branch --show-current)
+# 如果当前不是gh-pages分支，创建并切换到gh-pages分支
+if [ "$current_branch" != "gh-pages" ]; then
+git checkout -b gh-pages
+fi
+# 推送到远程gh-pages分支
 git push -u origin gh-pages --force
 ```
 

@@ -78,8 +78,16 @@ deploy_blog() {
 	git add .
 	git commit -m "Update blog at $(date '+%Y-%m-%d %H:%M:%S')"
 	
-	# 推送到gh-pages分支
-	git push -u origin master:gh-pages --force
+	# 检查当前分支
+	current_branch=$(git branch --show-current)
+	
+	# 如果当前不是gh-pages分支，创建并切换到gh-pages分支
+	if [ "$current_branch" != "gh-pages" ]; then
+		git checkout -b gh-pages
+	fi
+	
+	# 推送到远程gh-pages分支
+	git push -u origin gh-pages --force
 	if [ $? -eq 0 ]; then
 		echo "博客部署成功！"
 		echo "请在GitHub仓库设置中启用GitHub Pages，并选择 gh-pages 分支"
@@ -130,23 +138,23 @@ EOF
 case "$1" in
 generate)
 	generate_blog
-	;
+	;;
 preview)
 	preview_blog
-	;
+	;;
 deploy)
 	deploy_blog
-	;
+	;;
 new)
 	create_new_post
-	;
+	;;
 help)
 	show_help
-	;
+	;;
 *)
 	echo "未知命令: $1"
 	show_help
 	exit 1
-	;
+	;;
 
 esac

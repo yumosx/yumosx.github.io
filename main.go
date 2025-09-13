@@ -25,6 +25,7 @@ type Post struct {
 // Site represents the whole blog site
 type Site struct {
 	Title   string
+	BaseURL string
 	Posts   []Post
 }
 
@@ -43,7 +44,8 @@ func main() {
 
 	// Generate the blog
 	site := &Site{
-		Title: "我的博客",
+		Title:  "我的博客",
+		BaseURL: "https://yumosx.github.io",
 	}
 
 	// Load all posts
@@ -541,26 +543,26 @@ func renderRSS(site *Site, outputFile string) {
 `)
 	rss.WriteString(fmt.Sprintf(`<title>%s</title>
 `, site.Title))
-	rss.WriteString(`<link>https://yumosx.github.io</link>
-`)
+	rss.WriteString(fmt.Sprintf(`<link>%s</link>
+`, site.BaseURL))
 	rss.WriteString(`<description>我的博客</description>
 `)
-	rss.WriteString(fmt.Sprintf(`<atom:link href="https://yumosx.github.io/feed.xml" rel="self" type="application/rss+xml"/>
-`))
+	rss.WriteString(fmt.Sprintf(`<atom:link href="%s/feed.xml" rel="self" type="application/rss+xml"/>
+`, site.BaseURL))
 
 	for _, post := range site.Posts {
 		rss.WriteString(`<item>
 `)
 		rss.WriteString(fmt.Sprintf(`<title>%s</title>
 `, post.Title))
-		rss.WriteString(fmt.Sprintf(`<link>https://yumosx.github.io/posts/%s.html</link>
-`, post.Slug))
+		rss.WriteString(fmt.Sprintf(`<link>%s/posts/%s.html</link>
+`, site.BaseURL, post.Slug))
 		rss.WriteString(fmt.Sprintf(`<description>%s</description>
 `, post.Summary))
 		rss.WriteString(fmt.Sprintf(`<pubDate>%s</pubDate>
 `, formatRSSDate(post.Date)))
-		rss.WriteString(fmt.Sprintf(`<guid>https://yumosx.github.io/posts/%s.html</guid>
-`, post.Slug))
+		rss.WriteString(fmt.Sprintf(`<guid>%s/posts/%s.html</guid>
+`, site.BaseURL, post.Slug))
 		rss.WriteString(`</item>
 `)
 	}
