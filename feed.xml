@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+<title>我的博客</title>
+<link>https://yumosx.github.io</link>
+<description>我的博客</description>
+<atom:link href="https://yumosx.github.io/feed.xml" rel="self" type="application/rss+xml"/>
+<item>
+<title>第一篇博客文章</title>
+<link>https://yumosx.github.io/posts/first-post.html</link>
+<description>这是我的第一篇博客文章。 欢迎来到我的博客！这是一个使用Go语言搭建的简单博客系统，适合在GitHub Pages上托管...</description>
+<pubDate>Wed, 15 Nov 2023 00:00:00 UTC</pubDate>
+<guid>https://yumosx.github.io/posts/first-post.html</guid>
+</item>
+<item>
+<title>Go语言入门</title>
+<link>https://yumosx.github.io/posts/go-intro.html</link>
+<description>Go是一种开源的编程语言，它能让构造简单、可靠且高效的软件变得容易。 </description>
+<pubDate>Fri, 10 Nov 2023 00:00:00 UTC</pubDate>
+<guid>https://yumosx.github.io/posts/go-intro.html</guid>
+</item>
+</channel>
+</rss>
