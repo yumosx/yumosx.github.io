@@ -1,0 +1,12 @@
+{{define "content"}}
+	<h2>博客文章</h2>
+	<ul class="post-list">
+	{{range .Posts}}
+		<li>
+			<a href="/posts/{{.Slug}}.html">{{.Title}}</a>
+			<span class="post-date">{{.Date}}</span>
+			<p>{{.Summary}}</p>
+		</li>
+	{{end}}
+	</ul>
+{{end}}
