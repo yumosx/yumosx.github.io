@@ -6,18 +6,11 @@
 <description>我的博客</description>
 <atom:link href="https://yumosx.github.io/feed.xml" rel="self" type="application/rss+xml"/>
 <item>
-<title>第一篇博客文章</title>
-<link>https://yumosx.github.io/posts/first-post.html</link>
-<description>这是我的第一篇博客文章。 欢迎来到我的博客！这是一个使用Go语言搭建的简单博客系统，适合在GitHub Pages上托管...</description>
+<title>Go 接口的显式实现</title>
+<link>https://yumosx.github.io/posts/impl.html</link>
+<description>在 Go 语言中，与 Java 或 Python 等语言不同，结构体（struct）无需显式声明对某个接口的实现。 例如，在 Java 中我�...</description>
 <pubDate>Wed, 15 Nov 2023 00:00:00 UTC</pubDate>
-<guid>https://yumosx.github.io/posts/first-post.html</guid>
-</item>
-<item>
-<title>Go语言入门</title>
-<link>https://yumosx.github.io/posts/go-intro.html</link>
-<description>Go是一种开源的编程语言，它能让构造简单、可靠且高效的软件变得容易。 </description>
-<pubDate>Fri, 10 Nov 2023 00:00:00 UTC</pubDate>
-<guid>https://yumosx.github.io/posts/go-intro.html</guid>
+<guid>https://yumosx.github.io/posts/impl.html</guid>
 </item>
 </channel>
 </rss>

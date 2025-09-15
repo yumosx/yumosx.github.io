@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>我的博客 - Go 接口的显式实现</title>
+	<link rel="stylesheet" href="/static/style.css">
+	<link rel="alternate" type="application/rss+xml" href="/feed.xml" title="我的博客 RSS Feed">
+</head>
+<body>
+	<header>
+		<h1><a href="/">我的博客</a></h1>
+	</header>
+	<main>
+		
+	<article class="post">
+		<h2>Go 接口的显式实现</h2>
+		<div class="post-meta">2023-11-15</div>
+		<div class="post-content"><br>
+<p>在 Go 语言中，与 Java 或 Python 等语言不同，结构体（struct）无需显式声明对某个接口的实现。</p>
+<br>
+<p>例如，在 Java 中我们常会写 class Student implements Person 来明确指定接口实现，这种方式具有一定的优势。</p>
+<br>
+<p>如果采用隐式实现机制，当接口中的方法发生变更时，之前实现该接口的结构体可能会因缺少某个方法而不再符合接口要求。</p>
+<br>
+<p>然而，在代码的某些地方可能仍然将该结构体作为该接口类型进行传递，从而引发错误。</p>
+<br>
+<p>很多开源项目的解决这种问题的方法是:</p>
+<p>```go</p>
+<p>var _ 接口 = 实现</p>
+<p>```</p>
+<br>
+<p>许多开源项目采用以下方式来显式确保接口的实现：</p>
+<br>
+<p>go</p>
+<p>var _ 接口类型 = (*实现类型)(nil)</p>
+<br>
+<p>1. 明确告知用户该结构体实现了特定接口，增强代码的可读性和可维护性；</p>
+<p>2. 防止因接口或结构体的变更导致实现关系被意外破坏，建立一种编译期的强绑定检查机制。</p>
+<br>
+</div>
+	</article>
+
+	</main>
+	<footer>
+		<p>© 2025 我的博客</p>
+	</footer>
+</body>
+</html>
