@@ -15,11 +15,11 @@ import (
 
 // Post represents a blog post
 type Post struct {
-	Title      string
-	Date       string
-	Content    template.HTML
-	Slug       string
-	Summary    string
+	Title   string
+	Date    string
+	Content template.HTML
+	Slug    string
+	Summary string
 }
 
 // Site represents the whole blog site
@@ -39,12 +39,9 @@ func main() {
 	// Create default templates
 	createDefaultTemplates()
 
-	// Create sample content
-	createSampleContent()
-
 	// Generate the blog
 	site := &Site{
-		Title:  "我的博客",
+		Title:   "我的博客",
 		BaseURL: "https://yumosx.github.io",
 	}
 
@@ -234,53 +231,6 @@ footer {
 	ioutil.WriteFile("static/style.css", []byte(css), 0644)
 }
 
-// createSampleContent creates sample blog posts
-func createSampleContent() {
-	post1 := `---
-Title: 第一篇博客文章
-Date: 2023-11-15
----
-这是我的第一篇博客文章。
-
-欢迎来到我的博客！这是一个使用Go语言搭建的简单博客系统，适合在GitHub Pages上托管。
-
-## 功能特点
-
-- 简单易用
-- 生成静态HTML
-- 支持Markdown
-- 自动生成RSS订阅源
-
-希望你喜欢！`
-
-	post2 := `---
-Title: Go语言入门
-Date: 2023-11-10
----
-# Go语言入门指南
-
-Go是一种开源的编程语言，它能让构造简单、可靠且高效的软件变得容易。
-
-## 为什么选择Go
-
-- 简洁的语法
-- 强大的并发支持
-- 快速的编译速度
-- 优秀的性能
-
-## 开始学习Go
-
-1. 安装Go开发环境
-2. 阅读官方教程
-3. 编写第一个程序
-4. 实践中学习
-
-如果你想了解更多关于Go语言的信息，可以访问[Go官方网站](https://golang.org)。`
-
-	ioutil.WriteFile("content/first-post.md", []byte(post1), 0644)
-	ioutil.WriteFile("content/go-intro.md", []byte(post2), 0644)
-}
-
 // loadPosts loads all blog posts from the content directory
 func loadPosts(dir string) ([]Post, error) {
 	var posts []Post
@@ -356,6 +306,7 @@ func parsePost(filePath string) (Post, error) {
 
 	// Simple markdown to HTML conversion
 	htmlContent := convertMarkdownToHTML(postContent)
+
 	post.Content = template.HTML(htmlContent)
 
 	// Extract summary
@@ -518,9 +469,9 @@ func renderPosts(site *Site, templateFile, outputDir string) {
 
 		// Pass a merged context including site and post data
 		context := map[string]interface{}{
-			"Site":   site,
-			"Title":  post.Title,
-			"Date":   post.Date,
+			"Site":    site,
+			"Title":   post.Title,
+			"Date":    post.Date,
 			"Content": post.Content,
 		}
 
