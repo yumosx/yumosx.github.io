@@ -41,7 +41,7 @@ func main() {
 
 	// Generate the blog
 	site := &Site{
-		Title:   "我的博客",
+		Title:   "yumosx's 博客",
 		BaseURL: "https://yumosx.github.io",
 	}
 
@@ -321,6 +321,7 @@ func convertMarkdownToHTML(markdown string) string {
 	// In a real-world scenario, you would use a proper markdown library
 
 	var result strings.Builder
+	inCodeBlock := false
 
 	for _, line := range strings.Split(markdown, "\n") {
 		// Headers
@@ -330,6 +331,19 @@ func convertMarkdownToHTML(markdown string) string {
 			result.WriteString(fmt.Sprintf("<h2>%s</h2>\n", strings.TrimPrefix(line, "## ")))
 		} else if strings.HasPrefix(line, "### ") {
 			result.WriteString(fmt.Sprintf("<h3>%s</h3>\n", strings.TrimPrefix(line, "### ")))
+			// Code blocks
+		} else if strings.HasPrefix(line, "```") {
+			if !inCodeBlock {
+				inCodeBlock = true
+				result.WriteString("<pre><code>")
+			} else {
+				inCodeBlock = false
+				result.WriteString("</code></pre>\n")
+			}
+		} else if inCodeBlock {
+			// Inside code block, just add the line with HTML escaping
+			result.WriteString(strings.Replace(strings.Replace(line, "&", "&amp;", -1), "<", "&lt;", -1))
+			result.WriteString("\n")
 		} else {
 			// Paragraphs
 			if len(line) > 0 {
@@ -356,6 +370,9 @@ func extractSummary(content string) string {
 		if strings.HasPrefix(line, "#") {
 			continue // Skip headers
 		}
+		if strings.HasPrefix(line, "```") {
+			continue // Skip code blocks
+		}
 		if len(line) > 0 {
 			summary.WriteString(line)
 			summary.WriteString(" ")
@@ -363,8 +380,11 @@ func extractSummary(content string) string {
 	}
 
 	summaryStr := summary.String()
-	if len(summaryStr) > 150 {
-		summaryStr = summaryStr[:150] + "..."
+	// 安全处理UTF-8字符的截断，避免乱码
+	if len([]rune(summaryStr)) > 150 {
+		// 将字符串转换为rune切片，确保按字符而不是按字节截断
+		runes := []rune(summaryStr)
+		summaryStr = string(runes[:150]) + "..."
 	}
 
 	return summaryStr
