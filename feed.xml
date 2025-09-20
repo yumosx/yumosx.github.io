@@ -13,7 +13,7 @@
 <guid>https://yumosx.github.io/posts/sign.html</guid>
 </item>
 <item>
-<title>Go 优雅编程(持续更新中)</title>
+<title>Go 接口的显式实现</title>
 <link>https://yumosx.github.io/posts/impl.html</link>
 <description>在 Go 语言中，与 Java 或 Python 等语言不同，结构体（struct）无需显式声明对某个接口的实现。 例如，在 Java 中我们常会写 class Student implements Person 来明确指定接口实现，这种方式具有一定的优势。 如果采用隐式实现机制，当接口中的方法发生...</description>
 <pubDate>Wed, 15 Nov 2023 00:00:00 UTC</pubDate>
