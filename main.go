@@ -5,12 +5,13 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/russross/blackfriday/v2"
 )
 
 // Post represents a blog post
@@ -130,9 +131,9 @@ func createDefaultTemplates() {
 	</article>
 {{end}}`
 
-	ioutil.WriteFile("templates/main.html", []byte(mainTmpl), 0644)
-	ioutil.WriteFile("templates/index.html", []byte(indexTmpl), 0644)
-	ioutil.WriteFile("templates/post.html", []byte(postTmpl), 0644)
+	os.WriteFile("templates/main.html", []byte(mainTmpl), 0644)
+	os.WriteFile("templates/index.html", []byte(indexTmpl), 0644)
+	os.WriteFile("templates/post.html", []byte(postTmpl), 0644)
 
 	// Create CSS file
 	css := `body {
@@ -174,7 +175,7 @@ footer {
 	padding: 0;
 }
 
-	li {
+	.post-list li {
 		margin-bottom: 30px;
 		padding-bottom: 20px;
 		border-bottom: 1px solid #eee;
@@ -208,7 +209,7 @@ footer {
 	}
 
 	.post-content {
-		time: 1.8;
+		line-height: 1.8;
 	}
 
 	.post-content h2 {
@@ -228,14 +229,14 @@ footer {
 		border-radius: 3px;
 	}`
 
-	ioutil.WriteFile("static/style.css", []byte(css), 0644)
+	os.WriteFile("static/style.css", []byte(css), 0644)
 }
 
 // loadPosts loads all blog posts from the content directory
 func loadPosts(dir string) ([]Post, error) {
 	var posts []Post
 
-	files, err := ioutil.ReadDir(dir)
+	files, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, err
 	}
@@ -261,7 +262,7 @@ func loadPosts(dir string) ([]Post, error) {
 func parsePost(filePath string) (Post, error) {
 	var post Post
 
-	content, err := ioutil.ReadFile(filePath)
+	content, err := os.ReadFile(filePath)
 	if err != nil {
 		return post, err
 	}
@@ -315,46 +316,16 @@ func parsePost(filePath string) (Post, error) {
 	return post, nil
 }
 
-// convertMarkdownToHTML converts simple markdown to HTML
-func convertMarkdownToHTML(markdown string) string {
-	// This is a simplified conversion for demonstration
-	// In a real-world scenario, you would use a proper markdown library
+// convertMarkdownToHTML converts markdown to HTML using the blackfriday library
+func convertMarkdownToHTML(markdownStr string) string {
+	// Set up Blackfriday options with common extensions
+	extensions := blackfriday.WithExtensions(blackfriday.CommonExtensions | blackfriday.AutoHeadingIDs | blackfriday.FencedCode)
+	renderer := blackfriday.WithRenderer(blackfriday.NewHTMLRenderer(blackfriday.HTMLRendererParameters{
+		Flags: blackfriday.CommonHTMLFlags | blackfriday.HrefTargetBlank,
+	}))
 
-	var result strings.Builder
-	inCodeBlock := false
-
-	for _, line := range strings.Split(markdown, "\n") {
-		// Headers
-		if strings.HasPrefix(line, "# ") {
-			result.WriteString(fmt.Sprintf("<h1>%s</h1>\n", strings.TrimPrefix(line, "# ")))
-		} else if strings.HasPrefix(line, "## ") {
-			result.WriteString(fmt.Sprintf("<h2>%s</h2>\n", strings.TrimPrefix(line, "## ")))
-		} else if strings.HasPrefix(line, "### ") {
-			result.WriteString(fmt.Sprintf("<h3>%s</h3>\n", strings.TrimPrefix(line, "### ")))
-			// Code blocks
-		} else if strings.HasPrefix(line, "```") {
-			if !inCodeBlock {
-				inCodeBlock = true
-				result.WriteString("<pre><code>")
-			} else {
-				inCodeBlock = false
-				result.WriteString("</code></pre>\n")
-			}
-		} else if inCodeBlock {
-			// Inside code block, just add the line with HTML escaping
-			result.WriteString(strings.Replace(strings.Replace(line, "&", "&amp;", -1), "<", "&lt;", -1))
-			result.WriteString("\n")
-		} else {
-			// Paragraphs
-			if len(line) > 0 {
-				result.WriteString(fmt.Sprintf("<p>%s</p>\n", line))
-			} else {
-				result.WriteString("<br>\n")
-			}
-		}
-	}
-
-	return result.String()
+	// Convert markdown to HTML
+	return string(blackfriday.Run([]byte(markdownStr), extensions, renderer))
 }
 
 // extractSummary extracts a summary from the post content
@@ -397,25 +368,25 @@ func generatePublicDir(dir string) {
 	createDirIfNotExist(filepath.Join(dir, "static"))
 
 	// Copy static files
-	staticFiles, _ := ioutil.ReadDir("static")
+	staticFiles, _ := os.ReadDir("static")
 	for _, file := range staticFiles {
 		src := filepath.Join("static", file.Name())
 		dst := filepath.Join(dir, "static", file.Name())
-		content, _ := ioutil.ReadFile(src)
-		ioutil.WriteFile(dst, content, 0644)
+		content, _ := os.ReadFile(src)
+	os.WriteFile(dst, content, 0644)
 	}
 }
 
 // renderIndex renders the index page
 func renderIndex(site *Site, templateFile, outputFile string) {
 	// Read template files
-	mainContent, err := ioutil.ReadFile("templates/main.html")
+	mainContent, err := os.ReadFile("templates/main.html")
 	if err != nil {
 		fmt.Printf("Error reading main template: %v\n", err)
 		return
 	}
 
-	indexContent, err := ioutil.ReadFile(templateFile)
+	indexContent, err := os.ReadFile(templateFile)
 	if err != nil {
 		fmt.Printf("Error reading index template: %v\n", err)
 		return
@@ -455,13 +426,13 @@ func renderIndex(site *Site, templateFile, outputFile string) {
 // renderPosts renders each post as a separate HTML file
 func renderPosts(site *Site, templateFile, outputDir string) {
 	// Read template files
-	mainContent, err := ioutil.ReadFile("templates/main.html")
+	mainContent, err := os.ReadFile("templates/main.html")
 	if err != nil {
 		fmt.Printf("Error reading main template: %v\n", err)
 		return
 	}
 
-	postContent, err := ioutil.ReadFile(templateFile)
+	postContent, err := os.ReadFile(templateFile)
 	if err != nil {
 		fmt.Printf("Error reading post template: %v\n", err)
 		return
@@ -542,7 +513,7 @@ func renderRSS(site *Site, outputFile string) {
 `)
 	rss.WriteString(`</rss>`)
 
-	ioutil.WriteFile(outputFile, []byte(rss.String()), 0644)
+	os.WriteFile(outputFile, []byte(rss.String()), 0644)
 }
 
 // formatRSSDate formats a date string for RSS feed
@@ -587,5 +558,5 @@ public/
 *~
 `
 
-	ioutil.WriteFile(".gitignore", []byte(gitignore), 0644)
+	os.WriteFile(".gitignore", []byte(gitignore), 0644)
 }

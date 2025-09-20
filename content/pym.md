@@ -1,0 +1,20 @@
+---
+Title: Python 依赖问题
+Date: 2023-11-15
+---
+
+在 Python 中，没有像 Go 语言中那样的内置模块依赖管理工具（如 Go Modules）。我们通常使用 uv 或 poetry 来管理项目依赖，这两个工具都基于 Python 的虚拟环境（venv）机制。所谓的 venv，实际上是在项目目录中创建一系列文件夹，用于隔离不同项目的依赖。
+
+当你为项目安装依赖时，这些依赖包会被安装到该 venv 文件夹中，而不是全局环境中。
+
+使用 uv 管理环境非常简单，最基本的方法是运行 uv sync 命令。该命令会自动同步依赖声明（如 pyproject.toml），并在当前目录下创建对应的 venv 环境。
+
+但有一个比较麻烦的地方是：执行 uv sync 后，虚拟环境并不会自动激活。在 PyCharm 中，我们仍需手动为项目配置该 venv 中的 Python 解释器。
+
+此外，即便完成以上设置，有时 PyCharm 仍可能报错显示某些包不存在。这时通常可以尝试以下两种方法：
+
+方法一：
+依次点击 File -> Settings -> Editor -> File Types，找到 Ignore files and folders 输入框，删除其中的 __init__.py;，点击 OK 等待文件重新索引。
+
+方法二（强烈推荐，通常非常有效）：
+点击 File → Invalidate Caches / Restart，选择 Invalidate and Restart，等待重建缓存和重新索引即可。这种方法一键操作，往往能彻底解决问题。

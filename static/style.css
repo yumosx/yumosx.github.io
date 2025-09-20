@@ -37,7 +37,7 @@ footer {
 	padding: 0;
 }
 
-	li {
+	.post-list li {
 		margin-bottom: 30px;
 		padding-bottom: 20px;
 		border-bottom: 1px solid #eee;
@@ -71,7 +71,7 @@ footer {
 	}
 
 	.post-content {
-		time: 1.8;
+		line-height: 1.8;
 	}
 
 	.post-content h2 {
