@@ -68,7 +68,6 @@ func main() {
 	// Render all pages
 	renderIndex(site, "templates/index.html", "public/index.html")
 	renderPosts(site, "templates/post.html", "public/posts")
-	renderRSS(site, "public/feed.xml")
 
 	// Create .gitignore file
 	createGitignore()
@@ -473,57 +472,7 @@ func renderPosts(site *Site, templateFile, outputDir string) {
 	}
 }
 
-// renderRSS generates an RSS feed for the blog
-func renderRSS(site *Site, outputFile string) {
-	var rss strings.Builder
 
-	rss.WriteString(`<?xml version="1.0" encoding="UTF-8"?>
-`)
-	rss.WriteString(`<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-`)
-	rss.WriteString(`<channel>
-`)
-	rss.WriteString(fmt.Sprintf(`<title>%s</title>
-`, site.Title))
-	rss.WriteString(fmt.Sprintf(`<link>%s</link>
-`, site.BaseURL))
-	rss.WriteString(`<description>我的博客</description>
-`)
-	rss.WriteString(fmt.Sprintf(`<atom:link href="%s/feed.xml" rel="self" type="application/rss+xml"/>
-`, site.BaseURL))
-
-	for _, post := range site.Posts {
-		rss.WriteString(`<item>
-`)
-		rss.WriteString(fmt.Sprintf(`<title>%s</title>
-`, post.Title))
-		rss.WriteString(fmt.Sprintf(`<link>%s/posts/%s.html</link>
-`, site.BaseURL, post.Slug))
-		rss.WriteString(fmt.Sprintf(`<description>%s</description>
-`, post.Summary))
-		rss.WriteString(fmt.Sprintf(`<pubDate>%s</pubDate>
-`, formatRSSDate(post.Date)))
-		rss.WriteString(fmt.Sprintf(`<guid>%s/posts/%s.html</guid>
-`, site.BaseURL, post.Slug))
-		rss.WriteString(`</item>
-`)
-	}
-
-	rss.WriteString(`</channel>
-`)
-	rss.WriteString(`</rss>`)
-
-	os.WriteFile(outputFile, []byte(rss.String()), 0644)
-}
-
-// formatRSSDate formats a date string for RSS feed
-func formatRSSDate(dateStr string) string {
-	t, err := time.Parse("2006-01-02", dateStr)
-	if err != nil {
-		return time.Now().Format(time.RFC1123)
-	}
-	return t.Format(time.RFC1123)
-}
 
 // createGitignore creates a .gitignore file
 func createGitignore() {
