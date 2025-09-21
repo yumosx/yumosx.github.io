@@ -23,7 +23,7 @@
 		</li>
 	
 		<li>
-			<a href="/posts/impl.html">Go 接口的显式实现</a>
+			<a href="/posts/impl.html">Go 代码大全</a>
 			<span class="post-date">2023-11-15</span>
 			<p>在 Go 语言中，与 Java 或 Python 等语言不同，结构体（struct）无需显式声明对某个接口的实现。 例如，在 Java 中我们常会写 class Student implements Person 来明确指定接口实现，这种方式具有一定的优势。 如果采用隐式实现机制，当接口中的方法发生...</p>
 		</li>
@@ -32,6 +32,18 @@
 			<a href="/posts/pym.html">Python 依赖问题</a>
 			<span class="post-date">2023-11-15</span>
 			<p>在 Python 中，没有像 Go 语言中那样的内置模块依赖管理工具（如 Go Modules）。我们通常使用 uv 或 poetry 来管理项目依赖，这两个工具都基于 Python 的虚拟环境（venv）机制。所谓的 venv，实际上是在项目目录中创建一系列文件夹，用于隔离不同项目的依赖。 当你为...</p>
+		</li>
+	
+		<li>
+			<a href="/posts/otel-part.html">OTLP 导出器的部分失败问题</a>
+			<span class="post-date">2025-9-20</span>
+			<p>OTLP 是 opentelemetry 中的协议传输标准，在收集到对应的metrics， trace，log 这些数据之后，我们往往会把对应的数据发送到远端，比如对应的 collector 对于整个数据传输的结果其实是存在三种状态的: 1. 失败状态: 比如因为网络问题出现的失败 2. 部分失败:...</p>
+		</li>
+	
+		<li>
+			<a href="/posts/otel-text.html">opentelemetry 中的跨上下文传播</a>
+			<span class="post-date">2023-9-20</span>
+			<p>在 otel 中有一个非常神奇的接口叫做 TextMapPropagator 这个接口用来在分布式追踪系统用于跨进程传播上下文信息的核心组件。 type TextMapPropagator interface { 	Inject(ctx context.Context, carrier TextMa...</p>
 		</li>
 	
 	</ul>

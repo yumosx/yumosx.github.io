@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>yumosx&#39;s 博客 - OTLP 导出器的部分失败问题</title>
+	<link rel="stylesheet" href="/static/style.css">
+	<link rel="alternate" type="application/rss+xml" href="/feed.xml" title="yumosx&#39;s 博客 RSS Feed">
+</head>
+<body>
+	<header>
+		<h1><a href="/">yumosx&#39;s 博客</a></h1>
+	</header>
+	<main>
+		
+	<article class="post">
+		<h2>OTLP 导出器的部分失败问题</h2>
+		<div class="post-meta">2025-9-20</div>
+		<div class="post-content"><p>OTLP 是 opentelemetry 中的协议传输标准，在收集到对应的metrics， trace，log 这些数据之后，我们往往会把对应的数据发送到远端，比如对应的 collector
+对于整个数据传输的结果其实是存在三种状态的:</p>
+
+<ol>
+<li>失败状态: 比如因为网络问题出现的失败</li>
+<li>部分失败: 有些数据发送成功但是有些数据发送失败, 出现这种情况的原因可能是服务端拒绝了某些连接</li>
+<li>发送成功</li>
+</ol>
+
+<p>当出现发送失败之后最先做的就是进行重试, OTLP 官方采用的重试策略是使用指数退避算法，</p>
+
+<pre><code>type RequestFunc func(context.Context, func(context.Context) error) error
+</code></pre>
+
+<p>如果是部分失败, 是不会去重试的, 因为如果重试的话很可能会导致出现数据覆盖的情况</p>
+
+<pre><code>The client MUST NOT retry the request when it receives a partial success response where the partial_success is populated.
+</code></pre>
+
+<p>下面这段代码处理的方式其实也说明了这一点, 当出现部分失败的时候是不会 return 一个 err 的</p>
+
+<pre><code>return errors.Join(uploadErr, c.requestFunc(ctx, func(ctx context.Context) error {
+    success = count
+    resp, err := c.lsc.Export(ctx, &amp;collogpb.ExportLogsServiceRequest{
+        ResourceLogs: rl,
+    })
+    if resp != nil &amp;&amp; resp.PartialSuccess != nil {
+        msg := resp.PartialSuccess.GetErrorMessage()
+        n := resp.PartialSuccess.GetRejectedLogRecords()
+        success -= n
+        if n != 0 || msg != &quot;&quot; {
+            err := errPartial{msg: msg, n: n}
+            uploadErr = errors.Join(uploadErr, err)
+        }
+    }
+    // nil is converted to OK.
+    if status.Code(err) == codes.OK {
+        // Success.
+        return nil
+    }
+    success = 0
+    return err
+}))
+</code></pre>
+</div>
+	</article>
+
+	</main>
+	<footer>
+		<p>© 2025 yumosx&#39;s 博客</p>
+	</footer>
+</body>
+</html>

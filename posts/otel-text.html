@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>yumosx&#39;s 博客 - opentelemetry 中的跨上下文传播</title>
+	<link rel="stylesheet" href="/static/style.css">
+	<link rel="alternate" type="application/rss+xml" href="/feed.xml" title="yumosx&#39;s 博客 RSS Feed">
+</head>
+<body>
+	<header>
+		<h1><a href="/">yumosx&#39;s 博客</a></h1>
+	</header>
+	<main>
+		
+	<article class="post">
+		<h2>opentelemetry 中的跨上下文传播</h2>
+		<div class="post-meta">2023-9-20</div>
+		<div class="post-content"><p>在 otel 中有一个非常神奇的接口叫做 TextMapPropagator 这个接口用来在分布式追踪系统用于跨进程传播上下文信息的核心组件。</p>
+
+<pre><code>type TextMapPropagator interface {
+	Inject(ctx context.Context, carrier TextMapCarrier)
+	Extract(ctx context.Context, carrier TextMapCarrier) context.Context
+	Fields() []string
+}
+</code></pre>
+
+<ul>
+<li>Inject: 将当前上下文 ctx 中的跨进程,写入到载体 carrier 中</li>
+<li>Extract: 从载体 carrier 中提取跨进程信息,并返回一个新的上下文</li>
+<li>Fields: 返回 propagator 支持的字段</li>
+</ul>
+
+<p>下面是一段 Client/Server 代码来详细的演示这个流程:</p>
+
+<ol>
+<li>首先 client 创建根 span</li>
+<li>然后通过 inject 方法注入到追踪上下文中的 http 请求头中去</li>
+<li>服务端从请求头中拿到对应的追踪上下文</li>
+<li>在服务端创建对应的子 span</li>
+<li>返回对应的响应</li>
+<li>子 span 结束</li>
+</ol>
+
+<p>server 端的代码:</p>
+
+<pre><code>func handler(w http.ResponseWriter, r *http.Request) {
+	propagator := otel.GetTextMapPropagator()
+	ctx := propagator.Extract(r.Context(), propagation.HeaderCarrier(r.Header))
+
+	ctx, span := tracer.Start(ctx, &quot;server-header&quot;)
+	defer span.End()
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(&quot;hello, world&quot;))
+}
+</code></pre>
+
+<p>client的代码:</p>
+
+<pre><code>func request(ctx context.Context) (err error) {
+	propagator := otel.GetTextMapPropagator()
+	req, err := http.NewRequestWithContext(ctx, &quot;GET&quot;, &quot;http://localhost:8080&quot;, nil)
+	if err != nil {
+		return err
+	}
+	propagator.Inject(ctx, propagation.HeaderCarrier(req.Header))
+
+	client := &amp;http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	return nil
+}
+</code></pre>
+
+<p>client 创建对应的子 span:</p>
+
+<pre><code class="language-go">ctx, span := tracer.Start(context.Background(), &quot;client-operation&quot;)
+defer span.End()
+
+if err := request(ctx); err != nil {
+	log.Fatal(err)
+}
+</code></pre>
+</div>
+	</article>
+
+	</main>
+	<footer>
+		<p>© 2025 yumosx&#39;s 博客</p>
+	</footer>
+</body>
+</html>
