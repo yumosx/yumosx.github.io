@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>yumosx&#39;s 博客 - Alembic 数据库迁移工具</title>
+	<link rel="stylesheet" href="/static/style.css">
+	<link rel="alternate" type="application/rss+xml" href="/feed.xml" title="yumosx&#39;s 博客 RSS Feed">
+</head>
+<body>
+	<header>
+		<h1><a href="/">yumosx&#39;s 博客</a></h1>
+	</header>
+	<main>
+		
+	<article class="post">
+		<h2>Alembic 数据库迁移工具</h2>
+		<div class="post-meta">2023-11-15</div>
+		<div class="post-content"><p>Alembic 是一个 Python 环境中的数据库迁移工具，类似于 Go 语言中 GORM 的数据库迁移功能。它是 SQLAlchemy 的迁移工具扩展，用于管理数据库架构变更的版本控制。</p>
+
+<p>在 Alembic 中最简单的命令就是初始化项目：</p>
+
+<pre><code class="language-bash">alembic init migrations
+</code></pre>
+
+<p>执行完成这个命令之后会在当前目录下生成：</p>
+
+<ul>
+<li>一个 <code>alembic.ini</code> 配置文件，包含 Alembic 命令的全局配置</li>
+<li>一个 <code>migrations</code> 文件夹，包含：
+
+<ul>
+<li><code>versions</code> 子文件夹，用于存储生成的迁移脚本</li>
+<li><code>env.py</code> 文件，包含迁移运行时的环境配置</li>
+</ul></li>
+</ul>
+
+<h2 id="环境配置文件-env-py">环境配置文件 (env.py)</h2>
+
+<p><code>env.py</code> 文件是 Alembic 迁移运行的核心配置文件，主要包含以下关键部分：</p>
+
+<pre><code class="language-python"># 导入必要的模块
+from logging.config import fileConfig
+from sqlalchemy import engine_from_config, pool
+from alembic import context
+
+# 获取配置对象
+config = context.config
+
+# 加载日志配置
+if config.config_file_name is not None:
+    fileConfig(config.config_file_name)
+</code></pre>
+
+<h2 id="设置数据库连接">设置数据库连接</h2>
+
+<p>在 <code>alembic.ini</code> 文件中配置数据库连接字符串：</p>
+
+<pre><code class="language-ini">sqlalchemy.url = mysql+pymysql://username:password@localhost:3306/database_name?charset=utf8mb4
+</code></pre>
+
+<h2 id="基本迁移操作">基本迁移操作</h2>
+
+<h3 id="创建迁移脚本">创建迁移脚本</h3>
+
+<p>使用 <code>revision</code> 命令创建新的迁移脚本：</p>
+
+<pre><code class="language-bash">alembic revision -m &quot;create tasks table&quot;
+</code></pre>
+
+<p>执行后会在 <code>versions</code> 目录下生成一个新的迁移文件，文件内容包含两个主要函数：</p>
+
+<pre><code class="language-python">&quot;&quot;&quot;create tasks table&quot;&quot;&quot;
+
+from alembic import op
+import sqlalchemy as sa
+
+# revision identifiers, used by Alembic.
+revision = '5776bfcc91f0'
+down_revision = None
+branch_labels = None
+depends_on = None
+
+def upgrade() -&gt; None:
+    &quot;&quot;&quot;Upgrade schema.&quot;&quot;&quot;
+    # 在这里添加数据库升级操作
+    pass
+
+def downgrade() -&gt; None:
+    &quot;&quot;&quot;Downgrade schema.&quot;&quot;&quot;
+    # 在这里添加数据库降级操作
+    pass
+</code></pre>
+
+<h3 id="添加表结构定义">添加表结构定义</h3>
+
+<p>在生成的迁移文件中，我们可以使用 <code>op</code> 和 <code>sa</code> 对象添加数据库操作，例如创建表：</p>
+
+<pre><code class="language-python">def upgrade() -&gt; None:
+    &quot;&quot;&quot;Upgrade schema.&quot;&quot;&quot;
+    op.create_table(
+        'tasks',
+        sa.Column('id', sa.Integer, primary_key=True, autoincrement=True),
+        sa.Column('title', sa.String(100), nullable=False),
+        sa.Column('description', sa.Text, nullable=True),
+        sa.Column('created_at', sa.DateTime, default=sa.func.now()),
+        sa.Column('updated_at', sa.DateTime, default=sa.func.now(), onupdate=sa.func.now())
+    )
+
+def downgrade() -&gt; None:
+    &quot;&quot;&quot;Downgrade schema.&quot;&quot;&quot;
+    op.drop_table('tasks')
+</code></pre>
+
+<h3 id="应用迁移">应用迁移</h3>
+
+<p>使用 <code>upgrade</code> 命令应用迁移：</p>
+
+<pre><code class="language-bash"># 应用所有未应用的迁移
+alembic upgrade head
+
+# 应用指定版本的迁移
+alembic upgrade 5776bfcc91f0
+
+# 回滚一个版本
+alembic downgrade -1
+
+# 回滚到初始状态
+alembic downgrade base
+</code></pre>
+
+<h2 id="修改现有表结构">修改现有表结构</h2>
+
+<p>当需要添加新字段时，创建新的迁移脚本：</p>
+
+<pre><code class="language-bash">alembic revision -m &quot;add status column to tasks&quot;
+</code></pre>
+
+<p>然后在生成的迁移文件中添加字段操作：</p>
+
+<pre><code class="language-python">def upgrade() -&gt; None:
+    &quot;&quot;&quot;Upgrade schema.&quot;&quot;&quot;
+    op.add_column(
+        'tasks',
+        sa.Column('status', sa.String(20), default='pending', nullable=False)
+    )
+
+def downgrade() -&gt; None:
+    &quot;&quot;&quot;Downgrade schema.&quot;&quot;&quot;
+    op.drop_column('tasks', 'status')
+</code></pre>
+
+<h2 id="查看迁移历史">查看迁移历史</h2>
+
+<p>使用 <code>history</code> 命令查看迁移历史记录：</p>
+
+<pre><code class="language-bash">alembic history
+</code></pre>
+
+<p>输出示例：</p>
+
+<pre><code>5776bfcc91f0 -&gt; be3e66122ef1 (head), add status column to tasks
+&lt;base&gt; -&gt; 5776bfcc91f0, create tasks table
+</code></pre>
+
+<h2 id="自动迁移">自动迁移</h2>
+
+<p>Alembic 支持根据模型定义自动生成迁移脚本，需要以下配置：</p>
+
+<p>在 <code>env.py</code> 文件中，导入你的 SQLAlchemy 模型并配置 <code>target_metadata</code>：</p>
+
+<pre><code class="language-python"># 在 env.py 中添加
+from myapp.models import Base  # 导入你的模型基类
+
+# 配置目标元数据
+target_metadata = Base.metadata
+
+# 修改 run_migrations_online 函数
+def run_migrations_online():
+    # ... 现有代码 ...
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        # 其他配置...
+    )
+    # ... 现有代码 ...
+</code></pre>
+
+<p>使用 <code>revision --autogenerate</code> 命令自动生成迁移脚本：</p>
+
+<pre><code class="language-bash">alembic revision --autogenerate -m &quot;add user table&quot;
+</code></pre>
+
+<p>Alembic 会自动检测模型变更并生成相应的迁移代码。这对于大型项目特别有用，可以减少手动编写迁移脚本的工作量。</p>
+</div>
+	</article>
+
+	</main>
+	<footer>
+		<p>© 2025 yumosx&#39;s 博客</p>
+	</footer>
+</body>
+</html>
