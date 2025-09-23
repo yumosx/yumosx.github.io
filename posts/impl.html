@@ -69,6 +69,41 @@ defer cancelFunc()
 
 <pre><code>type Key struct{}
 </code></pre>
+
+<h3 id="time-sleep">time.Sleep()</h3>
+
+<p>在我们日常开发中, 为了等待一些连接的建立或者是让 CPU 运转的更好往往可能会使用一个 time.Sleep() 方法，比如下面这段代码,</p>
+
+<pre><code>for {
+    select {
+        case &lt;-ctx.Done():
+        case &lt;-ch:
+        default:
+            time.Sleep(10 * time.Second)
+    }
+}
+</code></pre>
+
+<p>如果你一直没有从 &lt;-ch 中去读取好对应的数据的话, 那么这个 for 循环就会一直的空转, 这样其实不利于别的任务的执行, 而加上这个 sleep 之后, 可以避免CPU空转, 但是 sleep 在这个地方其实
+用的并不是很好，因为在 sleep 的时候我们无法判断当前外部的环境是否已经超时,也就是 ctx 控制的链路, 我们必须要等到这个 sleep 结束之后才会去判断是否超时</p>
+
+<p>那么优雅的写法是怎样子的呢?</p>
+
+<pre><code>func sleepWithCtx(ctx context.Context, d time.Duration) error {
+	// Wait a bit before retrying
+	timer := time.NewTimer(d)
+	defer timer.Stop()
+
+	select {
+	case &lt;-ctx.Done():
+		return ctx.Err()
+	case &lt;-timer.C:
+		return nil
+	}
+}
+</code></pre>
+
+<h2 id="数组访问检查">数组访问检查</h2>
 </div>
 	</article>
 
