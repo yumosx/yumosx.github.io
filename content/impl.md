@@ -3,6 +3,11 @@ Title: Go 代码大全
 Date: 2023-11-15
 ---
 
+## Go 语言的封装
+
+Go 语言关于结构体的字段封装是通过字段命名的大小写来完成的, 当我们
+
+
 ## 接口的显式实现
 
 在 Go 语言中，与 Java 或 Python 等语言不同，结构体（struct）无需显式声明对某个接口的实现。
@@ -18,6 +23,20 @@ var _ 接口类型 = (*实现类型)(nil)
 
 1. 明确告知用户该结构体实现了特定接口，增强代码的可读性和可维护性；
 2. 防止因接口或结构体的变更导致实现关系被意外破坏，建立一种编译期的强绑定检查机制。
+
+## 良好的 type 命名
+
+在定义接口的时候使用一个合适的类型, 避免已经一些不必要的实现，比如下面这种:
+
+```
+type CredentialsService interface {
+	Get(ctx context.Context, sid string, scheme string) (string, error)
+}
+
+type CredentialsService interface {
+	Get(ctx context.Context, sid SessionID, scheme SecuritySchemeName) (AuthCredential, error)
+}
+```
 
 ## context
 
@@ -53,4 +72,39 @@ func add(ctx context.Context) int{
 
 ```
 type Key struct{}
+```
+
+###  time.Sleep()
+
+在我们日常开发中, 为了等待一些连接的建立或者是让 CPU 运转的更好往往可能会使用一个 time.Sleep() 方法，比如下面这段代码,
+
+```
+for {
+    select {
+        case <-ctx.Done():
+        case <-ch:
+        default:
+            time.Sleep(10 * time.Second)
+    }
+}
+```
+
+如果你一直没有从 <-ch 中去读取好对应的数据的话, 那么这个 for 循环就会一直的空转, 这样其实不利于别的任务的执行, 而加上这个 sleep 之后, 可以避免CPU空转, 但是 sleep 在这个地方其实
+用的并不是很好，因为在 sleep 的时候我们无法判断当前外部的环境是否已经超时,也就是 ctx 控制的链路, 我们必须要等到这个 sleep 结束之后才会去判断是否超时
+
+那么优雅的写法是怎样子的呢?
+
+```
+func sleepWithCtx(ctx context.Context, d time.Duration) error {
+	// Wait a bit before retrying
+	timer := time.NewTimer(d)
+	defer timer.Stop()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-timer.C:
+		return nil
+	}
+}
 ```
