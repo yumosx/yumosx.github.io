@@ -16,7 +16,11 @@
 	<article class="post">
 		<h2>Go 代码大全</h2>
 		<div class="post-meta">2023-11-15</div>
-		<div class="post-content"><h2 id="接口的显式实现">接口的显式实现</h2>
+		<div class="post-content"><h2 id="go-语言的封装">Go 语言的封装</h2>
+
+<p>Go 语言关于结构体的字段封装是通过字段命名的大小写来完成的, 当我们</p>
+
+<h2 id="接口的显式实现">接口的显式实现</h2>
 
 <p>在 Go 语言中，与 Java 或 Python 等语言不同，结构体（struct）无需显式声明对某个接口的实现。
 例如，在 Java 中我们常会写 class Student implements Person 来明确指定接口实现，这种方式具有一定的优势。
@@ -32,6 +36,19 @@
 <li>明确告知用户该结构体实现了特定接口，增强代码的可读性和可维护性；</li>
 <li>防止因接口或结构体的变更导致实现关系被意外破坏，建立一种编译期的强绑定检查机制。</li>
 </ol>
+
+<h2 id="良好的-type-命名">良好的 type 命名</h2>
+
+<p>在定义接口的时候使用一个合适的类型, 避免已经一些不必要的实现，比如下面这种:</p>
+
+<pre><code>type CredentialsService interface {
+	Get(ctx context.Context, sid string, scheme string) (string, error)
+}
+
+type CredentialsService interface {
+	Get(ctx context.Context, sid SessionID, scheme SecuritySchemeName) (AuthCredential, error)
+}
+</code></pre>
 
 <h2 id="context">context</h2>
 
@@ -102,8 +119,6 @@ defer cancelFunc()
 	}
 }
 </code></pre>
-
-<h2 id="数组访问检查">数组访问检查</h2>
 </div>
 	</article>
 

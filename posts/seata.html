@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>yumosx&#39;s 博客 - Seata 分布式事务框架</title>
+	<link rel="stylesheet" href="/static/style.css">
+	<link rel="alternate" type="application/rss+xml" href="/feed.xml" title="yumosx&#39;s 博客 RSS Feed">
+</head>
+<body>
+	<header>
+		<h1><a href="/">yumosx&#39;s 博客</a></h1>
+	</header>
+	<main>
+		
+	<article class="post">
+		<h2>Seata 分布式事务框架</h2>
+		<div class="post-meta">2023-11-15</div>
+		<div class="post-content"><p>seata 这个框架为我们提供了三个核心的组件分别是:</p>
+
+<ol>
+<li>Transaction Coordinator (TC) - 事务协调器
+这个事务协调器负责维护全局事务的运行状态, 比如prepare, commit和 rollback</li>
+<li>Transaction Manager &trade; - 事务管理器
+它是发起方, 定义了全局事务的边界, 负责开启，提交或者回滚一个全局事务</li>
+<li>Resource Manager (RM) - 资源管理器
+向 TC 注册分支事务（本地事务）的状态，报告本地事务的执行状态，并接收来自 TC 的指令来驱动本地事务的提交或回滚。</li>
+</ol>
+
+<p>tcc 模式需要开发者手动实现对应 Try Confirm 和 Cancel 三个接口</p>
+</div>
+	</article>
+
+	</main>
+	<footer>
+		<p>© 2025 yumosx&#39;s 博客</p>
+	</footer>
+</body>
+</html>
