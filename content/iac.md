@@ -1,6 +1,6 @@
 ---
-Title: IaC 基础设施即代码
-Date: 2023-11-15
+Title : IaC 基础设施即代码
+Date : 2023-11-15
 ---
 
 我用一个盖房子的比喻来给你解释“Infrastructure as Code”。

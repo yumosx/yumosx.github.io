@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	url := "http://google.cn"
+	url := "http://baidu.com"
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -20,4 +20,6 @@ func main() {
 			panic(err)
 		}
 	}()
+	line1 := resp.Proto + " " + resp.Status
+	fmt.Printf("the first line of response:\n%s\n", line1)
 }

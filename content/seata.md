@@ -1,3 +1,8 @@
+---
+Title: Seata 分布式事务框架
+Date: 2023-11-15
+---
+
 seata 这个框架为我们提供了三个核心的组件分别是:
 
 1. Transaction Coordinator (TC) - 事务协调器

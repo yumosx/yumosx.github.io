@@ -270,6 +270,7 @@ func parsePost(filePath string) (Post, error) {
 	scanner := bufio.NewScanner(bytes.NewReader(content))
 	inFrontMatter := false
 	frontMatterEnd := 0
+	foundFrontMatter := false
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -278,6 +279,7 @@ func parsePost(filePath string) (Post, error) {
 		if line == "---" {
 			if !inFrontMatter {
 				inFrontMatter = true
+				foundFrontMatter = true
 			} else {
 				inFrontMatter = false
 				break
@@ -296,6 +298,11 @@ func parsePost(filePath string) (Post, error) {
 				}
 			}
 		}
+	}
+
+	// If no front matter was found, reset frontMatterEnd to 0
+	if !foundFrontMatter {
+		frontMatterEnd = 0
 	}
 
 	// Generate slug from filename
