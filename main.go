@@ -30,61 +30,99 @@ type Site struct {
 	Posts   []Post
 }
 
+// Config holds all paths and site metadata so nothing scatters magic strings.
+type Config struct {
+	SiteTitle    string
+	BaseURL      string
+	ContentDir   string
+	TemplatesDir string
+	PublicDir    string
+	StaticDir    string
+}
+
+func defaultConfig() Config {
+	return Config{
+		SiteTitle:    "yumosx's 博客",
+		BaseURL:      "https://yumosx.github.io",
+		ContentDir:   "content",
+		TemplatesDir: "templates",
+		PublicDir:    "public",
+		StaticDir:    "static",
+	}
+}
+
+// Generator wires filesystem layout, parsing, and rendering.
+type Generator struct {
+	cfg Config
+}
+
+func NewGenerator(cfg Config) *Generator {
+	return &Generator{cfg: cfg}
+}
+
 func main() {
-	// Create necessary directories if they don't exist
-	createDirIfNotExist("content")
-	createDirIfNotExist("templates")
-	createDirIfNotExist("public")
-	createDirIfNotExist("static")
+	g := NewGenerator(defaultConfig())
+	if err := g.Run(); err != nil {
+		fmt.Fprintf(os.Stderr, "生成失败: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Println("博客生成成功！请查看 public 目录")
+}
 
-	// Create default templates
-	createDefaultTemplates()
+// Run performs full build: dirs, optional defaults, posts, public tree, HTML.
+func (g *Generator) Run() error {
+	if err := g.ensureDirs(); err != nil {
+		return err
+	}
+	if err := g.writeDefaultAssets(); err != nil {
+		return err
+	}
 
-	// Generate the blog
 	site := &Site{
-		Title:   "yumosx's 博客",
-		BaseURL: "https://yumosx.github.io",
+		Title:   g.cfg.SiteTitle,
+		BaseURL: g.cfg.BaseURL,
 	}
-
-	// Load all posts
-	posts, err := loadPosts("content")
+	posts, err := g.loadPosts()
 	if err != nil {
-		fmt.Printf("Error loading posts: %v\n", err)
-		return
+		return fmt.Errorf("加载文章: %w", err)
 	}
-
-	// Sort posts by date (newest first)
 	sort.Slice(posts, func(i, j int) bool {
 		timeI, _ := time.Parse("2006-01-02", posts[i].Date)
 		timeJ, _ := time.Parse("2006-01-02", posts[j].Date)
 		return timeI.After(timeJ)
 	})
-
 	site.Posts = posts
 
-	// Generate public directory structure
-	generatePublicDir("public")
-
-	// Render all pages
-	renderIndex(site, "templates/index.html", "public/index.html")
-	renderPosts(site, "templates/post.html", "public/posts")
-
-	// Create .gitignore file
-	createGitignore()
-
-	fmt.Println("博客生成成功！请查看 public 目录")
-}
-
-// createDirIfNotExist creates a directory if it doesn't exist
-func createDirIfNotExist(dir string) {
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		os.Mkdir(dir, 0755)
+	if err := g.preparePublicDir(); err != nil {
+		return err
 	}
+	if err := g.renderIndex(site); err != nil {
+		return err
+	}
+	if err := g.renderPosts(site); err != nil {
+		return err
+	}
+	if err := g.writeGitignore(); err != nil {
+		return err
+	}
+	return nil
 }
 
-// createDefaultTemplates creates the default template files
-func createDefaultTemplates() {
-	// Main template
+func (g *Generator) ensureDirs() error {
+	for _, dir := range []string{
+		g.cfg.ContentDir,
+		g.cfg.TemplatesDir,
+		g.cfg.PublicDir,
+		g.cfg.StaticDir,
+	} {
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			return fmt.Errorf("创建目录 %s: %w", dir, err)
+		}
+	}
+	return nil
+}
+
+func (g *Generator) writeDefaultAssets() error {
 	mainTmpl := `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -107,7 +145,6 @@ func createDefaultTemplates() {
 </body>
 </html>`
 
-	// Index template
 	indexTmpl := `{{define "content"}}
 	<h2>博客文章</h2>
 	<ul class="post-list">
@@ -121,7 +158,6 @@ func createDefaultTemplates() {
 	</ul>
 {{end}}`
 
-	// Post template
 	postTmpl := `{{define "content"}}
 	<article class="post">
 		<h2>{{.Title}}</h2>
@@ -130,11 +166,6 @@ func createDefaultTemplates() {
 	</article>
 {{end}}`
 
-	os.WriteFile("templates/main.html", []byte(mainTmpl), 0644)
-	os.WriteFile("templates/index.html", []byte(indexTmpl), 0644)
-	os.WriteFile("templates/post.html", []byte(postTmpl), 0644)
-
-	// Create CSS file
 	css := `body {
 	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 	line-height: 1.6;
@@ -228,36 +259,42 @@ footer {
 		border-radius: 3px;
 	}`
 
-	os.WriteFile("static/style.css", []byte(css), 0644)
+	paths := map[string]string{
+		filepath.Join(g.cfg.TemplatesDir, "main.html"):   mainTmpl,
+		filepath.Join(g.cfg.TemplatesDir, "index.html"):  indexTmpl,
+		filepath.Join(g.cfg.TemplatesDir, "post.html"):   postTmpl,
+		filepath.Join(g.cfg.StaticDir, "style.css"):      css,
+	}
+	for path, body := range paths {
+		if err := os.WriteFile(path, []byte(body), 0644); err != nil {
+			return fmt.Errorf("写入 %s: %w", path, err)
+		}
+	}
+	return nil
 }
 
-// loadPosts loads all blog posts from the content directory
-func loadPosts(dir string) ([]Post, error) {
-	var posts []Post
-
-	files, err := os.ReadDir(dir)
+func (g *Generator) loadPosts() ([]Post, error) {
+	files, err := os.ReadDir(g.cfg.ContentDir)
 	if err != nil {
 		return nil, err
 	}
 
+	var posts []Post
 	for _, file := range files {
 		if filepath.Ext(file.Name()) != ".md" {
 			continue
 		}
-
-		post, err := parsePost(filepath.Join(dir, file.Name()))
+		path := filepath.Join(g.cfg.ContentDir, file.Name())
+		post, err := parsePost(path)
 		if err != nil {
-			fmt.Printf("Error parsing post %s: %v\n", file.Name(), err)
+			fmt.Fprintf(os.Stderr, "解析文章 %s: %v\n", file.Name(), err)
 			continue
 		}
-
 		posts = append(posts, post)
 	}
-
 	return posts, nil
 }
 
-// parsePost parses a markdown file into a Post struct
 func parsePost(filePath string) (Post, error) {
 	var post Post
 
@@ -266,7 +303,6 @@ func parsePost(filePath string) (Post, error) {
 		return post, err
 	}
 
-	// Read front matter
 	scanner := bufio.NewScanner(bytes.NewReader(content))
 	inFrontMatter := false
 	frontMatterEnd := 0
@@ -274,7 +310,7 @@ func parsePost(filePath string) (Post, error) {
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		frontMatterEnd += len(line) + 1 // +1 for newline
+		frontMatterEnd += len(line) + 1
 
 		if line == "---" {
 			if !inFrontMatter {
@@ -289,66 +325,51 @@ func parsePost(filePath string) (Post, error) {
 
 		if inFrontMatter {
 			parts := strings.SplitN(line, ": ", 2)
-			if len(parts) == 2 {
-				switch parts[0] {
-				case "Title":
-					post.Title = parts[1]
-				case "Date":
-					post.Date = parts[1]
-				}
+			if len(parts) != 2 {
+				continue
+			}
+			switch parts[0] {
+			case "Title":
+				post.Title = parts[1]
+			case "Date":
+				post.Date = parts[1]
 			}
 		}
 	}
 
-	// If no front matter was found, reset frontMatterEnd to 0
 	if !foundFrontMatter {
 		frontMatterEnd = 0
 	}
 
-	// Generate slug from filename
 	post.Slug = strings.TrimSuffix(filepath.Base(filePath), ".md")
-
-	// Process content (simplified HTML conversion)
 	postContent := string(content[frontMatterEnd:])
-
-	// Simple markdown to HTML conversion
-	htmlContent := convertMarkdownToHTML(postContent)
-
-	post.Content = template.HTML(htmlContent)
-
-	// Extract summary
+	post.Content = template.HTML(convertMarkdownToHTML(postContent))
 	post.Summary = extractSummary(postContent)
 
 	return post, nil
 }
 
-// convertMarkdownToHTML converts markdown to HTML using the blackfriday library
 func convertMarkdownToHTML(markdownStr string) string {
-	// Set up Blackfriday options with common extensions
 	extensions := blackfriday.WithExtensions(blackfriday.CommonExtensions | blackfriday.AutoHeadingIDs | blackfriday.FencedCode)
 	renderer := blackfriday.WithRenderer(blackfriday.NewHTMLRenderer(blackfriday.HTMLRendererParameters{
 		Flags: blackfriday.CommonHTMLFlags | blackfriday.HrefTargetBlank,
 	}))
-
-	// Convert markdown to HTML
 	return string(blackfriday.Run([]byte(markdownStr), extensions, renderer))
 }
 
-// extractSummary extracts a summary from the post content
 func extractSummary(content string) string {
-	// Simple summary extraction
 	lines := strings.Split(content, "\n")
 	var summary strings.Builder
 
 	for i, line := range lines {
-		if i > 5 { // Take first 5 lines as summary
+		if i > 5 {
 			break
 		}
 		if strings.HasPrefix(line, "#") {
-			continue // Skip headers
+			continue
 		}
 		if strings.HasPrefix(line, "```") {
-			continue // Skip code blocks
+			continue
 		}
 		if len(line) > 0 {
 			summary.WriteString(line)
@@ -357,132 +378,121 @@ func extractSummary(content string) string {
 	}
 
 	summaryStr := summary.String()
-	// 安全处理UTF-8字符的截断，避免乱码
 	if len([]rune(summaryStr)) > 150 {
-		// 将字符串转换为rune切片，确保按字符而不是按字节截断
 		runes := []rune(summaryStr)
 		summaryStr = string(runes[:150]) + "..."
 	}
-
 	return summaryStr
 }
 
-// generatePublicDir creates the public directory structure
-func generatePublicDir(dir string) {
-	createDirIfNotExist(dir)
-	createDirIfNotExist(filepath.Join(dir, "posts"))
-	createDirIfNotExist(filepath.Join(dir, "static"))
-
-	// Copy static files
-	staticFiles, _ := os.ReadDir("static")
-	for _, file := range staticFiles {
-		src := filepath.Join("static", file.Name())
-		dst := filepath.Join(dir, "static", file.Name())
-		content, _ := os.ReadFile(src)
-	os.WriteFile(dst, content, 0644)
+func (g *Generator) preparePublicDir() error {
+	pub := g.cfg.PublicDir
+	if err := os.MkdirAll(filepath.Join(pub, "posts"), 0755); err != nil {
+		return err
 	}
+	if err := os.MkdirAll(filepath.Join(pub, "static"), 0755); err != nil {
+		return err
+	}
+
+	staticFiles, err := os.ReadDir(g.cfg.StaticDir)
+	if err != nil {
+		return fmt.Errorf("读取静态目录: %w", err)
+	}
+	for _, file := range staticFiles {
+		if file.IsDir() {
+			continue
+		}
+		src := filepath.Join(g.cfg.StaticDir, file.Name())
+		dst := filepath.Join(pub, "static", file.Name())
+		data, err := os.ReadFile(src)
+		if err != nil {
+			return fmt.Errorf("读取 %s: %w", src, err)
+		}
+		if err := os.WriteFile(dst, data, 0644); err != nil {
+			return fmt.Errorf("写入 %s: %w", dst, err)
+		}
+	}
+	return nil
 }
 
-// renderIndex renders the index page
-func renderIndex(site *Site, templateFile, outputFile string) {
-	// Read template files
-	mainContent, err := os.ReadFile("templates/main.html")
+func (g *Generator) blogTemplateFuncs() template.FuncMap {
+	return template.FuncMap{"now": time.Now}
+}
+
+func (g *Generator) parseLayoutWithFragment(fragmentPath string) (*template.Template, error) {
+	mainPath := filepath.Join(g.cfg.TemplatesDir, "main.html")
+	mainContent, err := os.ReadFile(mainPath)
 	if err != nil {
-		fmt.Printf("Error reading main template: %v\n", err)
-		return
+		return nil, fmt.Errorf("读取主模板 %s: %w", mainPath, err)
 	}
-
-	indexContent, err := os.ReadFile(templateFile)
+	fragContent, err := os.ReadFile(fragmentPath)
 	if err != nil {
-		fmt.Printf("Error reading index template: %v\n", err)
-		return
+		return nil, fmt.Errorf("读取片段 %s: %w", fragmentPath, err)
 	}
-
-	// Combine templates
-	combinedTemplate := string(mainContent) + string(indexContent)
-
-	tmpl, err := template.New("blog").Funcs(template.FuncMap{
-		"now": time.Now,
-	}).Parse(combinedTemplate)
+	combined := string(mainContent) + string(fragContent)
+	tmpl, err := template.New("blog").Funcs(g.blogTemplateFuncs()).Parse(combined)
 	if err != nil {
-		fmt.Printf("Error parsing template: %v\n", err)
-		return
+		return nil, fmt.Errorf("解析模板: %w", err)
 	}
+	return tmpl, nil
+}
 
-	output, err := os.Create(outputFile)
+func (g *Generator) renderIndex(site *Site) error {
+	fragment := filepath.Join(g.cfg.TemplatesDir, "index.html")
+	tmpl, err := g.parseLayoutWithFragment(fragment)
 	if err != nil {
-		fmt.Printf("Error creating output file: %v\n", err)
-		return
+		return err
 	}
-	defer output.Close()
+	outPath := filepath.Join(g.cfg.PublicDir, "index.html")
+	f, err := os.Create(outPath)
+	if err != nil {
+		return fmt.Errorf("创建 %s: %w", outPath, err)
+	}
+	defer f.Close()
 
-	// Pass a merged context including site and posts
-	context := map[string]interface{}{
+	ctx := map[string]interface{}{
 		"Site":  site,
 		"Title": site.Title,
 		"Posts": site.Posts,
 	}
-
-	err = tmpl.Execute(output, context)
-	if err != nil {
-		fmt.Printf("Error executing template: %v\n", err)
+	if err := tmpl.Execute(f, ctx); err != nil {
+		return fmt.Errorf("渲染首页: %w", err)
 	}
+	return nil
 }
 
-// renderPosts renders each post as a separate HTML file
-func renderPosts(site *Site, templateFile, outputDir string) {
-	// Read template files
-	mainContent, err := os.ReadFile("templates/main.html")
+func (g *Generator) renderPosts(site *Site) error {
+	fragment := filepath.Join(g.cfg.TemplatesDir, "post.html")
+	tmpl, err := g.parseLayoutWithFragment(fragment)
 	if err != nil {
-		fmt.Printf("Error reading main template: %v\n", err)
-		return
+		return err
 	}
 
-	postContent, err := os.ReadFile(templateFile)
-	if err != nil {
-		fmt.Printf("Error reading post template: %v\n", err)
-		return
-	}
-
-	// Combine templates
-	combinedTemplate := string(mainContent) + string(postContent)
-
+	outDir := filepath.Join(g.cfg.PublicDir, "posts")
 	for _, post := range site.Posts {
-		tmpl, err := template.New("blog").Funcs(template.FuncMap{
-			"now": time.Now,
-		}).Parse(combinedTemplate)
+		outPath := filepath.Join(outDir, post.Slug+".html")
+		f, err := os.Create(outPath)
 		if err != nil {
-			fmt.Printf("Error parsing template: %v\n", err)
-			continue
+			return fmt.Errorf("创建 %s: %w", outPath, err)
 		}
-
-		outputFile := filepath.Join(outputDir, post.Slug+".html")
-		output, err := os.Create(outputFile)
-		if err != nil {
-			fmt.Printf("Error creating output file: %v\n", err)
-			continue
-		}
-		defer output.Close()
-
-		// Pass a merged context including site and post data
-		context := map[string]interface{}{
+		ctx := map[string]interface{}{
 			"Site":    site,
 			"Title":   post.Title,
 			"Date":    post.Date,
 			"Content": post.Content,
 		}
-
-		err = tmpl.Execute(output, context)
-		if err != nil {
-			fmt.Printf("Error executing template for post %s: %v\n", post.Title, err)
+		if err := tmpl.Execute(f, ctx); err != nil {
+			f.Close()
+			return fmt.Errorf("渲染文章 %s: %w", post.Slug, err)
+		}
+		if err := f.Close(); err != nil {
+			return fmt.Errorf("关闭 %s: %w", outPath, err)
 		}
 	}
+	return nil
 }
 
-
-
-// createGitignore creates a .gitignore file
-func createGitignore() {
+func (g *Generator) writeGitignore() error {
 	gitignore := `# Binaries
 *.exe
 *.exe~
@@ -513,6 +523,5 @@ public/
 *.swo
 *~
 `
-
-	os.WriteFile(".gitignore", []byte(gitignore), 0644)
+	return os.WriteFile(".gitignore", []byte(gitignore), 0644)
 }
