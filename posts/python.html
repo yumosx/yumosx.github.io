@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>yumosx&#39;s 博客 - rabbitmq</title>
+	<link rel="stylesheet" href="/static/style.css">
+	<link rel="alternate" type="application/rss+xml" href="/feed.xml" title="yumosx&#39;s 博客 RSS Feed">
+</head>
+<body>
+	<header>
+		<h1><a href="/">yumosx&#39;s 博客</a></h1>
+	</header>
+	<main>
+		
+	<article class="post">
+		<h2>rabbitmq</h2>
+		<div class="post-meta">2025-9-22</div>
+		<div class="post-content"><h2 id="字符串格式化">字符串格式化</h2>
+
+<p>在 Python 中 <code>%</code> 左边是字符串的话，右边可以是一个值，表示对应的字符串格式化</p>
+
+<pre><code class="language-python">key = 'my_var' value = 1.234
+formatted = '%-10s = %.2f' %(key, value) print (formatted)
+&gt;&gt;&gt; my_var
+my_var = 1.23
+</code></pre>
+
+<p>在 新的 Python 中，我们可以使用 <code>format</code> 方法来格式化字符串</p>
+
+<pre><code class="language-python">key = 'my_var' value = 1.234
+formatted = '{:&lt;10s} = {:.2f}'.format(key, value) print (formatted)
+&gt;&gt;&gt; my_var
+my_var = 1.23
+</code></pre>
+
+<h2 id="new-方法">new 方法</h2>
+
+<p>在 Python 中真正构造一个对象的其实是 New 方法，而 <strong>init</strong> 方法只是一个打前阵的小兵。</p>
+</div>
+	</article>
+
+	</main>
+	<footer>
+		<p>© 2026 yumosx&#39;s 博客</p>
+	</footer>
+</body>
+</html>

@@ -29,6 +29,12 @@
 		</li>
 	
 		<li>
+			<a href="/posts/pym.html">Python 依赖问题</a>
+			<span class="post-date">2023-11-15</span>
+			<p>在 Python 中，没有像 Go 语言中那样的内置模块依赖管理工具（如 Go Modules）。我们通常使用 uv 或 poetry 来管理项目依赖，这两个工具都基于 Python 的虚拟环境（venv）机制。所谓的 venv，实际上是在项目目录中创建一系列文件夹，用于隔离不同项目的依赖。 当你为...</p>
+		</li>
+	
+		<li>
 			<a href="/posts/iac.html">IaC 基础设施即代码</a>
 			<span class="post-date">2023-11-15</span>
 			<p>我用一个盖房子的比喻来给你解释“Infrastructure as Code”。 **传统方式（手动盖房）：** </p>
@@ -41,15 +47,9 @@
 		</li>
 	
 		<li>
-			<a href="/posts/pym.html">Python 依赖问题</a>
-			<span class="post-date">2023-11-15</span>
-			<p>在 Python 中，没有像 Go 语言中那样的内置模块依赖管理工具（如 Go Modules）。我们通常使用 uv 或 poetry 来管理项目依赖，这两个工具都基于 Python 的虚拟环境（venv）机制。所谓的 venv，实际上是在项目目录中创建一系列文件夹，用于隔离不同项目的依赖。 当你为...</p>
-		</li>
-	
-		<li>
-			<a href="/posts/seata.html">Seata 分布式事务框架</a>
-			<span class="post-date">2023-11-15</span>
-			<p>seata 这个框架为我们提供了三个核心的组件分别是: 1. Transaction Coordinator (TC) - 事务协调器     这个事务协调器负责维护全局事务的运行状态, 比如prepare, commit和 rollback 2. Transaction Manager (TM) ...</p>
+			<a href="/posts/otel-reader.html">OTEL Manual Reader 组件</a>
+			<span class="post-date">2025-9-20</span>
+			<p>首先我们需要看下这个接口是如何使用的 1. 创建一个 manual reader 组件, 并传递给 meter provider </p>
 		</li>
 	
 		<li>
@@ -65,16 +65,46 @@
 		</li>
 	
 		<li>
+			<a href="/posts/group.html">消息队列中超时问题</a>
+			<span class="post-date">2025-9-22</span>
+			<p>在Java应用中，我们往往会使用spring-kafka组件简单的设置一下group_id, topic就开始消费消息了，其实这样会埋下巨大的安全隐患，即当消费速度过慢时有可能会触发rebalance, 这批消息被分配到另一个消费者，然后新的消费者还会消费过慢，再次rebalance, 这样一直恶性...</p>
+		</li>
+	
+		<li>
 			<a href="/posts/pyproc.html">PyProc 源码分析 (持续更新中)</a>
 			<span class="post-date">2025-9-22</span>
 			<p>PyProc 的 frame 结构分成了两个部分, 第一个部分是对应的帧头, 第二部是对应的 数据部分, 也就是对应的数据部分，类型下面这样 [header][payload] </p>
+		</li>
+	
+		<li>
+			<a href="/posts/python.html">rabbitmq</a>
+			<span class="post-date">2025-9-22</span>
+			<p>在 Python 中 `%` 左边是字符串的话，右边可以是一个值，表示对应的字符串格式化 </p>
+		</li>
+	
+		<li>
+			<a href="/posts/rabbitmq.html">RabbitMQ 与 Aio-Pika</a>
+			<span class="post-date">2025-9-22</span>
+			<p>整个 rabbitmq 分成了 四个部分 1. producer: 用来生成对应的消息, 将消息发送出去 2. exchange: 用来按照对应的 router 把消息转发到对应的 queue 上面去 3. queue： 负责持久化对应的消息，兔子mq 的消息持久化机制是通过 Erlang 的 分布...</p>
+		</li>
+	
+		<li>
+			<a href="/posts/session.html">Python ORM </a>
+			<span class="post-date">2025-9-22</span>
+			<p>首先一句话解释一下 session 是一个数据库会话，它是一个用对象抽象过程的简单接口，用于与数据库进行交互。 </p>
+		</li>
+	
+		<li>
+			<a href="/posts/apschedule.html">APSchduler 介绍</a>
+			<span class="post-date">2025-9-22</span>
+			<p>是的，**在你当前的代码中使用 `AsyncIOScheduler` 时，默认情况下会等到上一个 `self.run()` 执行完毕之后，才会开启下一个 job**。 这正是 APScheduler 的 **interval trigger**（间隔触发器）的默认行为，具体由参数 `coalesce...</p>
 		</li>
 	
 	</ul>
 
 	</main>
 	<footer>
-		<p>© 2025 yumosx&#39;s 博客</p>
+		<p>© 2026 yumosx&#39;s 博客</p>
 	</footer>
 </body>
 </html>

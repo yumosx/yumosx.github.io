@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>yumosx&#39;s 博客 - RabbitMQ 与 Aio-Pika</title>
+	<link rel="stylesheet" href="/static/style.css">
+	<link rel="alternate" type="application/rss+xml" href="/feed.xml" title="yumosx&#39;s 博客 RSS Feed">
+</head>
+<body>
+	<header>
+		<h1><a href="/">yumosx&#39;s 博客</a></h1>
+	</header>
+	<main>
+		
+	<article class="post">
+		<h2>RabbitMQ 与 Aio-Pika</h2>
+		<div class="post-meta">2025-9-22</div>
+		<div class="post-content"><p>整个 rabbitmq 分成了 四个部分</p>
+
+<ol>
+<li>producer: 用来生成对应的消息, 将消息发送出去</li>
+<li>exchange: 用来按照对应的 router 把消息转发到对应的 queue 上面去</li>
+<li>queue： 负责持久化对应的消息，兔子mq 的消息持久化机制是通过 Erlang 的 分布式数据库做持久化的</li>
+<li>consumer: 负责去消费对应的消息</li>
+</ol>
+
+<p>整个消息发送层和接收层都是遵守一个叫做 AMQP 的协议，这个协议是建立在 TCP 协议之上的,
+客户端和 broker 之间的连接叫做 connection, 这个 connection 中包含了 channel，</p>
+
+<p>Connection 是指 TCP 连接，Channel 是 Connection 中的虚拟连接。两者的关系是：一个客户端和一个 Broker 之间只会建立一条 TCP 连接，就是指 Connection。Channel（虚拟连接）的概念在这个连接中定义，一个 Connection 中可以创建多个 Channel。客户端和服务端的实际通信都是在 Channel 维度通信的。这个机制可以减少实际的 TCP 连接数量，从而降低网络模块的损耗。从设计角度看，也是基于 IO 复用、异步 I/O 的思路来设计的。</p>
+
+<h2 id="生产消息">生产消息</h2>
+
+<p>下面与 <a href="https://docs.aio-pika.com/quick-start.html" target="_blank">aio-pika Quick start</a> 一致：<code>connect_robust</code> 在断线后会重连；<code>Message</code> 用 <code>body=</code> 显式传入负载；先 <code>declare_queue</code> 再发布，保证队列存在。</p>
+
+<pre><code class="language-python">import asyncio
+
+import aio_pika
+
+
+async def main() -&gt; None:
+    connection = await aio_pika.connect_robust(&quot;amqp://guest:guest@localhost/&quot;)
+
+    async with connection:
+        channel = await connection.channel()
+        queue = await channel.declare_queue(&quot;hello&quot;)
+
+        await channel.default_exchange.publish(
+            aio_pika.Message(body=b&quot;Hello World!&quot;),
+            routing_key=queue.name,
+        )
+
+
+if __name__ == &quot;__main__&quot;:
+    asyncio.run(main())
+</code></pre>
+
+<h2 id="消费消息">消费消息</h2>
+
+<p>用 <code>queue.iterator()</code> 持续拉取；<code>async with message.process()</code> 在块正常结束时自动 ack（与官方 Simple consumer 一致）。<code>set_qos(prefetch_count=...)</code> 限制未确认消息数量，避免消费者被压垮。</p>
+
+<pre><code class="language-python">import asyncio
+
+import aio_pika
+
+
+async def main() -&gt; None:
+    connection = await aio_pika.connect_robust(&quot;amqp://guest:guest@localhost/&quot;)
+
+    async with connection:
+        channel = await connection.channel()
+        await channel.set_qos(prefetch_count=10)
+
+        queue = await channel.declare_queue(&quot;hello&quot;)
+
+        async with queue.iterator() as queue_iter:
+            async for message in queue_iter:
+                async with message.process():
+                    print(message.body.decode())
+
+
+if __name__ == &quot;__main__&quot;:
+    asyncio.run(main())
+</code></pre>
+</div>
+	</article>
+
+	</main>
+	<footer>
+		<p>© 2026 yumosx&#39;s 博客</p>
+	</footer>
+</body>
+</html>

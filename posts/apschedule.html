@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>yumosx&#39;s 博客 - APSchduler 介绍</title>
+	<link rel="stylesheet" href="/static/style.css">
+	<link rel="alternate" type="application/rss+xml" href="/feed.xml" title="yumosx&#39;s 博客 RSS Feed">
+</head>
+<body>
+	<header>
+		<h1><a href="/">yumosx&#39;s 博客</a></h1>
+	</header>
+	<main>
+		
+	<article class="post">
+		<h2>APSchduler 介绍</h2>
+		<div class="post-meta">2025-9-22</div>
+		<div class="post-content"><p>是的，<strong>在你当前的代码中使用 <code>AsyncIOScheduler</code> 时，默认情况下会等到上一个 <code>self.run()</code> 执行完毕之后，才会开启下一个 job</strong>。</p>
+
+<p>这正是 APScheduler 的 <strong>interval trigger</strong>（间隔触发器）的默认行为，具体由参数 <code>coalesce</code> 和 <code>max_instances</code> 控制。</p>
+
+<h3 id="默认行为详解-apscheduler-4-x-5-x">默认行为详解（APScheduler 4.x / 5.x）</h3>
+
+<p>当你这样添加任务：</p>
+
+<pre><code class="language-python">self.scheduler.add_job(self.run, 'interval', seconds=2)
+</code></pre>
+
+<p>默认参数是：</p>
+
+<ul>
+<li><code>coalesce=True</code>：如果因为上一个任务还没执行完，导致错过了多个触发时间点，则合并（coalesce）成只执行一次。</li>
+<li><code>max_instances=1</code>：同一 job 同时最多只能有 1 个实例在运行。</li>
+</ul>
+
+<p><strong>结果就是</strong>：</p>
+
+<ul>
+<li>每隔 2 秒，scheduler 会尝试触发 <code>self.run()</code>。</li>
+<li>如果上一个 <code>self.run()</code> 还没执行完（比如数据库查询或 Kafka 发送耗时 &gt; 2 秒），新触发会被<strong>拒绝</strong>，不会并发执行。</li>
+<li>等上一个执行完毕后，下一个触发时间到来时，才会执行下一个。</li>
+<li>如果期间错过了多个周期，只会在上一个结束后立即补执行一次（因为 coalesce=True），而不是补跑所有错过的。</li>
+</ul>
+
+<p>这正好避免了任务堆积和重复处理同一批任务，非常适合你现在的“轮询数据库任务并发送 Kafka”的场景。</p>
+
+<h3 id="常见情况举例">常见情况举例</h3>
+
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>self.run() 执行耗时</th>
+<th>实际执行频率</th>
+<th>说明</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>正常</td>
+<td>0.5 秒</td>
+<td>每 2 秒一次</td>
+<td>严格按间隔执行</td>
+</tr>
+
+<tr>
+<td>偶尔慢</td>
+<td>3 秒</td>
+<td>大约每 3-4 秒一次</td>
+<td>等上一个结束，下一个触发时执行</td>
+</tr>
+
+<tr>
+<td>持续慢</td>
+<td>10 秒</td>
+<td>每 10 秒一次</td>
+<td>完全串行，不会并发</td>
+</tr>
+
+<tr>
+<td>错过多个</td>
+<td>上一个跑了 10 秒，错过 4 个周期</td>
+<td>上一个结束后立即再跑一次（补一次）</td>
+<td>因 coalesce=True</td>
+</tr>
+</tbody>
+</table>
+
+<h3 id="如果你想改变这个行为">如果你想改变这个行为</h3>
+
+<table>
+<thead>
+<tr>
+<th>需求</th>
+<th>修改方式</th>
+<th>代码示例</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>允许并发执行（不管上一个是否完成，都在新触发时启动新实例）</td>
+<td>设置 <code>max_instances</code> 大于 1</td>
+<td><code>max_instances=10</code></td>
+</tr>
+
+<tr>
+<td>错过的不补执行（严格每隔 fixed 时间执行一次，不堆积）</td>
+<td><code>coalesce=False</code> + <code>misfire_grace_time=None</code></td>
+<td>一般不推荐</td>
+</tr>
+
+<tr>
+<td>错过的不执行（只在准点触发，错过就跳过）</td>
+<td><code>coalesce=False</code></td>
+<td>较少用</td>
+</tr>
+</tbody>
+</table>
+<p><strong>推荐配置（在你的场景下）</strong>：</p>
+
+<pre><code class="language-python">self.scheduler.add_job(
+    self.run,
+    'interval',
+    seconds=2,
+    id='task_poller',
+    coalesce=True,          # 默认就是 True，建议保留
+    max_instances=1,        # 默认就是 1，建议保留（防止重复处理同一批任务）
+    misfire_grace_time=30   # 可选：允许迟到 30 秒内仍执行，防止轻微延迟被丢弃
+)
+</code></pre>
+
+<h3 id="总结回答你的问题">总结回答你的问题</h3>
+
+<p><strong>是的</strong>，在你当前的设置下（也是默认设置），APScheduler 会等到 <code>self.run()</code> 完全执行完毕之后，才会开始下一个 job 的执行。</p>
+
+<p>这保证了：</p>
+
+<ul>
+<li>任务串行执行，不会并发处理同一批任务（避免重复发送 Kafka）。</li>
+<li>不会因为任务变慢导致大量任务堆积。</li>
+<li>行为稳定、可预测。</li>
+</ul>
+
+<p>完全符合你原来的 <code>while True: await self.run(); await asyncio.sleep(2)</code> 的语义，甚至比手动 sleep 更可靠（因为 interval 是基于“上一个结束时间 + 间隔”计算的，不会漂移）。</p>
+
+<p>所以你无需担心并发问题，当前配置已经是最安全、最合适的。</p>
+</div>
+	</article>
+
+	</main>
+	<footer>
+		<p>© 2026 yumosx&#39;s 博客</p>
+	</footer>
+</body>
+</html>

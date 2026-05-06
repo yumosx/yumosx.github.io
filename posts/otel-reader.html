@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>yumosx&#39;s 博客 - OTEL Manual Reader 组件</title>
+	<link rel="stylesheet" href="/static/style.css">
+	<link rel="alternate" type="application/rss+xml" href="/feed.xml" title="yumosx&#39;s 博客 RSS Feed">
+</head>
+<body>
+	<header>
+		<h1><a href="/">yumosx&#39;s 博客</a></h1>
+	</header>
+	<main>
+		
+	<article class="post">
+		<h2>OTEL Manual Reader 组件</h2>
+		<div class="post-meta">2025-9-20</div>
+		<div class="post-content"><h2 id="otel-的-manual-reader-组件">otel 的 manual reader 组件</h2>
+
+<p>首先我们需要看下这个接口是如何使用的</p>
+
+<ol>
+<li>创建一个 manual reader 组件, 并传递给 meter provider
+<code>
+reader := otel.NewManualReader()
+mp := metrics.NewMeterProvider(metrics.WithReader(reader))
+</code></li>
+<li>使用 collect 接口去收集对应的 metric
+<code>
+var got metricdata.ResourceMetrics
+reader.Collect(ctx, &amp;got)
+</code></li>
+<li>我们查看一下 got 中是否有我们期望的 metric
+<code>
+assert.Equal(t, 1, len(got.ResourceMetrics))
+</code></li>
+</ol>
+</div>
+	</article>
+
+	</main>
+	<footer>
+		<p>© 2026 yumosx&#39;s 博客</p>
+	</footer>
+</body>
+</html>
