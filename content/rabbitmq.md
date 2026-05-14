@@ -10,6 +10,10 @@ Date: 2025-9-22
 3. queue： 负责持久化对应的消息，兔子mq 的消息持久化机制是通过 Erlang 的 分布式数据库做持久化的
 4. consumer: 负责去消费对应的消息
 
+整体的架构其实我们可以参考下图:
+![rabbitmq](/static/images/rabbitmq.png)
+
+
 整个消息发送层和接收层都是遵守一个叫做 AMQP 的协议，这个协议是建立在 TCP 协议之上的,
 客户端和 broker 之间的连接叫做 connection, 这个 connection 中包含了 channel，
 
