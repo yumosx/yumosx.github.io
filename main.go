@@ -131,6 +131,7 @@ func (g *Generator) writeDefaultAssets() error {
 	<title>{{.Site.Title}} - {{.Title}}</title>
 	<link rel="stylesheet" href="/static/style.css">
 	<link rel="alternate" type="application/rss+xml" href="/feed.xml" title="{{.Site.Title}} RSS Feed">
+	<script>(function(){try{var t=localStorage.getItem('blog-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.setAttribute('data-theme','dark')}catch(e){}})();</script>
 </head>
 <body>
 	<header>
@@ -238,29 +239,31 @@ footer { border-top: 1px solid var(--border); padding-top: 20px; text-align: cen
 	var KEY = 'blog-theme';
 	function setTheme(t) {
 		document.documentElement.setAttribute('data-theme', t);
-		localStorage.setItem(KEY, t);
+		try { localStorage.setItem(KEY, t); } catch(e) {}
 		updateIcon(t);
 	}
 	function getTheme() {
-		var saved = localStorage.getItem(KEY);
-		if (saved) return saved;
-		return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+		try {
+			var saved = localStorage.getItem(KEY);
+			if (saved === 'dark' || saved === 'light') return saved;
+		} catch(e) {}
+		if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
+		return 'light';
 	}
 	function updateIcon(t) {
 		var btn = document.getElementById('theme-toggle');
 		if (!btn) return;
-		btn.textContent = t === 'dark' ? '☀️' : '🌙';
+		btn.textContent = t === 'dark' ? '\u2600\uFE0F' : '\uD83C\uDF19';
 		btn.setAttribute('aria-label', t === 'dark' ? '切换到亮色模式' : '切换到暗黑模式');
 	}
 	function init() {
 		var t = getTheme();
 		setTheme(t);
 		var btn = document.getElementById('theme-toggle');
-		if (btn) {
-			btn.addEventListener('click', function() {
-				setTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
-			});
-		}
+		if (btn) btn.addEventListener('click', function() {
+			var cur = document.documentElement.getAttribute('data-theme');
+			setTheme(cur === 'dark' ? 'light' : 'dark');
+		});
 	}
 	if (document.readyState === 'loading') {
 		document.addEventListener('DOMContentLoaded', init);
