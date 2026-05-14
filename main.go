@@ -42,7 +42,7 @@ type Config struct {
 
 func defaultConfig() Config {
 	return Config{
-		SiteTitle:    "yumosx's 博客",
+		SiteTitle:    "yumosx's 写字的地方",
 		BaseURL:      "https://yumosx.github.io",
 		ContentDir:   "content",
 		TemplatesDir: "templates",
@@ -260,10 +260,10 @@ footer {
 	}`
 
 	paths := map[string]string{
-		filepath.Join(g.cfg.TemplatesDir, "main.html"):   mainTmpl,
-		filepath.Join(g.cfg.TemplatesDir, "index.html"):  indexTmpl,
-		filepath.Join(g.cfg.TemplatesDir, "post.html"):   postTmpl,
-		filepath.Join(g.cfg.StaticDir, "style.css"):      css,
+		filepath.Join(g.cfg.TemplatesDir, "main.html"):  mainTmpl,
+		filepath.Join(g.cfg.TemplatesDir, "index.html"): indexTmpl,
+		filepath.Join(g.cfg.TemplatesDir, "post.html"):  postTmpl,
+		filepath.Join(g.cfg.StaticDir, "style.css"):     css,
 	}
 	for path, body := range paths {
 		if err := os.WriteFile(path, []byte(body), 0644); err != nil {

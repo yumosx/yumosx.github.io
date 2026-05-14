@@ -1,5 +1,5 @@
 ---
-Title: rabbitmq
+Title: Python
 Date: 2025-9-22
 ---
 
