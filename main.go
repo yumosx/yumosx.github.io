@@ -257,6 +257,14 @@ footer {
 		background-color: #f5f5f5;
 		padding: 2px 5px;
 		border-radius: 3px;
+	}
+
+	.post-content img {
+		max-width: 100%;
+		height: auto;
+		border-radius: 8px;
+		margin: 20px 0;
+		display: block;
 	}`
 
 	paths := map[string]string{
@@ -390,29 +398,28 @@ func (g *Generator) preparePublicDir() error {
 	if err := os.MkdirAll(filepath.Join(pub, "posts"), 0755); err != nil {
 		return err
 	}
-	if err := os.MkdirAll(filepath.Join(pub, "static"), 0755); err != nil {
-		return err
-	}
-
-	staticFiles, err := os.ReadDir(g.cfg.StaticDir)
-	if err != nil {
-		return fmt.Errorf("读取静态目录: %w", err)
-	}
-	for _, file := range staticFiles {
-		if file.IsDir() {
-			continue
-		}
-		src := filepath.Join(g.cfg.StaticDir, file.Name())
-		dst := filepath.Join(pub, "static", file.Name())
-		data, err := os.ReadFile(src)
-		if err != nil {
-			return fmt.Errorf("读取 %s: %w", src, err)
-		}
-		if err := os.WriteFile(dst, data, 0644); err != nil {
-			return fmt.Errorf("写入 %s: %w", dst, err)
-		}
+	if err := copyDir(g.cfg.StaticDir, filepath.Join(pub, "static")); err != nil {
+		return fmt.Errorf("复制静态资源: %w", err)
 	}
 	return nil
+}
+
+func copyDir(src, dst string) error {
+	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		relPath, _ := filepath.Rel(src, path)
+		dstPath := filepath.Join(dst, relPath)
+		if info.IsDir() {
+			return os.MkdirAll(dstPath, 0755)
+		}
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		return os.WriteFile(dstPath, data, 0644)
+	})
 }
 
 func (g *Generator) blogTemplateFuncs() template.FuncMap {
