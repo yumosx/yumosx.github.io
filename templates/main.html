@@ -10,6 +10,7 @@
 <body>
 	<header>
 		<h1><a href="/">{{.Site.Title}}</a></h1>
+		<button id="theme-toggle" class="theme-toggle" aria-label="切换主题">🌙</button>
 	</header>
 	<main>
 		{{template "content" .}}
@@ -17,5 +18,6 @@
 	<footer>
 		<p>© {{now.Format "2006"}} {{.Site.Title}}</p>
 	</footer>
+	<script src="/static/theme.js"></script>
 </body>
 </html>

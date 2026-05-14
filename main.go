@@ -135,6 +135,7 @@ func (g *Generator) writeDefaultAssets() error {
 <body>
 	<header>
 		<h1><a href="/">{{.Site.Title}}</a></h1>
+		<button id="theme-toggle" class="theme-toggle" aria-label="切换主题">🌙</button>
 	</header>
 	<main>
 		{{template "content" .}}
@@ -142,6 +143,7 @@ func (g *Generator) writeDefaultAssets() error {
 	<footer>
 		<p>© {{now.Format "2006"}} {{.Site.Title}}</p>
 	</footer>
+	<script src="/static/theme.js"></script>
 </body>
 </html>`
 
@@ -166,112 +168,113 @@ func (g *Generator) writeDefaultAssets() error {
 	</article>
 {{end}}`
 
-	css := `body {
+	css := `:root {
+	--bg: #ffffff;
+	--text: #333333;
+	--text-secondary: #777777;
+	--border: #eeeeee;
+	--link: #333333;
+	--link-hover: #007acc;
+	--code-bg: #f5f5f5;
+}
+
+[data-theme='dark'] {
+	--bg: #1a1a2e;
+	--text: #e0e0e0;
+	--text-secondary: #999999;
+	--border: #2d2d44;
+	--link: #64b5f6;
+	--link-hover: #90caf9;
+	--code-bg: #252540;
+}
+
+body {
 	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 	line-height: 1.6;
-	color: #333;
+	color: var(--text);
+	background-color: var(--bg);
 	max-width: 800px;
 	margin: 0 auto;
 	padding: 20px;
+	transition: background-color 0.3s, color 0.3s;
 }
 
 header {
-	border-bottom: 1px solid #eee;
+	border-bottom: 1px solid var(--border);
 	padding-bottom: 20px;
 	margin-bottom: 30px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
 }
-	h1 {
-		margin: 0;
+	h1 { margin: 0; }
+
+	.theme-toggle {
+		background: none; border: none; font-size: 1.4em;
+		cursor: pointer; padding: 4px 8px; border-radius: 6px;
+		transition: background-color 0.2s;
 	}
+		.theme-toggle:hover { background-color: var(--border); }
 
-	a {
-		color: #333;
-		text-decoration: none;
+a { color: var(--link); text-decoration: none; }
+main { margin-bottom: 40px; }
+footer { border-top: 1px solid var(--border); padding-top: 20px; text-align: center; color: var(--text-secondary); }
+
+.post-list { list-style: none; padding: 0; }
+	.post-list li { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+	.post-list a { font-size: 1.2em; font-weight: bold; display: block; margin-bottom: 5px; }
+	.post-list a:hover { color: var(--link-hover); }
+	.post-date { display: block; color: var(--text-secondary); font-size: 0.9em; margin-bottom: 10px; }
+
+.post { margin-bottom: 40px; }
+	.post-meta { color: var(--text-secondary); margin-bottom: 20px; }
+	.post-content { line-height: 1.8; }
+	.post-content h2 { margin-top: 40px; }
+	.post-content pre { background-color: var(--code-bg); padding: 15px; border-radius: 5px; overflow-x: auto; }
+	.post-content code { background-color: var(--code-bg); padding: 2px 5px; border-radius: 3px; }
+	.post-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 20px 0; display: block; }`
+
+	themeJS := `(function() {
+	var KEY = 'blog-theme';
+	function setTheme(t) {
+		document.documentElement.setAttribute('data-theme', t);
+		localStorage.setItem(KEY, t);
+		updateIcon(t);
 	}
-
-main {
-	margin-bottom: 40px;
-}
-
-footer {
-	border-top: 1px solid #eee;
-	padding-top: 20px;
-	text-align: center;
-	color: #777;
-}
-
-.post-list {
-	list-style: none;
-	padding: 0;
-}
-
-	.post-list li {
-		margin-bottom: 30px;
-		padding-bottom: 20px;
-		border-bottom: 1px solid #eee;
+	function getTheme() {
+		var saved = localStorage.getItem(KEY);
+		if (saved) return saved;
+		return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 	}
-
-		a {
-			font-size: 1.2em;
-			font-weight: bold;
-			display: block;
-			margin-bottom: 5px;
+	function updateIcon(t) {
+		var btn = document.getElementById('theme-toggle');
+		if (!btn) return;
+		btn.textContent = t === 'dark' ? '☀️' : '🌙';
+		btn.setAttribute('aria-label', t === 'dark' ? '切换到亮色模式' : '切换到暗黑模式');
+	}
+	function init() {
+		var t = getTheme();
+		setTheme(t);
+		var btn = document.getElementById('theme-toggle');
+		if (btn) {
+			btn.addEventListener('click', function() {
+				setTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+			});
 		}
-
-			a:hover {
-				color: #007acc;
-			}
-
-	.post-date {
-		display: block;
-		color: #777;
-		font-size: 0.9em;
-		margin-bottom: 10px;
 	}
-
-.post {
-	margin-bottom: 40px;
-}
-
-	.post-meta {
-		color: #777;
-		margin-bottom: 20px;
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', init);
+	} else {
+		init();
 	}
-
-	.post-content {
-		line-height: 1.8;
-	}
-
-	.post-content h2 {
-		margin-top: 40px;
-	}
-
-	.post-content pre {
-		background-color: #f5f5f5;
-		padding: 15px;
-		border-radius: 5px;
-		overflow-x: auto;
-	}
-
-	.post-content code {
-		background-color: #f5f5f5;
-		padding: 2px 5px;
-		border-radius: 3px;
-	}
-
-	.post-content img {
-		max-width: 100%;
-		height: auto;
-		border-radius: 8px;
-		margin: 20px 0;
-		display: block;
-	}`
+})();`
 
 	paths := map[string]string{
 		filepath.Join(g.cfg.TemplatesDir, "main.html"):  mainTmpl,
 		filepath.Join(g.cfg.TemplatesDir, "index.html"): indexTmpl,
 		filepath.Join(g.cfg.TemplatesDir, "post.html"):  postTmpl,
 		filepath.Join(g.cfg.StaticDir, "style.css"):     css,
+		filepath.Join(g.cfg.StaticDir, "theme.js"):      themeJS,
 	}
 	for path, body := range paths {
 		if err := os.WriteFile(path, []byte(body), 0644); err != nil {
