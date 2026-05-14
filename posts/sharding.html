@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>yumosx&#39;s 写字的地方 - 分库分表</title>
+	<link rel="stylesheet" href="/static/style.css">
+	<link rel="alternate" type="application/rss+xml" href="/feed.xml" title="yumosx&#39;s 写字的地方 RSS Feed">
+</head>
+<body>
+	<header>
+		<h1><a href="/">yumosx&#39;s 写字的地方</a></h1>
+	</header>
+	<main>
+		
+	<article class="post">
+		<h2>分库分表</h2>
+		<div class="post-meta">2025-9-22</div>
+		<div class="post-content"><h1 id="分库分表">分库分表</h1>
+
+<p>分库分表的原则:
+1. 垂直拆分:  比如说按照用户类型来拆分，比如普通用户和管理员用户
+2. 水平拆分:  比如说按照用户 id 来拆分，比如每个用户 id 都放到一个库中</p>
+
+<p>但是一般的场景下是不需要分库分表的,
+1. 你的机器性能足够, 不需要分库分表
+2. 你的表访问量其实不是很大, 不需要分库分表</p>
+
+<p>分库分表前也可以考虑 分区表+从库
+1. 分区表:  比如说按照用户 id 来分区，比如每个用户 id 都放到一个分区中
+2. 从库:  比如说每个分区都有一个从库，从库的读取性能会更好</p>
+
+<p>真正需要分库分表的时候, 才需要考虑分库分表的策略。</p>
+
+<p>分库分表的常见手段
+1. SDK: 提供一个 SDK, 内置了常见的分库分表的手段: 缺点就是维护成本高
+2. 数据代理, 常见的数据代理 Apache ShardingSphere, MyCat
+3. sidcar:  在应用中添加一个 sidecar 容器, 用于处理分库分表的逻辑
+4. 手搓:  手动实现分库分表的逻辑, 但是需要自己维护, 维护成本高</p>
+</div>
+	</article>
+
+	</main>
+	<footer>
+		<p>© 2026 yumosx&#39;s 写字的地方</p>
+	</footer>
+</body>
+</html>

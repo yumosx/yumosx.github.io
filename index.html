@@ -3,13 +3,13 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>yumosx&#39;s 博客 - yumosx&#39;s 博客</title>
+	<title>yumosx&#39;s 写字的地方 - yumosx&#39;s 写字的地方</title>
 	<link rel="stylesheet" href="/static/style.css">
-	<link rel="alternate" type="application/rss+xml" href="/feed.xml" title="yumosx&#39;s 博客 RSS Feed">
+	<link rel="alternate" type="application/rss+xml" href="/feed.xml" title="yumosx&#39;s 写字的地方 RSS Feed">
 </head>
 <body>
 	<header>
-		<h1><a href="/">yumosx&#39;s 博客</a></h1>
+		<h1><a href="/">yumosx&#39;s 写字的地方</a></h1>
 	</header>
 	<main>
 		
@@ -43,7 +43,7 @@
 		<li>
 			<a href="/posts/impl.html">Go 代码大全</a>
 			<span class="post-date">2023-11-15</span>
-			<p>Go 语言关于结构体的字段封装是通过字段命名的大小写来完成的, 当我们 </p>
+			<p>在 Go 语言中，与 Java 或 Python 等语言不同，结构体（struct）无需显式声明对某个接口的实现。 例如，在 Java 中我们常会写 class Student implements Person 来明确指定接口实现，这种方式具有一定的优势。 如果采用隐式实现机制，当接口中的方法发生...</p>
 		</li>
 	
 		<li>
@@ -77,7 +77,7 @@
 		</li>
 	
 		<li>
-			<a href="/posts/python.html">rabbitmq</a>
+			<a href="/posts/python.html">Python</a>
 			<span class="post-date">2025-9-22</span>
 			<p>在 Python 中 `%` 左边是字符串的话，右边可以是一个值，表示对应的字符串格式化 </p>
 		</li>
@@ -95,6 +95,12 @@
 		</li>
 	
 		<li>
+			<a href="/posts/sharding.html">分库分表</a>
+			<span class="post-date">2025-9-22</span>
+			<p>分库分表的原则: 1. 垂直拆分:  比如说按照用户类型来拆分，比如普通用户和管理员用户 2. 水平拆分:  比如说按照用户 id 来拆分，比如每个用户 id 都放到一个库中 </p>
+		</li>
+	
+		<li>
 			<a href="/posts/apschedule.html">APSchduler 介绍</a>
 			<span class="post-date">2025-9-22</span>
 			<p>是的，**在你当前的代码中使用 `AsyncIOScheduler` 时，默认情况下会等到上一个 `self.run()` 执行完毕之后，才会开启下一个 job**。 这正是 APScheduler 的 **interval trigger**（间隔触发器）的默认行为，具体由参数 `coalesce...</p>
@@ -104,7 +110,7 @@
 
 	</main>
 	<footer>
-		<p>© 2026 yumosx&#39;s 博客</p>
+		<p>© 2026 yumosx&#39;s 写字的地方</p>
 	</footer>
 </body>
 </html>
