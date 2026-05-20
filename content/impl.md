@@ -123,6 +123,76 @@ func sleepWithCtx(ctx context.Context, d time.Duration) error {
 }
 ```
 
+## iter.Seq
+
+Go 1.23+ 引入的迭代器模式，用于 range 遍历自定义数据结构。
+
+### 基本用法
+
+```go
+// Seq[T] 单值迭代器
+func All[E any](s []E) iter.Seq[E] {
+	return func(yield func(E) bool) {
+		for _, v := range s {
+			if !yield(v) {
+				return
+			}
+		}
+	}
+}
+
+// Seq2[K, V] 双值迭代器 (类似 map)
+func Entries[K comparable, V any](m map[K]V) iter.Seq2[K, V] {
+	return func(yield func(K, V) bool) {
+		for k, v := range m {
+			if !yield(k, v) {
+				return
+			}
+		}
+	}
+}
+
+// 使用
+for v := range All([]int{1, 2, 3}) {
+    fmt.Println(v)
+}
+
+for k, v := range Entries(map[string]int{"a": 1, "b": 2}) {
+    fmt.Println(k, v)
+}
+```
+
+### 实际场景：分页查询
+
+```go
+func Paginate(db *sql.DB, query string) iter.Seq2[int, []User] {
+    return func(yield func(int, []User) bool) {
+        page := 1
+        for {
+            var users []User
+            rows, _ := db.Query(query+" LIMIT ? OFFSET ?", 10, (page-1)*10)
+            for rows.Next() {
+                var u User
+                rows.Scan(&u.ID, &u.Name)
+                users = append(users, u)
+            }
+            
+            if len(users) == 0 || !yield(page, users) {
+                break
+            }
+            page++
+        }
+    }
+}
+
+// 使用
+for pageNum, users := range Paginate(db, "SELECT * FROM users") {
+    fmt.Printf("第%d页: %d条记录\n", pageNum, len(users))
+}
+```
+
+
+
 ## 模式
 ### 懒加载
 
@@ -182,3 +252,4 @@ type Broker interface {
 	Publish(v msg) Queue
 }
 ```
+
