@@ -137,6 +137,72 @@ defer cancelFunc()
 }
 </code></pre>
 
+<h2 id="iter-seq">iter.Seq</h2>
+
+<p>Go 1.23+ 引入的迭代器模式，用于 range 遍历自定义数据结构。</p>
+
+<h3 id="基本用法">基本用法</h3>
+
+<pre><code class="language-go">// Seq[T] 单值迭代器
+func All[E any](s []E) iter.Seq[E] {
+	return func(yield func(E) bool) {
+		for _, v := range s {
+			if !yield(v) {
+				return
+			}
+		}
+	}
+}
+
+// Seq2[K, V] 双值迭代器 (类似 map)
+func Entries[K comparable, V any](m map[K]V) iter.Seq2[K, V] {
+	return func(yield func(K, V) bool) {
+		for k, v := range m {
+			if !yield(k, v) {
+				return
+			}
+		}
+	}
+}
+
+// 使用
+for v := range All([]int{1, 2, 3}) {
+    fmt.Println(v)
+}
+
+for k, v := range Entries(map[string]int{&quot;a&quot;: 1, &quot;b&quot;: 2}) {
+    fmt.Println(k, v)
+}
+</code></pre>
+
+<h3 id="实际场景-分页查询">实际场景：分页查询</h3>
+
+<pre><code class="language-go">func Paginate(db *sql.DB, query string) iter.Seq2[int, []User] {
+    return func(yield func(int, []User) bool) {
+        page := 1
+        for {
+            var users []User
+            rows, _ := db.Query(query+&quot; LIMIT ? OFFSET ?&quot;, 10, (page-1)*10)
+            for rows.Next() {
+                var u User
+                rows.Scan(&amp;u.ID, &amp;u.Name)
+                users = append(users, u)
+            }
+            
+            if len(users) == 0 || !yield(page, users) {
+                break
+            }
+            page++
+        }
+    }
+}
+
+// 使用
+for pageNum, users := range Paginate(db, &quot;SELECT * FROM users&quot;) {
+    fmt.Printf(&quot;第%d页: %d条记录\n&quot;, pageNum, len(users))
+}
+</code></pre>
+
 <h2 id="模式">模式</h2>
 
 <h3 id="懒加载">懒加载</h3>
