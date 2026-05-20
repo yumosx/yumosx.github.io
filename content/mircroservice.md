@@ -79,10 +79,50 @@ func (p *Publisher) register(client internal.EtcdClient) (clientv3.LeaseID, erro
 }
 ```
 
+2. 保活机制
 
+```go
+// 通过客户端保持返回一个 chan
+ch, err := cli.KeepAlive(cli.Ctx(), p.lease)
 
+//通过 cli.Watch 监听 p.fullKey，且使用 WithFilterPut() 过滤掉 Put 事件，只关心 Delete 事件
+wch := cli.Watch(cli.Ctx(), p.fullKey, clientv3.WithFilterPut())
+for _, evt := range c.Events {
+    if evt.Type == clientv3.EventTypeDelete {
+        _, err := cli.Put(cli.Ctx(), p.fullKey, p.value, clientv3.WithLease(p.lease))
+    }
+}
 
+/*
+当 ch 通道关闭（ok == false），说明租约已失效（如租约过期、连接断开等），
+会先调用 p.revoke(cli) 撤销租约，然后尝试 p.doKeepAlive() 重新建立保活（可能重新申请租约并放置键值）。
+*/
+if !ok {
+	p.revoke(cli)
+	if err := p.doKeepAlive(); err != nil {
+		logc.Errorf(cli.Ctx(), "etcd publisher KeepAlive: %v", err)
+	}
+	return
+}
 
+/*
+收到 p.pauseChan 信号后，撤销当前租约，并阻塞等待 p.resumeChan 或退出信号。
+恢复时调用 p.doKeepAlive() 重新开始保活，并退出当前 goroutine（调用者可能需要重新启动一个新的保活循环）。
+这种设计可以在某些场景（如配置变更、服务降级）下临时停止保活，之后再恢复。
+*/
+case <-p.pauseChan:
+    logc.Infof(cli.Ctx(), "paused etcd renew, key: %s, value: %s", p.key, p.value)
+    p.revoke(cli)
+    select {
+    case <-p.resumeChan:
+        if err := p.doKeepAlive(); err != nil {
+            logc.Errorf(cli.Ctx(), "etcd publisher KeepAlive: %v", err)
+        }
+        return
+    case <-p.quit.Done():
+        return
+    }
+```
 
 服务注册流程:
 
@@ -164,4 +204,25 @@ server.Start()                             ▼
                                               │
                                               ▼
                                       gRPC ClientConn.UpdateState()
+```
+
+```go
+func NewSubscriber(endpoints []string, key string, opts ...SubOption) (*Subscriber, error) {
+	sub := &Subscriber{
+		endpoints: endpoints,
+		key:       key,
+	}
+	for _, opt := range opts {
+		opt(sub)
+	}
+	if sub.items == nil {
+		sub.items = newContainer(sub.exclusive)
+	}
+
+	if err := internal.GetRegistry().Monitor(endpoints, key, sub.exactMatch, sub.items); err != nil {
+		return nil, err
+	}
+
+	return sub, nil
+}
 ```
