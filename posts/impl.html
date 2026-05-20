@@ -37,7 +37,8 @@
 
 <h2 id="良好的-type-命名">良好的 type 命名</h2>
 
-<p>在定义接口的时候使用一个合适的类型, 避免已经一些不必要的实现，比如下面这种:</p>
+<p>在定义接口的时候使用一个合适的类型, 避免已经一些不必要的实现，比如下面这种, scheme 的类型是 string 类型，但是如果单使用 string 的话虽然没有问题
+但是在语义上并不是很清晰。</p>
 
 <pre><code class="language-go">type CredentialsService interface {
 	Get(ctx context.Context, sid string, scheme string) (string, error)
@@ -63,8 +64,9 @@ type Chat interface {
 
 type Stream interface {
 }
-
 </code></pre>
+
+<p>使用接口的另外一个好处就是可以去 mock 对应的实现, 这样可以在测试中去模拟对应的实现, 而不需要去依赖真实的实现。</p>
 
 <h2 id="context">context</h2>
 
@@ -83,7 +85,7 @@ defer cancelFunc()
 安全的，因为它的接口是一个 interfance{} 类型，所以我们可以把任何数据给塞到这个 context 里面去的，如果你把一切塞到 context 里面去的话，我们也许就会写出下面这种代码:
 这样导致的后果就是无法根据函数参数去判断函数是做什么的。</p>
 
-<pre><code>func add(ctx context.Context) int{
+<pre><code class="language-go">func add(ctx context.Context) int{
     a := ctx.Value(&quot;a&quot;).(int)
     b := ctx.Value(&quot;b&quot;).(int)
     return a + b
@@ -117,8 +119,7 @@ defer cancelFunc()
 }
 </code></pre>
 
-<p>如果你一直没有从 &lt;-ch 中去读取好对应的数据的话, 那么这个 for 循环就会一直的空转, 这样其实不利于别的任务的执行, 而加上这个 sleep 之后, 可以避免CPU空转, 但是 sleep 在这个地方其实
-用的并不是很好，因为在 sleep 的时候我们无法判断当前外部的环境是否已经超时,也就是 ctx 控制的链路, 我们必须要等到这个 sleep 结束之后才会去判断是否超时</p>
+<p>如果你一直没有从 &lt;-ch 中去读取好对应的数据的话, 那么这个 for 循环就会一直的空转, 这样其实不利于别的任务的执行, 而加上这个 sleep 之后, 可以避免CPU空转, 但是 sleep 在这个地方其实用的并不是很好，因为在 sleep 的时候我们无法判断当前外部的环境是否已经超时,也就是 ctx 控制的链路, 我们必须要等到这个 sleep 结束之后才会去判断是否超时</p>
 
 <p>那么优雅的写法是怎样子的呢?</p>
 
@@ -133,6 +134,66 @@ defer cancelFunc()
 	case &lt;-timer.C:
 		return nil
 	}
+}
+</code></pre>
+
+<h2 id="模式">模式</h2>
+
+<h3 id="懒加载">懒加载</h3>
+
+<p>这源自于我的一个场景，原先我在编写一段程序的时候是在一开始加载所有的资源，但是后来我发现在有些场景下，我只需要在需要的时候去加载资源，而不是在一开始加载所有的资源，所以我就使用了这种模式</p>
+
+<p>在go 语言中我的实现如下:</p>
+
+<pre><code class="language-go">type LazyLoader struct {
+	loaders map[string]func() any
+	cache   map[string]any
+	mu      sync.Mutex
+}
+
+func NewLazyLoader() *LazyLoader {
+	return &amp;LazyLoader{
+		loaders: make(map[string]func() any),
+		cache:   make(map[string]any),
+	}
+}
+
+func (l *LazyLoader) Register(key string, loader func() any) {
+	l.loaders[key] = loader
+}
+
+func (l *LazyLoader) Load(key string) any {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	if val, ok := l.cache[key]; ok {
+		return val
+	}
+
+	val := l.loaders[key]()
+	l.cache[key] = val
+	return val
+}
+</code></pre>
+
+<h3 id="borker-订阅模式">borker + 订阅模式</h3>
+
+<p>在一些 event 设计中, 会使用 borker + 订阅 + 推送 模式, 来实现事件的发布和订阅。
+- 首先你需要一个 queue, 这个 queue 用来从queue 去读取事件, 也可以用来写入事件。
+- 然后你需要一个 borker, 这个 borker 用来发布事件, 也可以用来订阅事件。</p>
+
+<p>queue 接口实现</p>
+
+<pre><code class="language-go">type Queue interface {
+	Read() (any, error)
+	Write(msg any) error
+}
+</code></pre>
+
+<p>broker 接口实现</p>
+
+<pre><code class="language-go">type Broker interface {
+	Publish(v msg) Queue
 }
 </code></pre>
 </div>

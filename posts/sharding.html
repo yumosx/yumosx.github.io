@@ -3,7 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>yumosx&#39;s 写字的地方 - 分库分表</title>
+	<title>yumosx&#39;s 写字的地方 - 高性能系统设计之分库分表</title>
 	<link rel="stylesheet" href="/static/style.css">
 	<link rel="alternate" type="application/rss+xml" href="/feed.xml" title="yumosx&#39;s 写字的地方 RSS Feed">
 	<script>(function(){try{var t=localStorage.getItem('blog-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.setAttribute('data-theme','dark')}catch(e){}})();</script>
@@ -16,7 +16,7 @@
 	<main>
 		
 	<article class="post">
-		<h2>分库分表</h2>
+		<h2>高性能系统设计之分库分表</h2>
 		<div class="post-meta">2025-9-22</div>
 		<div class="post-content"><h1 id="分库分表">分库分表</h1>
 
@@ -40,8 +40,44 @@
 3. sidcar:  在应用中添加一个 sidecar 容器, 用于处理分库分表的逻辑
 4. 手搓:  手动实现分库分表的逻辑, 但是需要自己维护, 维护成本高</p>
 
-<p>主键设计:
-在分库分表中，其实最难的其实是主键的设计,</p>
+<h2 id="主键设计">主键设计:</h2>
+
+<p>在分库分表中，其实最难的其实是主键的设计, 为什么要采用雪花算法的设计原则，因为在分布式环境下，我们的数据是分布的，你要可以保证每个节点的全局唯一且有一定业务含义的分布式ID。</p>
+
+<ol>
+<li><p>全局唯一+性能: 生成的64 位整数, 比 uuid 快</p></li>
+
+<li><p>分布式，没有中性化:
+无中心化：每个服务节点独立生成ID，不需要网络请求或锁竞争，完全本地生成，性能极高（单机可达百万级/秒）。
+通过“机器ID”区分节点：只要保证每个节点的workerId（工作机器ID）不重复，就能保证全局唯一，无需集中协调。</p></li>
+
+<li><p>时间有序 vs. 业务可理解</p></li>
+</ol>
+
+<p>单纯的随机ID虽然也唯一，但完全丢失了时序信息。在很多业务场景中，需要按时间范围查询数据（如“查询最近10分钟的订单”）。如果ID不含时间，这类查询就必须扫描全表或依赖额外的时间索引。</p>
+
+<p>雪花算法的解决方式：
+其核心构成是：时间戳(41位) + 机器ID(10位) + 序列号(12位)。
+高位是时间戳，可以直接从ID中解析出生成时间。这使得ID天然趋势递增且包含时间。
+因此，可以直接用ID进行时间排序或按时间范围分片（如按ID取模来路由），而无需额外维护时间字段索引。</p>
+
+<ol>
+<li>灵活性 vs. 扩展性
+实际生产环境中，数据量会持续增长，可能需要调整分片数或重新划分分片。如果主键设计时包含了分片信息，后面就会非常被动。
+雪花算法的解决方式：
+其64位结构允许自定义位分配。例如，可以将10位机器ID拆分为 5位数据中心ID + 5位机器ID，或者将其中几位设计为业务分片键。
+这意味着可以通过ID中的特定比特位，直接确定该行数据属于哪个分片，实现路由计算无查表、无哈希，极大提升分片路由效率，也为未来的扩容预留了空间。</li>
+</ol>
+
+<p>一个分库分表 sharding 库设计:</p>
+
+<pre><code class="language-go">type ShardingDB struct {
+    DBPrefix string
+    TablePrefix string
+    dbNumber int
+    tableNumber int
+}
+</code></pre>
 </div>
 	</article>
 
