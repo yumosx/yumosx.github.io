@@ -25,15 +25,15 @@
 		</li>
 	
 		<li>
-			<a href="/posts/pym.html">Python 依赖问题</a>
-			<span class="post-date">2023-11-15</span>
-			<p>在 Python 中，没有像 Go 语言中那样的内置模块依赖管理工具（如 Go Modules）。我们通常使用 uv 或 poetry 来管理项目依赖，这两个工具都基于 Python 的虚拟环境（venv）机制。所谓的 venv，实际上是在项目目录中创建一系列文件夹，用于隔离不同项目的依赖。 当你为...</p>
-		</li>
-	
-		<li>
 			<a href="/posts/alembic.html">Alembic 数据库迁移工具</a>
 			<span class="post-date">2023-11-15</span>
 			<p>Alembic 是一个 Python 环境中的数据库迁移工具，类似于 Go 语言中 GORM 的数据库迁移功能。它是 SQLAlchemy 的迁移工具扩展，用于管理数据库架构变更的版本控制。 在 Alembic 中最简单的命令就是初始化项目： alembic init migrations </p>
+		</li>
+	
+		<li>
+			<a href="/posts/pym.html">Python 依赖问题</a>
+			<span class="post-date">2023-11-15</span>
+			<p>在 Python 中，没有像 Go 语言中那样的内置模块依赖管理工具（如 Go Modules）。我们通常使用 uv 或 poetry 来管理项目依赖，这两个工具都基于 Python 的虚拟环境（venv）机制。所谓的 venv，实际上是在项目目录中创建一系列文件夹，用于隔离不同项目的依赖。 当你为...</p>
 		</li>
 	
 		<li>
@@ -49,6 +49,12 @@
 		</li>
 	
 		<li>
+			<a href="/posts/otel-text.html">opentelemetry 中的跨上下文传播</a>
+			<span class="post-date">2023-9-20</span>
+			<p>在 otel 中有一个非常神奇的接口叫做 TextMapPropagator 这个接口用来在分布式追踪系统用于跨进程传播上下文信息的核心组件。 type TextMapPropagator interface { 	Inject(ctx context.Context, carrier TextMa...</p>
+		</li>
+	
+		<li>
 			<a href="/posts/otel-part.html">OTLP 导出器的部分失败问题</a>
 			<span class="post-date">2025-9-20</span>
 			<p>OTLP 是 opentelemetry 中的协议传输标准，在收集到对应的metrics， trace，log 这些数据之后，我们往往会把对应的数据发送到远端，比如对应的 collector 对于整个数据传输的结果其实是存在三种状态的: 1. 失败状态: 比如因为网络问题出现的失败 2. 部分失败:...</p>
@@ -61,21 +67,21 @@
 		</li>
 	
 		<li>
+			<a href="/posts/mircroservice.html">高性能系统设计之注册中心设计</a>
+			<span class="post-date">2025-9-23</span>
+			<p>type cluster struct { </p>
+		</li>
+	
+		<li>
 			<a href="/posts/group.html">消息队列中超时问题</a>
 			<span class="post-date">2025-9-22</span>
 			<p>在Java应用中，我们往往会使用spring-kafka组件简单的设置一下group_id, topic就开始消费消息了，其实这样会埋下巨大的安全隐患，即当消费速度过慢时有可能会触发rebalance, 这批消息被分配到另一个消费者，然后新的消费者还会消费过慢，再次rebalance, 这样一直恶性...</p>
 		</li>
 	
 		<li>
-			<a href="/posts/rabbitmq.html">RabbitMQ 与 Aio-Pika</a>
+			<a href="/posts/pyproc.html">PyProc 源码分析 (持续更新中)</a>
 			<span class="post-date">2025-9-22</span>
-			<p>整个 rabbitmq 分成了 四个部分 1. producer: 用来生成对应的消息, 将消息发送出去 2. exchange: 用来按照对应的 router 把消息转发到对应的 queue 上面去 3. queue： 负责持久化对应的消息，兔子mq 的消息持久化机制是通过 Erlang 的 分布...</p>
-		</li>
-	
-		<li>
-			<a href="/posts/otel-text.html">opentelemetry 中的跨上下文传播</a>
-			<span class="post-date">2023-9-20</span>
-			<p>在 otel 中有一个非常神奇的接口叫做 TextMapPropagator 这个接口用来在分布式追踪系统用于跨进程传播上下文信息的核心组件。 type TextMapPropagator interface { 	Inject(ctx context.Context, carrier TextMa...</p>
+			<p>PyProc 的 frame 结构分成了两个部分, 第一个部分是对应的帧头, 第二部是对应的 数据部分, 也就是对应的数据部分，类型下面这样 [header][payload] </p>
 		</li>
 	
 		<li>
@@ -85,9 +91,9 @@
 		</li>
 	
 		<li>
-			<a href="/posts/pyproc.html">PyProc 源码分析 (持续更新中)</a>
+			<a href="/posts/rabbitmq.html">RabbitMQ 与 Aio-Pika</a>
 			<span class="post-date">2025-9-22</span>
-			<p>PyProc 的 frame 结构分成了两个部分, 第一个部分是对应的帧头, 第二部是对应的 数据部分, 也就是对应的数据部分，类型下面这样 [header][payload] </p>
+			<p>整个 rabbitmq 分成了 四个部分 1. producer: 用来生成对应的消息, 将消息发送出去 2. exchange: 用来按照对应的 router 把消息转发到对应的 queue 上面去 3. queue： 负责持久化对应的消息，兔子mq 的消息持久化机制是通过 Erlang 的 分布...</p>
 		</li>
 	
 		<li>

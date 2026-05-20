@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>yumosx&#39;s 写字的地方 - 高性能系统设计之注册中心设计</title>
+	<link rel="stylesheet" href="/static/style.css">
+	<link rel="alternate" type="application/rss+xml" href="/feed.xml" title="yumosx&#39;s 写字的地方 RSS Feed">
+	<script>(function(){try{var t=localStorage.getItem('blog-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.setAttribute('data-theme','dark')}catch(e){}})();</script>
+</head>
+<body>
+	<header>
+		<h1><a href="/">yumosx&#39;s 写字的地方</a></h1>
+		<button id="theme-toggle" class="theme-toggle" aria-label="切换主题">🌙</button>
+	</header>
+	<main>
+		
+	<article class="post">
+		<h2>高性能系统设计之注册中心设计</h2>
+		<div class="post-meta">2025-9-23</div>
+		<div class="post-content"><h1 id="注册中心设计">注册中心设计</h1>
+
+<h2 id="注册表">注册表</h2>
+
+<pre><code class="language-go">type cluster struct {
+    endpoints  []string                    // etcd 集群地址
+    key        string                      // 集群标识
+    watchers   map[watchKey]*watchValue    // 监听器映射
+    watchGroup *threading.RoutineGroup     // 协程组
+    done       chan lang.PlaceholderType
+    lock       sync.RWMutex
+}
+</code></pre>
+
+<p>框架中的注册表</p>
+
+<pre><code class="language-go">type Registry struct {
+    clusters map[string]*cluster  // etcd 集群映射
+    lock     sync.RWMutex
+}
+</code></pre>
+
+<h2 id="服务发布">服务发布</h2>
+
+<pre><code class="language-go">Publisher.KeepAlive()
+       │
+       ├─▶ doRegister()
+       │       │
+       │       ├─▶ Grant(TTL)                   // 申请租约
+       │       └─▶ Put(key, value, WithLease)  // 写入键值
+       │
+       └─▶ keepAliveAsync()
+               │
+               ├─▶ KeepAlive(lease)   // 保持心跳
+               └─▶ Watch(key)         // 监听删除事件，自动重注册
+</code></pre>
+
+<ol>
+<li>服务注册</li>
+</ol>
+
+<pre><code class="language-go">func (p *Publisher) doRegister() (internal.EtcdClient, error) {
+	// 1. 获取对应的服务, 底层会调用 etOrCreateCluster 这个函数
+    // 如果不存在则创建一个新的集群
+    cli, err := internal.GetRegistry().GetConn(p.endpoints)
+	if err != nil {
+		return nil, err
+	}
+    // 2. 注册服务
+	p.lease, err = p.register(cli)
+	return cli, err
+}
+</code></pre>
+
+<p>注册到 etcd 流程:</p>
+
+<pre><code class="language-go">func (p *Publisher) register(client internal.EtcdClient) (clientv3.LeaseID, error) {
+	resp, err := client.Grant(client.Ctx(), TimeToLive)
+	if err != nil {
+		return clientv3.NoLease, err
+	}
+
+	lease := resp.ID
+	if p.id &gt; 0 {
+		p.fullKey = makeEtcdKey(p.key, p.id)
+	} else {
+		p.fullKey = makeEtcdKey(p.key, int64(lease))
+	}
+    // 写入对应的键值对
+	_, err = client.Put(client.Ctx(), p.fullKey, p.value, clientv3.WithLease(lease))
+
+	return lease, err
+}
+</code></pre>
+
+<p>服务注册流程:</p>
+
+<pre><code class="language-Graph">服务启动
+    │
+    ▼
+RpcServerConf.HasEtcd() ──── Yes ──▶ NewRpcPubServer()
+    │                                      │
+    No                                     ▼
+    │                              registerEtcd()
+    ▼                                      │
+NewRpcServer()                             ▼
+    │                              figureOutListenOn()
+    │                             (处理 0.0.0.0 → 实际 IP)
+    ▼                                      │
+server.Start()                             ▼
+                                    NewPublisher()
+                                            │
+                                            ▼
+                                    Publisher.KeepAlive()
+                                            │
+                                    ┌───────┴───────┐
+                                    │               │
+                                    ▼               ▼
+                                Grant(TTL)    Put(key, addr)
+                                    │               │
+                                    └───────┬───────┘
+                                            ▼
+                                    etcd: key → addr (with lease)
+</code></pre>
+
+<p>客户端初始化</p>
+
+<pre><code> 客户端初始化
+       │
+       ▼
+   RpcClientConf.BuildTarget()
+       │
+       ├─▶ 有 Endpoints ──▶ BuildDirectTarget() ──▶ direct://addr1,addr2
+       │
+       └─▶ 有 Etcd ──▶ BuildDiscovTarget() ──▶ discov://hosts/key
+                              │
+                              ▼
+                      gRPC Resolver (discovBuilder.Build)
+                              │
+                              ▼
+                      NewSubscriber(hosts, key)
+                              │
+                              ▼
+                      Registry.Monitor()
+                              │
+                              ▼
+                      cluster.monitor()
+                              │
+                              ├─▶ load()        // 首次加载
+                              │       │
+                              │       └─▶ etcd.Get(key, WithPrefix)
+                              │
+                              └─▶ watch()       // 持续监听
+                                      │
+                                      └─▶ etcd.Watch(key)
+                                              │
+                                              ▼
+                                      handleWatchEvents()
+                                              │
+                                      ┌───────┴───────┐
+                                      │               │
+                                      ▼               ▼
+                                 OnAdd(kv)     OnDelete(kv)
+                                      │               │
+                                      └───────┬───────┘
+                                              ▼
+                                      Container 更新
+                                              │
+                                              ▼
+                                      listeners 通知
+                                              │
+                                              ▼
+                                      gRPC ClientConn.UpdateState()
+</code></pre>
+</div>
+	</article>
+
+	</main>
+	<footer>
+		<p>© 2026 yumosx&#39;s 写字的地方</p>
+	</footer>
+	<script src="/static/theme.js"></script>
+</body>
+</html>
