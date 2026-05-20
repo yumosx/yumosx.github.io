@@ -20,3 +20,18 @@ Date: 2023-11-15
 
 方法二（强烈推荐，通常非常有效）：
 点击 File → Invalidate Caches / Restart，选择 Invalidate and Restart，等待重建缓存和重新索引即可。这种方法一键操作，往往能彻底解决问题。
+
+
+## poetry 依赖管理
+
+一个 install 命令即可搞定所有依赖。
+
+```bash
+poetry init                    # 初始化项目
+poetry add requests            # 添加依赖
+poetry add -D pytest           # 添加开发依赖
+poetry install                 # 安装所有依赖
+poetry update                  # 更新依赖
+poetry remove requests         # 移除依赖
+poetry export -f requirements.txt > requirements.txt  # 导出 requirements
+```

@@ -21,7 +21,8 @@ var _ 接口类型 = (*实现类型)(nil)
 
 ## 良好的 type 命名
 
-在定义接口的时候使用一个合适的类型, 避免已经一些不必要的实现，比如下面这种:
+在定义接口的时候使用一个合适的类型, 避免已经一些不必要的实现，比如下面这种, scheme 的类型是 string 类型，但是如果单使用 string 的话虽然没有问题
+但是在语义上并不是很清晰。
 
 ```go
 type CredentialsService interface {
@@ -48,8 +49,9 @@ type Chat interface {
 
 type Stream interface {
 }
-
 ```
+
+使用接口的另外一个好处就是可以去 mock 对应的实现, 这样可以在测试中去模拟对应的实现, 而不需要去依赖真实的实现。
 
 ## context
 
@@ -68,7 +70,7 @@ defer cancelFunc()
 有时候我们还希望使用 context 去携带一些信息，比如某个服务的链路 Id, 这一点在一些 可观测场景或者是微服务框架中非常的常见, 但是由于 context.WithValue 的接口其实并不是类型
 安全的，因为它的接口是一个 interfance{} 类型，所以我们可以把任何数据给塞到这个 context 里面去的，如果你把一切塞到 context 里面去的话，我们也许就会写出下面这种代码:
 这样导致的后果就是无法根据函数参数去判断函数是做什么的。
-```
+```go
 func add(ctx context.Context) int{
     a := ctx.Value("a").(int)
     b := ctx.Value("b").(int)
@@ -102,8 +104,7 @@ for {
 }
 ```
 
-如果你一直没有从 <-ch 中去读取好对应的数据的话, 那么这个 for 循环就会一直的空转, 这样其实不利于别的任务的执行, 而加上这个 sleep 之后, 可以避免CPU空转, 但是 sleep 在这个地方其实
-用的并不是很好，因为在 sleep 的时候我们无法判断当前外部的环境是否已经超时,也就是 ctx 控制的链路, 我们必须要等到这个 sleep 结束之后才会去判断是否超时
+如果你一直没有从 <-ch 中去读取好对应的数据的话, 那么这个 for 循环就会一直的空转, 这样其实不利于别的任务的执行, 而加上这个 sleep 之后, 可以避免CPU空转, 但是 sleep 在这个地方其实用的并不是很好，因为在 sleep 的时候我们无法判断当前外部的环境是否已经超时,也就是 ctx 控制的链路, 我们必须要等到这个 sleep 结束之后才会去判断是否超时
 
 那么优雅的写法是怎样子的呢?
 
@@ -119,5 +120,65 @@ func sleepWithCtx(ctx context.Context, d time.Duration) error {
 	case <-timer.C:
 		return nil
 	}
+}
+```
+
+## 模式
+### 懒加载
+
+这源自于我的一个场景，原先我在编写一段程序的时候是在一开始加载所有的资源，但是后来我发现在有些场景下，我只需要在需要的时候去加载资源，而不是在一开始加载所有的资源，所以我就使用了这种模式
+
+在go 语言中我的实现如下:
+
+```go
+type LazyLoader struct {
+	loaders map[string]func() any
+	cache   map[string]any
+	mu      sync.Mutex
+}
+
+func NewLazyLoader() *LazyLoader {
+	return &LazyLoader{
+		loaders: make(map[string]func() any),
+		cache:   make(map[string]any),
+	}
+}
+
+func (l *LazyLoader) Register(key string, loader func() any) {
+	l.loaders[key] = loader
+}
+
+func (l *LazyLoader) Load(key string) any {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	if val, ok := l.cache[key]; ok {
+		return val
+	}
+
+	val := l.loaders[key]()
+	l.cache[key] = val
+	return val
+}
+```
+
+### borker + 订阅模式
+
+在一些 event 设计中, 会使用 borker + 订阅 + 推送 模式, 来实现事件的发布和订阅。
+- 首先你需要一个 queue, 这个 queue 用来从queue 去读取事件, 也可以用来写入事件。
+- 然后你需要一个 borker, 这个 borker 用来发布事件, 也可以用来订阅事件。
+
+queue 接口实现
+```go
+type Queue interface {
+	Read() (any, error)
+	Write(msg any) error
+}
+```
+
+broker 接口实现
+```go
+type Broker interface {
+	Publish(v msg) Queue
 }
 ```
