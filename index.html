@@ -19,6 +19,12 @@
 	<ul class="post-list">
 	
 		<li>
+			<a href="/posts/grom.html">GORM 高级篇 </a>
+			<span class="post-date">2025-10-01</span>
+			<p>type Plugin interface { 	Name() string 	Initialize(*DB) error } </p>
+		</li>
+	
+		<li>
 			<a href="/posts/sign.html">如何给 commit sign 一下</a>
 			<span class="post-date">2023-11-16</span>
 			<p>最近在参加开源项目的时候，其中 Approver 要求我去给我的 commit sign 一下，也就是给对应的 commit 加上一个签名，这种签名有两种方式 Signed-off-by（您提供的这种)：是一文本记录，用于表明责任和许可同意。它很容易被任何人复制和添加。 - GPG 签名（git c...</p>
@@ -49,9 +55,9 @@
 		</li>
 	
 		<li>
-			<a href="/posts/otel-text.html">opentelemetry 中的跨上下文传播</a>
-			<span class="post-date">2023-9-20</span>
-			<p>在 otel 中有一个非常神奇的接口叫做 TextMapPropagator 这个接口用来在分布式追踪系统用于跨进程传播上下文信息的核心组件。 type TextMapPropagator interface { 	Inject(ctx context.Context, carrier TextMa...</p>
+			<a href="/posts/otel-reader.html">OTEL Manual Reader 组件</a>
+			<span class="post-date">2025-9-20</span>
+			<p>首先我们需要看下这个接口是如何使用的 1. 创建一个 manual reader 组件, 并传递给 meter provider </p>
 		</li>
 	
 		<li>
@@ -61,15 +67,15 @@
 		</li>
 	
 		<li>
-			<a href="/posts/otel-reader.html">OTEL Manual Reader 组件</a>
-			<span class="post-date">2025-9-20</span>
-			<p>首先我们需要看下这个接口是如何使用的 1. 创建一个 manual reader 组件, 并传递给 meter provider </p>
-		</li>
-	
-		<li>
 			<a href="/posts/mircroservice.html">高性能系统设计之注册中心设计</a>
 			<span class="post-date">2025-9-23</span>
 			<p>type cluster struct { </p>
+		</li>
+	
+		<li>
+			<a href="/posts/otel-text.html">opentelemetry 中的跨上下文传播</a>
+			<span class="post-date">2023-9-20</span>
+			<p>在 otel 中有一个非常神奇的接口叫做 TextMapPropagator 这个接口用来在分布式追踪系统用于跨进程传播上下文信息的核心组件。 type TextMapPropagator interface { 	Inject(ctx context.Context, carrier TextMa...</p>
 		</li>
 	
 		<li>
@@ -111,7 +117,7 @@
 		<li>
 			<a href="/posts/sharding.html">高性能系统设计之数据库设计</a>
 			<span class="post-date">2025-9-22</span>
-			<p>分库分表的原则: 1. 垂直拆分:  比如说按照用户类型来拆分，比如普通用户和管理员用户 2. 水平拆分:  比如说按照用户 id 来拆分，比如每个用户 id 都放到一个库中 </p>
+			<p>分库分表的原则: 1. 垂直拆分: 比如说按照用户类型来拆分，比如普通用户和管理员用户 </p>
 		</li>
 	
 		<li>

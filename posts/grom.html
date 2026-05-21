@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>yumosx&#39;s 写字的地方 - GORM 高级篇 </title>
+	<link rel="stylesheet" href="/static/style.css">
+	<link rel="alternate" type="application/rss+xml" href="/feed.xml" title="yumosx&#39;s 写字的地方 RSS Feed">
+	<script>(function(){try{var t=localStorage.getItem('blog-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.setAttribute('data-theme','dark')}catch(e){}})();</script>
+</head>
+<body>
+	<header>
+		<h1><a href="/">yumosx&#39;s 写字的地方</a></h1>
+		<button id="theme-toggle" class="theme-toggle" aria-label="切换主题">🌙</button>
+	</header>
+	<main>
+		
+	<article class="post">
+		<h2>GORM 高级篇 </h2>
+		<div class="post-meta">2025-10-01</div>
+		<div class="post-content"><pre><code class="language-go">type Plugin interface {
+	Name() string
+	Initialize(*DB) error
+}
+</code></pre>
+
+<p><strong>Plugin 接口使用说明：</strong></p>
+
+<p><code>Plugin</code> 接口用于实现 GORM 插件，允许开发者扩展 GORM 的功能。</p>
+
+<ul>
+<li><strong><code>Name() string</code></strong> - 返回插件的唯一标识名称。GORM 使用此名称来管理已注册的插件，避免重复注册。</li>
+<li><strong><code>Initialize(*DB) error</code></strong> - 初始化插件逻辑。在插件注册时自动调用，接收 <code>*DB</code> 实例以便插件可以修改数据库配置、注册回调、添加 Clauses 等。返回 <code>nil</code> 表示初始化成功，返回错误会中断注册过程。</li>
+</ul>
+
+<p><strong>使用示例：</strong></p>
+
+<pre><code class="language-go">type MyPlugin struct{}
+
+func (p *MyPlugin) Name() string {
+    return &quot;myPlugin&quot;
+}
+
+func (p *MyPlugin) Initialize(db *gorm.DB) error {
+    // 注册回调、修改配置等
+    db.Callback().Create().Before(&quot;gorm:create&quot;).Register(&quot;myPlugin:beforeCreate&quot;, func(db *gorm.DB) {
+        // 自定义逻辑
+    })
+    return nil
+}
+
+// 注册插件
+db.Use(&amp;MyPlugin{})
+</code></pre>
+
+<pre><code class="language-go">// ConnPool db conns pool interface
+type ConnPool interface {
+	PrepareContext(ctx context.Context, query string) (*sql.Stmt, error)
+	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
+	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
+	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
+}
+</code></pre>
+
+<p><strong>ConnPool 接口使用说明：</strong></p>
+
+<p><code>ConnPool</code> 接口定义了数据库连接池的核心操作方法，是 GORM 与底层 SQL 驱动交互的抽象层。</p>
+
+<ul>
+<li><strong><code>PrepareContext(ctx, query) (*sql.Stmt, error)</code></strong> - 预编译 SQL 语句。返回的 <code>*sql.Stmt</code> 可重复执行，提高性能并防止 SQL 注入。适用于需要多次执行相同 SQL 的场景。</li>
+<li><strong><code>ExecContext(ctx, query, args...) (sql.Result, error)</code></strong> - 执行不返回行的 SQL（如 INSERT、UPDATE、DELETE）。返回的 <code>sql.Result</code> 包含受影响的行数和最后插入的 ID。</li>
+<li><strong><code>QueryContext(ctx, query, args...) (*sql.Rows, error)</code></strong> - 执行返回多行的查询（如 SELECT）。返回 <code>*sql.Rows</code> 需要调用 <code>Next()</code> 遍历，使用后必须调用 <code>Close()</code> 释放资源。</li>
+<li><strong><code>QueryRowContext(ctx, query, args...) *sql.Row</code></strong> - 执行返回单行的查询。返回 <code>*sql.Row</code> 可直接调用 <code>Scan()</code> 方法获取数据，无需显式关闭。</li>
+</ul>
+
+<p><strong>使用示例：</strong></p>
+
+<pre><code class="language-go">// 预编译语句
+stmt, err := db.ConnPool.PrepareContext(ctx, &quot;SELECT name FROM users WHERE id = ?&quot;)
+if err != nil {
+    return err
+}
+defer stmt.Close()
+
+// 执行更新
+result, err := db.ConnPool.ExecContext(ctx, &quot;UPDATE users SET name = ? WHERE id = ?&quot;, &quot;John&quot;, 1)
+rowsAffected, _ := result.RowsAffected()
+
+// 查询多行
+rows, err := db.ConnPool.QueryContext(ctx, &quot;SELECT id, name FROM users&quot;)
+if err != nil {
+    return err
+}
+defer rows.Close()
+for rows.Next() {
+    var id int
+    var name string
+    rows.Scan(&amp;id, &amp;name)
+}
+
+// 查询单行
+var name string
+err = db.ConnPool.QueryRowContext(ctx, &quot;SELECT name FROM users WHERE id = ?&quot;, 1).Scan(&amp;name)
+</code></pre>
+</div>
+	</article>
+
+	</main>
+	<footer>
+		<p>© 2026 yumosx&#39;s 写字的地方</p>
+	</footer>
+	<script src="/static/theme.js"></script>
+</body>
+</html>
