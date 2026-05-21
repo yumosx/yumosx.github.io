@@ -3,7 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>yumosx&#39;s 写字的地方 - 高性能系统设计之分库分表</title>
+	<title>yumosx&#39;s 写字的地方 - 高性能系统设计之数据库设计</title>
 	<link rel="stylesheet" href="/static/style.css">
 	<link rel="alternate" type="application/rss+xml" href="/feed.xml" title="yumosx&#39;s 写字的地方 RSS Feed">
 	<script>(function(){try{var t=localStorage.getItem('blog-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.setAttribute('data-theme','dark')}catch(e){}})();</script>
@@ -16,13 +16,22 @@
 	<main>
 		
 	<article class="post">
-		<h2>高性能系统设计之分库分表</h2>
+		<h2>高性能系统设计之数据库设计</h2>
 		<div class="post-meta">2025-9-22</div>
 		<div class="post-content"><h1 id="分库分表">分库分表</h1>
 
 <p>分库分表的原则:
 1. 垂直拆分:  比如说按照用户类型来拆分，比如普通用户和管理员用户
 2. 水平拆分:  比如说按照用户 id 来拆分，比如每个用户 id 都放到一个库中</p>
+
+<h1 id="老系统表垂直拆分">老系统表垂直拆分</h1>
+
+<ul>
+<li>实体数据（适合缓存）：像“用户账号表”，通过一个固定的ID就能找到。这类数据最稳定，最适合放缓存里随用随取。</li>
+<li>辅助数据（冷门备用）：像“用户家庭住址”，平时不用，关键时刻才找。放缓存里占地方，放数据库就行。</li>
+<li>历史记录（不建议缓存）：像“谁访问过你”的记录，又乱又一直变。把“来访记录”和“好友状态”硬塞一起的例子，就像把垃圾和新鲜食物混放，还要求垃圾和食物保持一样新鲜，纯属给自己找麻烦，得彻底拆开。</li>
+<li>关系数据（有状态的数据）：比如“好友关系”，经常变，但也需要快。要单独用合适的容器（数据结构）管理。</li>
+</ul>
 
 <p>但是一般的场景下是不需要分库分表的,
 1. 你的机器性能足够, 不需要分库分表
