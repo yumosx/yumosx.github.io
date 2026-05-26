@@ -5,12 +5,14 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"time"
 
+	"github.com/BurntSushi/toml"
 	"github.com/russross/blackfriday/v2"
 )
 
@@ -21,6 +23,13 @@ type Post struct {
 	Content template.HTML
 	Slug    string
 	Summary string
+}
+
+// Link represents a friend link
+type Link struct {
+	Name string `toml:"name"`
+	URL  string `toml:"url"`
+	Desc string `toml:"desc"`
 }
 
 // Site represents the whole blog site
@@ -100,6 +109,9 @@ func (g *Generator) Run() error {
 		return err
 	}
 	if err := g.renderPosts(site); err != nil {
+		return err
+	}
+	if err := g.renderLinks(site); err != nil {
 		return err
 	}
 	if err := g.writeGitignore(); err != nil {
@@ -429,7 +441,18 @@ func copyDir(src, dst string) error {
 }
 
 func (g *Generator) blogTemplateFuncs() template.FuncMap {
-	return template.FuncMap{"now": time.Now}
+	return template.FuncMap{
+		"now":         time.Now,
+		"extractHost": extractHostFromURL,
+	}
+}
+
+func extractHostFromURL(rawURL string) string {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return rawURL
+	}
+	return u.Hostname()
 }
 
 func (g *Generator) parseLayoutWithFragment(fragmentPath string) (*template.Template, error) {
@@ -501,6 +524,38 @@ func (g *Generator) renderPosts(site *Site) error {
 		if err := f.Close(); err != nil {
 			return fmt.Errorf("关闭 %s: %w", outPath, err)
 		}
+	}
+	return nil
+}
+
+func (g *Generator) renderLinks(site *Site) error {
+	fragment := filepath.Join(g.cfg.TemplatesDir, "links.html")
+	tmpl, err := g.parseLayoutWithFragment(fragment)
+	if err != nil {
+		return err
+	}
+
+	var linksConfig struct {
+		Links []Link `toml:"links"`
+	}
+	if _, err := toml.DecodeFile("links.toml", &linksConfig); err != nil {
+		return fmt.Errorf("解析 links.toml: %w", err)
+	}
+
+	outPath := filepath.Join(g.cfg.PublicDir, "links.html")
+	f, err := os.Create(outPath)
+	if err != nil {
+		return fmt.Errorf("创建 %s: %w", outPath, err)
+	}
+	defer f.Close()
+
+	ctx := map[string]interface{}{
+		"Site":  site,
+		"Title": "友链",
+		"Links": linksConfig.Links,
+	}
+	if err := tmpl.Execute(f, ctx); err != nil {
+		return fmt.Errorf("渲染友链页: %w", err)
 	}
 	return nil
 }

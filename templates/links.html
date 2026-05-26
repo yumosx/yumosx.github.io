@@ -1,0 +1,15 @@
+{{define "content"}}
+	<h2>友链</h2>
+	<p>这里收藏了一些常用的在线工具网站：</p>
+	<ul class="link-list">
+	{{range .Links}}
+		<li>
+			<a href="{{.URL}}" target="_blank" rel="noopener noreferrer">
+				<span class="link-title">{{.Name}}</span>
+				<span class="link-url">{{.URL | extractHost}}</span>
+			</a>
+			<span class="link-desc">{{.Desc}}</span>
+		</li>
+	{{end}}
+	</ul>
+{{end}}
