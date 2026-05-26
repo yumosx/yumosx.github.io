@@ -22,91 +22,76 @@
 	<article class="post">
 		<h2>GORM 高级篇 </h2>
 		<div class="post-meta">2025-10-01</div>
-		<div class="post-content"><pre><code class="language-go">type Plugin interface {
-	Name() string
-	Initialize(*DB) error
-}
-</code></pre>
-
-<p><strong>Plugin 接口使用说明：</strong></p>
-
+		<div class="post-content"><pre class="chroma"><code><span class="line"><span class="cl"><span class="kd">type</span><span class="w"> </span><span class="nx">Plugin</span><span class="w"> </span><span class="kd">interface</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nf">Name</span><span class="p">()</span><span class="w"> </span><span class="kt">string</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nf">Initialize</span><span class="p">(</span><span class="o">*</span><span class="nx">DB</span><span class="p">)</span><span class="w"> </span><span class="kt">error</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre><p><strong>Plugin 接口使用说明：</strong></p>
 <p><code>Plugin</code> 接口用于实现 GORM 插件，允许开发者扩展 GORM 的功能。</p>
-
 <ul>
 <li><strong><code>Name() string</code></strong> - 返回插件的唯一标识名称。GORM 使用此名称来管理已注册的插件，避免重复注册。</li>
 <li><strong><code>Initialize(*DB) error</code></strong> - 初始化插件逻辑。在插件注册时自动调用，接收 <code>*DB</code> 实例以便插件可以修改数据库配置、注册回调、添加 Clauses 等。返回 <code>nil</code> 表示初始化成功，返回错误会中断注册过程。</li>
 </ul>
-
 <p><strong>使用示例：</strong></p>
-
-<pre><code class="language-go">type MyPlugin struct{}
-
-func (p *MyPlugin) Name() string {
-    return &quot;myPlugin&quot;
-}
-
-func (p *MyPlugin) Initialize(db *gorm.DB) error {
-    // 注册回调、修改配置等
-    db.Callback().Create().Before(&quot;gorm:create&quot;).Register(&quot;myPlugin:beforeCreate&quot;, func(db *gorm.DB) {
-        // 自定义逻辑
-    })
-    return nil
-}
-
-// 注册插件
-db.Use(&amp;MyPlugin{})
-</code></pre>
-
-<pre><code class="language-go">// ConnPool db conns pool interface
-type ConnPool interface {
-	PrepareContext(ctx context.Context, query string) (*sql.Stmt, error)
-	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
-	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
-	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
-}
-</code></pre>
-
-<p><strong>ConnPool 接口使用说明：</strong></p>
-
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="kd">type</span><span class="w"> </span><span class="nx">MyPlugin</span><span class="w"> </span><span class="kd">struct</span><span class="p">{}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">p</span><span class="w"> </span><span class="o">*</span><span class="nx">MyPlugin</span><span class="p">)</span><span class="w"> </span><span class="nf">Name</span><span class="p">()</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="s">&#34;myPlugin&#34;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">p</span><span class="w"> </span><span class="o">*</span><span class="nx">MyPlugin</span><span class="p">)</span><span class="w"> </span><span class="nf">Initialize</span><span class="p">(</span><span class="nx">db</span><span class="w"> </span><span class="o">*</span><span class="nx">gorm</span><span class="p">.</span><span class="nx">DB</span><span class="p">)</span><span class="w"> </span><span class="kt">error</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// 注册回调、修改配置等</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">db</span><span class="p">.</span><span class="nf">Callback</span><span class="p">().</span><span class="nf">Create</span><span class="p">().</span><span class="nf">Before</span><span class="p">(</span><span class="s">&#34;gorm:create&#34;</span><span class="p">).</span><span class="nf">Register</span><span class="p">(</span><span class="s">&#34;myPlugin:beforeCreate&#34;</span><span class="p">,</span><span class="w"> </span><span class="kd">func</span><span class="p">(</span><span class="nx">db</span><span class="w"> </span><span class="o">*</span><span class="nx">gorm</span><span class="p">.</span><span class="nx">DB</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// 自定义逻辑</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">})</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="kc">nil</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="c1">// 注册插件</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">db</span><span class="p">.</span><span class="nf">Use</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">MyPlugin</span><span class="p">{})</span><span class="w">
+</span></span></span></code></pre><pre class="chroma"><code><span class="line"><span class="cl"><span class="c1">// ConnPool db conns pool interface</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">type</span><span class="w"> </span><span class="nx">ConnPool</span><span class="w"> </span><span class="kd">interface</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nf">PrepareContext</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">query</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="nx">sql</span><span class="p">.</span><span class="nx">Stmt</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nf">ExecContext</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">query</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">args</span><span class="w"> </span><span class="o">...</span><span class="kd">interface</span><span class="p">{})</span><span class="w"> </span><span class="p">(</span><span class="nx">sql</span><span class="p">.</span><span class="nx">Result</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nf">QueryContext</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">query</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">args</span><span class="w"> </span><span class="o">...</span><span class="kd">interface</span><span class="p">{})</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="nx">sql</span><span class="p">.</span><span class="nx">Rows</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nf">QueryRowContext</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">query</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">args</span><span class="w"> </span><span class="o">...</span><span class="kd">interface</span><span class="p">{})</span><span class="w"> </span><span class="o">*</span><span class="nx">sql</span><span class="p">.</span><span class="nx">Row</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre><p><strong>ConnPool 接口使用说明：</strong></p>
 <p><code>ConnPool</code> 接口定义了数据库连接池的核心操作方法，是 GORM 与底层 SQL 驱动交互的抽象层。</p>
-
 <ul>
 <li><strong><code>PrepareContext(ctx, query) (*sql.Stmt, error)</code></strong> - 预编译 SQL 语句。返回的 <code>*sql.Stmt</code> 可重复执行，提高性能并防止 SQL 注入。适用于需要多次执行相同 SQL 的场景。</li>
 <li><strong><code>ExecContext(ctx, query, args...) (sql.Result, error)</code></strong> - 执行不返回行的 SQL（如 INSERT、UPDATE、DELETE）。返回的 <code>sql.Result</code> 包含受影响的行数和最后插入的 ID。</li>
 <li><strong><code>QueryContext(ctx, query, args...) (*sql.Rows, error)</code></strong> - 执行返回多行的查询（如 SELECT）。返回 <code>*sql.Rows</code> 需要调用 <code>Next()</code> 遍历，使用后必须调用 <code>Close()</code> 释放资源。</li>
 <li><strong><code>QueryRowContext(ctx, query, args...) *sql.Row</code></strong> - 执行返回单行的查询。返回 <code>*sql.Row</code> 可直接调用 <code>Scan()</code> 方法获取数据，无需显式关闭。</li>
 </ul>
-
 <p><strong>使用示例：</strong></p>
-
-<pre><code class="language-go">// 预编译语句
-stmt, err := db.ConnPool.PrepareContext(ctx, &quot;SELECT name FROM users WHERE id = ?&quot;)
-if err != nil {
-    return err
-}
-defer stmt.Close()
-
-// 执行更新
-result, err := db.ConnPool.ExecContext(ctx, &quot;UPDATE users SET name = ? WHERE id = ?&quot;, &quot;John&quot;, 1)
-rowsAffected, _ := result.RowsAffected()
-
-// 查询多行
-rows, err := db.ConnPool.QueryContext(ctx, &quot;SELECT id, name FROM users&quot;)
-if err != nil {
-    return err
-}
-defer rows.Close()
-for rows.Next() {
-    var id int
-    var name string
-    rows.Scan(&amp;id, &amp;name)
-}
-
-// 查询单行
-var name string
-err = db.ConnPool.QueryRowContext(ctx, &quot;SELECT name FROM users WHERE id = ?&quot;, 1).Scan(&amp;name)
-</code></pre>
-</div>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="c1">// 预编译语句</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">stmt</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">db</span><span class="p">.</span><span class="nx">ConnPool</span><span class="p">.</span><span class="nf">PrepareContext</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;SELECT name FROM users WHERE id = ?&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">err</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="k">defer</span><span class="w"> </span><span class="nx">stmt</span><span class="p">.</span><span class="nf">Close</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="c1">// 执行更新</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">result</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">db</span><span class="p">.</span><span class="nx">ConnPool</span><span class="p">.</span><span class="nf">ExecContext</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;UPDATE users SET name = ? WHERE id = ?&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;John&#34;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">rowsAffected</span><span class="p">,</span><span class="w"> </span><span class="nx">_</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">result</span><span class="p">.</span><span class="nf">RowsAffected</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="c1">// 查询多行</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">rows</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">db</span><span class="p">.</span><span class="nx">ConnPool</span><span class="p">.</span><span class="nf">QueryContext</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;SELECT id, name FROM users&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">err</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="k">defer</span><span class="w"> </span><span class="nx">rows</span><span class="p">.</span><span class="nf">Close</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="k">for</span><span class="w"> </span><span class="nx">rows</span><span class="p">.</span><span class="nf">Next</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">id</span><span class="w"> </span><span class="kt">int</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">name</span><span class="w"> </span><span class="kt">string</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">rows</span><span class="p">.</span><span class="nf">Scan</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">id</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">name</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="c1">// 查询单行</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">var</span><span class="w"> </span><span class="nx">name</span><span class="w"> </span><span class="kt">string</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">db</span><span class="p">.</span><span class="nx">ConnPool</span><span class="p">.</span><span class="nf">QueryRowContext</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;SELECT name FROM users WHERE id = ?&#34;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">).</span><span class="nf">Scan</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">name</span><span class="p">)</span><span class="w">
+</span></span></span></code></pre></div>
 	</article>
 
 	</main>

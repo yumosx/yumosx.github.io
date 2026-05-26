@@ -23,61 +23,48 @@
 		<h2>Python ORM </h2>
 		<div class="post-meta">2025-9-22</div>
 		<div class="post-content"><h2 id="session">session</h2>
-
 <p>首先一句话解释一下 session 是一个数据库会话，它是一个用对象抽象过程的简单接口，用于与数据库进行交互。</p>
-
-<h2 id="add-方法">add 方法</h2>
-
+<h2 id="add-">add 方法</h2>
 <p>add 方法用于将对象添加到会话中，等待后续 commit 方法提交到数据库。当 commit 之后对象就会过期
 但是当你访问对象属性时，会话会自动重新加载对象，所以你可以继续访问对象属性。</p>
-
 <p>在创建会话时，我们需要指定一个参数叫做expire_on_commit=False，这样会话提交后对象就不会过期。</p>
-
 <p>这个参数是 session 里面的</p>
-
-<pre><code class="language-python">with Session(engine) as session:
-        session.add(hero_1)
-        session.add(hero_2)
-        session.add(hero_3)
-        session.commit()
-        #- 提交后对象就会过期
-        print(hero_1)
-        print(hero_2)
-        print(hero_3)
-
-        #- 访问对象属性时，会话会自动重新加载对象
-        print(hero_1.id)
-        print(hero_2.id)
-        print(hero_3.id)
-</code></pre>
-
-<h2 id="refresh-方法">refresh 方法</h2>
-
-<pre><code class="language-python">AsyncSessionFactory = async_sessionmaker(
-    bind=engine,
-    class_=AsyncSession,
-    expire_on_commit=False, # 提交后不过期
-)
-</code></pre>
-
-<p>refresh 方法用于刷新对象的属性，从数据库中重新加载对象。</p>
-
-<pre><code class="language-python">with Session(engine) as session:
-        session.add(hero_1)
-        session.add(hero_2)
-        session.add(hero_3)
-        session.commit()
-
-        #- 刷新对象属性
-        session.refresh(hero_1)
-        session.refresh(hero_2)
-        session.refresh(hero_3)
-
-        print(hero_1)
-        print(hero_2)
-        print(hero_3)
-</code></pre>
-</div>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="k">with</span> <span class="n">Session</span><span class="p">(</span><span class="n">engine</span><span class="p">)</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">hero_1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">hero_2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">hero_3</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">#- 提交后对象就会过期</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="n">hero_1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="n">hero_2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="n">hero_3</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1">#- 访问对象属性时，会话会自动重新加载对象</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="n">hero_1</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="n">hero_2</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="n">hero_3</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</span></span></code></pre><h2 id="refresh-">refresh 方法</h2>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="n">AsyncSessionFactory</span> <span class="o">=</span> <span class="n">async_sessionmaker</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">bind</span><span class="o">=</span><span class="n">engine</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">class_</span><span class="o">=</span><span class="n">AsyncSession</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">expire_on_commit</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="c1"># 提交后不过期</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span></code></pre><p>refresh 方法用于刷新对象的属性，从数据库中重新加载对象。</p>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="k">with</span> <span class="n">Session</span><span class="p">(</span><span class="n">engine</span><span class="p">)</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">hero_1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">hero_2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">hero_3</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1">#- 刷新对象属性</span>
+</span></span><span class="line"><span class="cl">        <span class="n">session</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">hero_1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">session</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">hero_2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">session</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">hero_3</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="n">hero_1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="n">hero_2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="n">hero_3</span><span class="p">)</span>
+</span></span></code></pre></div>
 	</article>
 
 	</main>

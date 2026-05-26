@@ -23,22 +23,18 @@
 		<h2>opentelemetry 中的跨上下文传播</h2>
 		<div class="post-meta">2023-9-20</div>
 		<div class="post-content"><p>在 otel 中有一个非常神奇的接口叫做 TextMapPropagator 这个接口用来在分布式追踪系统用于跨进程传播上下文信息的核心组件。</p>
-
 <pre><code>type TextMapPropagator interface {
 	Inject(ctx context.Context, carrier TextMapCarrier)
 	Extract(ctx context.Context, carrier TextMapCarrier) context.Context
 	Fields() []string
 }
 </code></pre>
-
 <ul>
 <li>Inject: 将当前上下文 ctx 中的跨进程,写入到载体 carrier 中</li>
 <li>Extract: 从载体 carrier 中提取跨进程信息,并返回一个新的上下文</li>
 <li>Fields: 返回 propagator 支持的字段</li>
 </ul>
-
 <p>下面是一段 Client/Server 代码来详细的演示这个流程:</p>
-
 <ol>
 <li>首先 client 创建根 span</li>
 <li>然后通过 inject 方法注入到追踪上下文中的 http 请求头中去</li>
@@ -47,9 +43,7 @@
 <li>返回对应的响应</li>
 <li>子 span 结束</li>
 </ol>
-
 <p>server 端的代码:</p>
-
 <pre><code>func handler(w http.ResponseWriter, r *http.Request) {
 	propagator := otel.GetTextMapPropagator()
 	ctx := propagator.Extract(r.Context(), propagation.HeaderCarrier(r.Header))
@@ -61,9 +55,7 @@
 	w.Write([]byte(&quot;hello, world&quot;))
 }
 </code></pre>
-
 <p>client的代码:</p>
-
 <pre><code>func request(ctx context.Context) (err error) {
 	propagator := otel.GetTextMapPropagator()
 	req, err := http.NewRequestWithContext(ctx, &quot;GET&quot;, &quot;http://localhost:8080&quot;, nil)
@@ -81,17 +73,14 @@
 	return nil
 }
 </code></pre>
-
 <p>client 创建对应的子 span:</p>
-
-<pre><code class="language-go">ctx, span := tracer.Start(context.Background(), &quot;client-operation&quot;)
-defer span.End()
-
-if err := request(ctx); err != nil {
-	log.Fatal(err)
-}
-</code></pre>
-</div>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">span</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">tracer</span><span class="p">.</span><span class="nf">Start</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nf">Background</span><span class="p">(),</span><span class="w"> </span><span class="s">&#34;client-operation&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="k">defer</span><span class="w"> </span><span class="nx">span</span><span class="p">.</span><span class="nf">End</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nf">request</span><span class="p">(</span><span class="nx">ctx</span><span class="p">);</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">log</span><span class="p">.</span><span class="nf">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div>
 	</article>
 
 	</main>

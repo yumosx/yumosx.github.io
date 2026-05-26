@@ -22,11 +22,8 @@
 	<article class="post">
 		<h2>gRPC 高级篇 </h2>
 		<div class="post-meta">2025-10-02</div>
-		<div class="post-content"><pre><code class="language-go">type UnaryServerInterceptor func(ctx context.Context, req any, info *UnaryServerInfo, handler UnaryHandler) (resp any, err error)
-</code></pre>
-
-<h2 id="参数说明">参数说明</h2>
-
+		<div class="post-content"><pre class="chroma"><code><span class="line"><span class="cl"><span class="kd">type</span><span class="w"> </span><span class="nx">UnaryServerInterceptor</span><span class="w"> </span><span class="kd">func</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">req</span><span class="w"> </span><span class="kt">any</span><span class="p">,</span><span class="w"> </span><span class="nx">info</span><span class="w"> </span><span class="o">*</span><span class="nx">UnaryServerInfo</span><span class="p">,</span><span class="w"> </span><span class="nx">handler</span><span class="w"> </span><span class="nx">UnaryHandler</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nx">resp</span><span class="w"> </span><span class="kt">any</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w">
+</span></span></span></code></pre><h2 id="heading">参数说明</h2>
 <table>
 <thead>
 <tr>
@@ -34,39 +31,30 @@
 <th>说明</th>
 </tr>
 </thead>
-
 <tbody>
 <tr>
 <td><code>ctx</code></td>
 <td>请求上下文，可传递元数据、取消信号等</td>
 </tr>
-
 <tr>
 <td><code>req</code></td>
 <td>客户端请求对象（尚未被业务处理）</td>
 </tr>
-
 <tr>
 <td><code>info</code></td>
 <td>包含服务方法名等信息的结构体</td>
 </tr>
-
 <tr>
 <td><code>handler</code></td>
 <td>实际的业务处理函数，调用它将请求传递给下游</td>
 </tr>
 </tbody>
 </table>
-
-<h2 id="工作原理">工作原理</h2>
-
+<h2 id="heading-1">工作原理</h2>
 <p>拦截器采用 <strong>中间件模式</strong>，请求流程如下：</p>
-
 <pre><code>客户端请求 → 拦截器前置逻辑 → handler() → 业务方法 → 拦截器后置逻辑 → 响应
 </code></pre>
-
-<h2 id="典型用途">典型用途</h2>
-
+<h2 id="heading-2">典型用途</h2>
 <ul>
 <li><strong>日志记录</strong>：记录请求/响应、耗时统计</li>
 <li><strong>认证授权</strong>：验证 token、检查权限</li>
@@ -74,20 +62,17 @@
 <li><strong>错误处理</strong>：统一异常转换和响应</li>
 <li><strong>链路追踪</strong>：注入/提取 trace 信息</li>
 </ul>
-
-<h2 id="示例用法">示例用法</h2>
-
-<pre><code class="language-go">func loggingInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
-    start := time.Now()
-    resp, err := handler(ctx, req)  // 调用实际业务
-    log.Printf(&quot;%s 耗时: %v&quot;, info.FullMethod, time.Since(start))
-    return resp, err
-}
-
-// 注册拦截器
-s := grpc.NewServer(grpc.UnaryInterceptor(loggingInterceptor))
-</code></pre>
-</div>
+<h2 id="heading-3">示例用法</h2>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="nf">loggingInterceptor</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">req</span><span class="w"> </span><span class="kt">any</span><span class="p">,</span><span class="w"> </span><span class="nx">info</span><span class="w"> </span><span class="o">*</span><span class="nx">grpc</span><span class="p">.</span><span class="nx">UnaryServerInfo</span><span class="p">,</span><span class="w"> </span><span class="nx">handler</span><span class="w"> </span><span class="nx">grpc</span><span class="p">.</span><span class="nx">UnaryHandler</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="kt">any</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">start</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">time</span><span class="p">.</span><span class="nf">Now</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">resp</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nf">handler</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">req</span><span class="p">)</span><span class="w">  </span><span class="c1">// 调用实际业务</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">log</span><span class="p">.</span><span class="nf">Printf</span><span class="p">(</span><span class="s">&#34;%s 耗时: %v&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">info</span><span class="p">.</span><span class="nx">FullMethod</span><span class="p">,</span><span class="w"> </span><span class="nx">time</span><span class="p">.</span><span class="nf">Since</span><span class="p">(</span><span class="nx">start</span><span class="p">))</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">resp</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="c1">// 注册拦截器</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">s</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">grpc</span><span class="p">.</span><span class="nf">NewServer</span><span class="p">(</span><span class="nx">grpc</span><span class="p">.</span><span class="nf">UnaryInterceptor</span><span class="p">(</span><span class="nx">loggingInterceptor</span><span class="p">))</span><span class="w">
+</span></span></span></code></pre></div>
 	</article>
 
 	</main>

@@ -22,129 +22,109 @@
 	<article class="post">
 		<h2>高性能系统设计之注册中心设计</h2>
 		<div class="post-meta">2025-9-23</div>
-		<div class="post-content"><h1 id="注册中心设计">注册中心设计</h1>
-
-<h2 id="注册表">注册表</h2>
-
-<pre><code class="language-go">type cluster struct {
-    endpoints  []string                    // etcd 集群地址
-    key        string                      // 集群标识
-    watchers   map[watchKey]*watchValue    // 监听器映射
-    watchGroup *threading.RoutineGroup     // 协程组
-    done       chan lang.PlaceholderType
-    lock       sync.RWMutex
-}
-</code></pre>
-
-<p>框架中的注册表</p>
-
-<pre><code class="language-go">type Registry struct {
-    clusters map[string]*cluster  // etcd 集群映射
-    lock     sync.RWMutex
-}
-</code></pre>
-
-<h2 id="服务发布">服务发布</h2>
-
-<pre><code class="language-go">Publisher.KeepAlive()
-       │
-       ├─▶ doRegister()
-       │       │
-       │       ├─▶ Grant(TTL)                   // 申请租约
-       │       └─▶ Put(key, value, WithLease)  // 写入键值
-       │
-       └─▶ keepAliveAsync()
-               │
-               ├─▶ KeepAlive(lease)   // 保持心跳
-               └─▶ Watch(key)         // 监听删除事件，自动重注册
-</code></pre>
-
-<ol>
+		<div class="post-content"><h1 id="heading">注册中心设计</h1>
+<h2 id="heading-1">注册表</h2>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="kd">type</span><span class="w"> </span><span class="nx">cluster</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">endpoints</span><span class="w">  </span><span class="p">[]</span><span class="kt">string</span><span class="w">                    </span><span class="c1">// etcd 集群地址</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">key</span><span class="w">        </span><span class="kt">string</span><span class="w">                      </span><span class="c1">// 集群标识</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">watchers</span><span class="w">   </span><span class="kd">map</span><span class="p">[</span><span class="nx">watchKey</span><span class="p">]</span><span class="o">*</span><span class="nx">watchValue</span><span class="w">    </span><span class="c1">// 监听器映射</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">watchGroup</span><span class="w"> </span><span class="o">*</span><span class="nx">threading</span><span class="p">.</span><span class="nx">RoutineGroup</span><span class="w">     </span><span class="c1">// 协程组</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">done</span><span class="w">       </span><span class="kd">chan</span><span class="w"> </span><span class="nx">lang</span><span class="p">.</span><span class="nx">PlaceholderType</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">lock</span><span class="w">       </span><span class="nx">sync</span><span class="p">.</span><span class="nx">RWMutex</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre><p>框架中的注册表</p>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="kd">type</span><span class="w"> </span><span class="nx">Registry</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">clusters</span><span class="w"> </span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="o">*</span><span class="nx">cluster</span><span class="w">  </span><span class="c1">// etcd 集群映射</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">lock</span><span class="w">     </span><span class="nx">sync</span><span class="p">.</span><span class="nx">RWMutex</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre><h2 id="heading-2">服务发布</h2>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="nx">Publisher</span><span class="p">.</span><span class="nf">KeepAlive</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">       </span><span class="err">│</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">       </span><span class="err">├─▶</span><span class="w"> </span><span class="nf">doRegister</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">       </span><span class="err">│</span><span class="w">       </span><span class="err">│</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">       </span><span class="err">│</span><span class="w">       </span><span class="err">├─▶</span><span class="w"> </span><span class="nf">Grant</span><span class="p">(</span><span class="nx">TTL</span><span class="p">)</span><span class="w">                   </span><span class="c1">// 申请租约</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">       </span><span class="err">│</span><span class="w">       </span><span class="err">└─▶</span><span class="w"> </span><span class="nf">Put</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span><span class="w"> </span><span class="nx">value</span><span class="p">,</span><span class="w"> </span><span class="nx">WithLease</span><span class="p">)</span><span class="w">  </span><span class="c1">// 写入键值</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">       </span><span class="err">│</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">       </span><span class="err">└─▶</span><span class="w"> </span><span class="nf">keepAliveAsync</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">               </span><span class="err">│</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">               </span><span class="err">├─▶</span><span class="w"> </span><span class="nf">KeepAlive</span><span class="p">(</span><span class="nx">lease</span><span class="p">)</span><span class="w">   </span><span class="c1">// 保持心跳</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">               </span><span class="err">└─▶</span><span class="w"> </span><span class="nf">Watch</span><span class="p">(</span><span class="nx">key</span><span class="p">)</span><span class="w">         </span><span class="c1">// 监听删除事件，自动重注册</span><span class="w">
+</span></span></span></code></pre><ol>
 <li>服务注册</li>
 </ol>
-
-<pre><code class="language-go">func (p *Publisher) doRegister() (internal.EtcdClient, error) {
-	// 1. 获取对应的服务, 底层会调用 etOrCreateCluster 这个函数
-    // 如果不存在则创建一个新的集群
-    cli, err := internal.GetRegistry().GetConn(p.endpoints)
-	if err != nil {
-		return nil, err
-	}
-    // 2. 注册服务
-	p.lease, err = p.register(cli)
-	return cli, err
-}
-</code></pre>
-
-<p>注册到 etcd 流程:</p>
-
-<pre><code class="language-go">func (p *Publisher) register(client internal.EtcdClient) (clientv3.LeaseID, error) {
-	resp, err := client.Grant(client.Ctx(), TimeToLive)
-	if err != nil {
-		return clientv3.NoLease, err
-	}
-
-	lease := resp.ID
-	if p.id &gt; 0 {
-		p.fullKey = makeEtcdKey(p.key, p.id)
-	} else {
-		p.fullKey = makeEtcdKey(p.key, int64(lease))
-	}
-    // 写入对应的键值对
-	_, err = client.Put(client.Ctx(), p.fullKey, p.value, clientv3.WithLease(lease))
-
-	return lease, err
-}
-</code></pre>
-
-<ol>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">p</span><span class="w"> </span><span class="o">*</span><span class="nx">Publisher</span><span class="p">)</span><span class="w"> </span><span class="nf">doRegister</span><span class="p">()</span><span class="w"> </span><span class="p">(</span><span class="nx">internal</span><span class="p">.</span><span class="nx">EtcdClient</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="c1">// 1. 获取对应的服务, 底层会调用 etOrCreateCluster 这个函数</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// 如果不存在则创建一个新的集群</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">cli</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">internal</span><span class="p">.</span><span class="nf">GetRegistry</span><span class="p">().</span><span class="nf">GetConn</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">endpoints</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="k">return</span><span class="w"> </span><span class="kc">nil</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// 2. 注册服务</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">p</span><span class="p">.</span><span class="nx">lease</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">p</span><span class="p">.</span><span class="nf">register</span><span class="p">(</span><span class="nx">cli</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="nx">cli</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre><p>注册到 etcd 流程:</p>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">p</span><span class="w"> </span><span class="o">*</span><span class="nx">Publisher</span><span class="p">)</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="nx">client</span><span class="w"> </span><span class="nx">internal</span><span class="p">.</span><span class="nx">EtcdClient</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nx">clientv3</span><span class="p">.</span><span class="nx">LeaseID</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">resp</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nf">Grant</span><span class="p">(</span><span class="nx">client</span><span class="p">.</span><span class="nf">Ctx</span><span class="p">(),</span><span class="w"> </span><span class="nx">TimeToLive</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="k">return</span><span class="w"> </span><span class="nx">clientv3</span><span class="p">.</span><span class="nx">NoLease</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">lease</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">resp</span><span class="p">.</span><span class="nx">ID</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">p</span><span class="p">.</span><span class="nx">id</span><span class="w"> </span><span class="p">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">p</span><span class="p">.</span><span class="nx">fullKey</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nf">makeEtcdKey</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">key</span><span class="p">,</span><span class="w"> </span><span class="nx">p</span><span class="p">.</span><span class="nx">id</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">p</span><span class="p">.</span><span class="nx">fullKey</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nf">makeEtcdKey</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">key</span><span class="p">,</span><span class="w"> </span><span class="nb">int64</span><span class="p">(</span><span class="nx">lease</span><span class="p">))</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// 写入对应的键值对</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nf">Put</span><span class="p">(</span><span class="nx">client</span><span class="p">.</span><span class="nf">Ctx</span><span class="p">(),</span><span class="w"> </span><span class="nx">p</span><span class="p">.</span><span class="nx">fullKey</span><span class="p">,</span><span class="w"> </span><span class="nx">p</span><span class="p">.</span><span class="nx">value</span><span class="p">,</span><span class="w"> </span><span class="nx">clientv3</span><span class="p">.</span><span class="nf">WithLease</span><span class="p">(</span><span class="nx">lease</span><span class="p">))</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="nx">lease</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre><ol start="2">
 <li>保活机制</li>
 </ol>
-
-<pre><code class="language-go">// 通过客户端保持返回一个 chan
-ch, err := cli.KeepAlive(cli.Ctx(), p.lease)
-
-//通过 cli.Watch 监听 p.fullKey，且使用 WithFilterPut() 过滤掉 Put 事件，只关心 Delete 事件
-wch := cli.Watch(cli.Ctx(), p.fullKey, clientv3.WithFilterPut())
-for _, evt := range c.Events {
-    if evt.Type == clientv3.EventTypeDelete {
-        _, err := cli.Put(cli.Ctx(), p.fullKey, p.value, clientv3.WithLease(p.lease))
-    }
-}
-
-/*
-当 ch 通道关闭（ok == false），说明租约已失效（如租约过期、连接断开等），
-会先调用 p.revoke(cli) 撤销租约，然后尝试 p.doKeepAlive() 重新建立保活（可能重新申请租约并放置键值）。
-*/
-if !ok {
-	p.revoke(cli)
-	if err := p.doKeepAlive(); err != nil {
-		logc.Errorf(cli.Ctx(), &quot;etcd publisher KeepAlive: %v&quot;, err)
-	}
-	return
-}
-
-/*
-收到 p.pauseChan 信号后，撤销当前租约，并阻塞等待 p.resumeChan 或退出信号。
-恢复时调用 p.doKeepAlive() 重新开始保活，并退出当前 goroutine（调用者可能需要重新启动一个新的保活循环）。
-这种设计可以在某些场景（如配置变更、服务降级）下临时停止保活，之后再恢复。
-*/
-case &lt;-p.pauseChan:
-    logc.Infof(cli.Ctx(), &quot;paused etcd renew, key: %s, value: %s&quot;, p.key, p.value)
-    p.revoke(cli)
-    select {
-    case &lt;-p.resumeChan:
-        if err := p.doKeepAlive(); err != nil {
-            logc.Errorf(cli.Ctx(), &quot;etcd publisher KeepAlive: %v&quot;, err)
-        }
-        return
-    case &lt;-p.quit.Done():
-        return
-    }
-</code></pre>
-
-<p>服务注册流程:</p>
-
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="c1">// 通过客户端保持返回一个 chan</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">ch</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">cli</span><span class="p">.</span><span class="nf">KeepAlive</span><span class="p">(</span><span class="nx">cli</span><span class="p">.</span><span class="nf">Ctx</span><span class="p">(),</span><span class="w"> </span><span class="nx">p</span><span class="p">.</span><span class="nx">lease</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="cp">//通过 cli.Watch 监听 p.fullKey，且使用 WithFilterPut() 过滤掉 Put 事件，只关心 Delete 事件</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">wch</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">cli</span><span class="p">.</span><span class="nf">Watch</span><span class="p">(</span><span class="nx">cli</span><span class="p">.</span><span class="nf">Ctx</span><span class="p">(),</span><span class="w"> </span><span class="nx">p</span><span class="p">.</span><span class="nx">fullKey</span><span class="p">,</span><span class="w"> </span><span class="nx">clientv3</span><span class="p">.</span><span class="nf">WithFilterPut</span><span class="p">())</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="k">for</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">evt</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nx">c</span><span class="p">.</span><span class="nx">Events</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">evt</span><span class="p">.</span><span class="nx">Type</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nx">clientv3</span><span class="p">.</span><span class="nx">EventTypeDelete</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">cli</span><span class="p">.</span><span class="nf">Put</span><span class="p">(</span><span class="nx">cli</span><span class="p">.</span><span class="nf">Ctx</span><span class="p">(),</span><span class="w"> </span><span class="nx">p</span><span class="p">.</span><span class="nx">fullKey</span><span class="p">,</span><span class="w"> </span><span class="nx">p</span><span class="p">.</span><span class="nx">value</span><span class="p">,</span><span class="w"> </span><span class="nx">clientv3</span><span class="p">.</span><span class="nf">WithLease</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">lease</span><span class="p">))</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="cm">/*
+</span></span></span><span class="line"><span class="cl"><span class="cm">当 ch 通道关闭（ok == false），说明租约已失效（如租约过期、连接断开等），
+</span></span></span><span class="line"><span class="cl"><span class="cm">会先调用 p.revoke(cli) 撤销租约，然后尝试 p.doKeepAlive() 重新建立保活（可能重新申请租约并放置键值）。
+</span></span></span><span class="line"><span class="cl"><span class="cm">*/</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="k">if</span><span class="w"> </span><span class="p">!</span><span class="nx">ok</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">p</span><span class="p">.</span><span class="nf">revoke</span><span class="p">(</span><span class="nx">cli</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">p</span><span class="p">.</span><span class="nf">doKeepAlive</span><span class="p">();</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">logc</span><span class="p">.</span><span class="nf">Errorf</span><span class="p">(</span><span class="nx">cli</span><span class="p">.</span><span class="nf">Ctx</span><span class="p">(),</span><span class="w"> </span><span class="s">&#34;etcd publisher KeepAlive: %v&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">return</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="cm">/*
+</span></span></span><span class="line"><span class="cl"><span class="cm">收到 p.pauseChan 信号后，撤销当前租约，并阻塞等待 p.resumeChan 或退出信号。
+</span></span></span><span class="line"><span class="cl"><span class="cm">恢复时调用 p.doKeepAlive() 重新开始保活，并退出当前 goroutine（调用者可能需要重新启动一个新的保活循环）。
+</span></span></span><span class="line"><span class="cl"><span class="cm">这种设计可以在某些场景（如配置变更、服务降级）下临时停止保活，之后再恢复。
+</span></span></span><span class="line"><span class="cl"><span class="cm">*/</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="k">case</span><span class="w"> </span><span class="o">&lt;-</span><span class="nx">p</span><span class="p">.</span><span class="nx">pauseChan</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">logc</span><span class="p">.</span><span class="nf">Infof</span><span class="p">(</span><span class="nx">cli</span><span class="p">.</span><span class="nf">Ctx</span><span class="p">(),</span><span class="w"> </span><span class="s">&#34;paused etcd renew, key: %s, value: %s&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">p</span><span class="p">.</span><span class="nx">key</span><span class="p">,</span><span class="w"> </span><span class="nx">p</span><span class="p">.</span><span class="nx">value</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">p</span><span class="p">.</span><span class="nf">revoke</span><span class="p">(</span><span class="nx">cli</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">select</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="o">&lt;-</span><span class="nx">p</span><span class="p">.</span><span class="nx">resumeChan</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">p</span><span class="p">.</span><span class="nf">doKeepAlive</span><span class="p">();</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="nx">logc</span><span class="p">.</span><span class="nf">Errorf</span><span class="p">(</span><span class="nx">cli</span><span class="p">.</span><span class="nf">Ctx</span><span class="p">(),</span><span class="w"> </span><span class="s">&#34;etcd publisher KeepAlive: %v&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="o">&lt;-</span><span class="nx">p</span><span class="p">.</span><span class="nx">quit</span><span class="p">.</span><span class="nf">Done</span><span class="p">():</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span></code></pre><p>服务注册流程:</p>
 <pre><code class="language-Graph">服务启动
     │
     ▼
@@ -172,9 +152,7 @@ server.Start()                             ▼
                                             ▼
                                     etcd: key → addr (with lease)
 </code></pre>
-
 <p>客户端初始化</p>
-
 <pre><code> 客户端初始化
        │
        ▼
@@ -222,27 +200,25 @@ server.Start()                             ▼
                                               ▼
                                       gRPC ClientConn.UpdateState()
 </code></pre>
-
-<pre><code class="language-go">func NewSubscriber(endpoints []string, key string, opts ...SubOption) (*Subscriber, error) {
-	sub := &amp;Subscriber{
-		endpoints: endpoints,
-		key:       key,
-	}
-	for _, opt := range opts {
-		opt(sub)
-	}
-	if sub.items == nil {
-		sub.items = newContainer(sub.exclusive)
-	}
-
-	if err := internal.GetRegistry().Monitor(endpoints, key, sub.exactMatch, sub.items); err != nil {
-		return nil, err
-	}
-
-	return sub, nil
-}
-</code></pre>
-</div>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="nf">NewSubscriber</span><span class="p">(</span><span class="nx">endpoints</span><span class="w"> </span><span class="p">[]</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">key</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">opts</span><span class="w"> </span><span class="o">...</span><span class="nx">SubOption</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="nx">Subscriber</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">sub</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">Subscriber</span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">endpoints</span><span class="p">:</span><span class="w"> </span><span class="nx">endpoints</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">key</span><span class="p">:</span><span class="w">       </span><span class="nx">key</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">for</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">opt</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nx">opts</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nf">opt</span><span class="p">(</span><span class="nx">sub</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">sub</span><span class="p">.</span><span class="nx">items</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nx">sub</span><span class="p">.</span><span class="nx">items</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nf">newContainer</span><span class="p">(</span><span class="nx">sub</span><span class="p">.</span><span class="nx">exclusive</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">internal</span><span class="p">.</span><span class="nf">GetRegistry</span><span class="p">().</span><span class="nf">Monitor</span><span class="p">(</span><span class="nx">endpoints</span><span class="p">,</span><span class="w"> </span><span class="nx">key</span><span class="p">,</span><span class="w"> </span><span class="nx">sub</span><span class="p">.</span><span class="nx">exactMatch</span><span class="p">,</span><span class="w"> </span><span class="nx">sub</span><span class="p">.</span><span class="nx">items</span><span class="p">);</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="k">return</span><span class="w"> </span><span class="kc">nil</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="nx">sub</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div>
 	</article>
 
 	</main>

@@ -22,26 +22,25 @@
 	<article class="post">
 		<h2>OTEL Manual Reader 组件</h2>
 		<div class="post-meta">2025-9-20</div>
-		<div class="post-content"><h2 id="otel-的-manual-reader-组件">otel 的 manual reader 组件</h2>
-
+		<div class="post-content"><h2 id="otel--manual-reader-">otel 的 manual reader 组件</h2>
 <p>首先我们需要看下这个接口是如何使用的</p>
-
 <ol>
-<li>创建一个 manual reader 组件, 并传递给 meter provider
-<code>
-reader := otel.NewManualReader()
-mp := metrics.NewMeterProvider(metrics.WithReader(reader))
-</code></li>
-<li>使用 collect 接口去收集对应的 metric
-<code>
-var got metricdata.ResourceMetrics
-reader.Collect(ctx, &amp;got)
-</code></li>
-<li>我们查看一下 got 中是否有我们期望的 metric
-<code>
-assert.Equal(t, 1, len(got.ResourceMetrics))
-</code></li>
+<li>创建一个 manual reader 组件, 并传递给 meter provider</li>
 </ol>
+<pre><code>reader := otel.NewManualReader()
+mp := metrics.NewMeterProvider(metrics.WithReader(reader))
+</code></pre>
+<ol start="2">
+<li>使用 collect 接口去收集对应的 metric</li>
+</ol>
+<pre><code>var got metricdata.ResourceMetrics
+reader.Collect(ctx, &amp;got)
+</code></pre>
+<ol start="3">
+<li>我们查看一下 got 中是否有我们期望的 metric</li>
+</ol>
+<pre><code>assert.Equal(t, 1, len(got.ResourceMetrics))
+</code></pre>
 </div>
 	</article>
 

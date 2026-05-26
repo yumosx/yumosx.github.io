@@ -22,88 +22,80 @@
 	<article class="post">
 		<h2>高性能系统设计之数据库设计</h2>
 		<div class="post-meta">2025-9-22</div>
-		<div class="post-content"><h1 id="分库分表">分库分表</h1>
-
+		<div class="post-content"><h1 id="heading">分库分表</h1>
 <p>分库分表的原则:</p>
-
 <ol>
 <li>垂直拆分: 比如说按照用户类型来拆分，比如普通用户和管理员用户</li>
 <li>水平拆分: 比如说按照用户 id 来拆分，比如每个用户 id 都放到一个库中</li>
 </ol>
-
-<h1 id="老系统表垂直拆分">老系统表垂直拆分</h1>
-
+<h1 id="heading-1">老系统表垂直拆分</h1>
 <ul>
 <li>实体数据（适合缓存）：像“用户账号表”，通过一个固定的ID就能找到。这类数据最稳定，最适合放缓存里随用随取。</li>
 <li>辅助数据（冷门备用）：像“用户家庭住址”，平时不用，关键时刻才找。放缓存里占地方，放数据库就行。</li>
 <li>历史记录（不建议缓存）：像“谁访问过你”的记录，又乱又一直变。把“来访记录”和“好友状态”硬塞一起的例子，就像把垃圾和新鲜食物混放，还要求垃圾和食物保持一样新鲜，纯属给自己找麻烦，得彻底拆开。</li>
 <li>关系数据（有状态的数据）：比如“好友关系”，经常变，但也需要快。要单独用合适的容器（数据结构）管理。</li>
 </ul>
-
 <p>但是一般的场景下是不需要分库分表的,</p>
-
 <ol>
 <li>你的机器性能足够, 不需要分库分表</li>
 <li>你的表访问量其实不是很大, 不需要分库分表</li>
 </ol>
-
 <p>分库分表前也可以考虑 分区表+从库</p>
-
 <ol>
 <li>分区表: 比如说按照用户 id 来分区，比如每个用户 id 都放到一个分区中</li>
 <li>从库: 比如说每个分区都有一个从库，从库的读取性能会更好</li>
 </ol>
-
 <p>真正需要分库分表的时候, 才需要考虑分库分表的策略。</p>
-
 <p>分库分表的常见手段</p>
-
 <ol>
 <li>SDK: 提供一个 SDK, 内置了常见的分库分表的手段: 缺点就是维护成本高</li>
 <li>数据代理, 常见的数据代理 Apache ShardingSphere, MyCat</li>
 <li>sidcar: 在应用中添加一个 sidecar 容器, 用于处理分库分表的逻辑</li>
 <li>手搓: 手动实现分库分表的逻辑, 但是需要自己维护, 维护成本高</li>
 </ol>
-
-<h2 id="主键设计">主键设计:</h2>
-
+<h2 id="heading-2">主键设计:</h2>
 <p>在分库分表中，其实最难的其实是主键的设计, 为什么要采用雪花算法的设计原则，因为在分布式环境下，我们的数据是分布的，你要可以保证每个节点的全局唯一且有一定业务含义的分布式ID。</p>
-
 <ol>
-<li><p>全局唯一+性能: 生成的64 位整数, 比 uuid 快</p></li>
-
-<li><p>分布式，没有中性化:
+<li>
+<p>全局唯一+性能: 生成的64 位整数, 比 uuid 快</p>
+</li>
+<li>
+<p>分布式，没有中性化:
 无中心化：每个服务节点独立生成ID，不需要网络请求或锁竞争，完全本地生成，性能极高（单机可达百万级/秒）。
-通过“机器ID”区分节点：只要保证每个节点的workerId（工作机器ID）不重复，就能保证全局唯一，无需集中协调。</p></li>
-
-<li><p>时间有序 vs. 业务可理解</p></li>
+通过“机器ID”区分节点：只要保证每个节点的workerId（工作机器ID）不重复，就能保证全局唯一，无需集中协调。</p>
+</li>
+<li>
+<p>时间有序 vs. 业务可理解</p>
+</li>
 </ol>
-
 <p>单纯的随机ID虽然也唯一，但完全丢失了时序信息。在很多业务场景中，需要按时间范围查询数据（如“查询最近10分钟的订单”）。如果ID不含时间，这类查询就必须扫描全表或依赖额外的时间索引。</p>
-
-<p>雪花算法的解决方式：
-1. 其核心构成是：时间戳(41位) + 机器ID(10位) + 序列号(12位)。
-2. 高位是时间戳，可以直接从ID中解析出生成时间。这使得ID天然趋势递增且包含时间。
-3. 因此，可以直接用ID进行时间排序或按时间范围分片（如按ID取模来路由），而无需额外维护时间字段索引。</p>
-
+<p>雪花算法的解决方式：</p>
 <ol>
-<li>灵活性 vs. 扩展性
+<li>
+<p>其核心构成是：时间戳(41位) + 机器ID(10位) + 序列号(12位)。</p>
+</li>
+<li>
+<p>高位是时间戳，可以直接从ID中解析出生成时间。这使得ID天然趋势递增且包含时间。</p>
+</li>
+<li>
+<p>因此，可以直接用ID进行时间排序或按时间范围分片（如按ID取模来路由），而无需额外维护时间字段索引。</p>
+</li>
+<li>
+<p>灵活性 vs. 扩展性
 实际生产环境中，数据量会持续增长，可能需要调整分片数或重新划分分片。如果主键设计时包含了分片信息，后面就会非常被动。
 雪花算法的解决方式：
 其64位结构允许自定义位分配。例如，可以将10位机器ID拆分为 5位数据中心ID + 5位机器ID，或者将其中几位设计为业务分片键。
-这意味着可以通过ID中的特定比特位，直接确定该行数据属于哪个分片，实现路由计算无查表、无哈希，极大提升分片路由效率，也为未来的扩容预留了空间。</li>
+这意味着可以通过ID中的特定比特位，直接确定该行数据属于哪个分片，实现路由计算无查表、无哈希，极大提升分片路由效率，也为未来的扩容预留了空间。</p>
+</li>
 </ol>
-
 <p>一个分库分表 sharding 库设计:</p>
-
-<pre><code class="language-go">type ShardingDB struct {
-    DBPrefix string
-    TablePrefix string
-    dbNumber int
-    tableNumber int
-}
-</code></pre>
-</div>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="kd">type</span><span class="w"> </span><span class="nx">ShardingDB</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">DBPrefix</span><span class="w"> </span><span class="kt">string</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">TablePrefix</span><span class="w"> </span><span class="kt">string</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">dbNumber</span><span class="w"> </span><span class="kt">int</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">tableNumber</span><span class="w"> </span><span class="kt">int</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div>
 	</article>
 
 	</main>

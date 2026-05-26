@@ -23,36 +23,25 @@
 		<h2>Python 依赖问题</h2>
 		<div class="post-meta">2023-11-15</div>
 		<div class="post-content"><h2 id="pycharm">Pycharm</h2>
-
 <p>在 Python 中，没有像 Go 语言中那样的内置模块依赖管理工具（如 Go Modules）。我们通常使用 uv 或 poetry 来管理项目依赖，这两个工具都基于 Python 的虚拟环境（venv）机制。所谓的 venv，实际上是在项目目录中创建一系列文件夹，用于隔离不同项目的依赖。</p>
-
 <p>当你为项目安装依赖时，这些依赖包会被安装到该 venv 文件夹中，而不是全局环境中。</p>
-
 <p>使用 uv 管理环境非常简单，最基本的方法是运行 uv sync 命令。该命令会自动同步依赖声明（如 pyproject.toml），并在当前目录下创建对应的 venv 环境。</p>
-
 <p>但有一个比较麻烦的地方是：执行 uv sync 后，虚拟环境并不会自动激活。在 PyCharm 中，我们仍需手动为项目配置该 venv 中的 Python 解释器。</p>
-
 <p>此外，即便完成以上设置，有时 PyCharm 仍可能报错显示某些包不存在。这时通常可以尝试以下两种方法：</p>
-
 <p>方法一：
 依次点击 File -&gt; Settings -&gt; Editor -&gt; File Types，找到 Ignore files and folders 输入框，删除其中的 <strong>init</strong>.py;，点击 OK 等待文件重新索引。</p>
-
 <p>方法二（强烈推荐，通常非常有效）：
 点击 File → Invalidate Caches / Restart，选择 Invalidate and Restart，等待重建缓存和重新索引即可。这种方法一键操作，往往能彻底解决问题。</p>
-
-<h2 id="poetry-依赖管理">poetry 依赖管理</h2>
-
+<h2 id="poetry-">poetry 依赖管理</h2>
 <p>一个 install 命令即可搞定所有依赖。</p>
-
-<pre><code class="language-bash">poetry init                    # 初始化项目
-poetry add requests            # 添加依赖
-poetry add -D pytest           # 添加开发依赖
-poetry install                 # 安装所有依赖
-poetry update                  # 更新依赖
-poetry remove requests         # 移除依赖
-poetry export -f requirements.txt &gt; requirements.txt  # 导出 requirements
-</code></pre>
-</div>
+<pre class="chroma"><code><span class="line"><span class="cl">poetry init                    <span class="c1"># 初始化项目</span>
+</span></span><span class="line"><span class="cl">poetry add requests            <span class="c1"># 添加依赖</span>
+</span></span><span class="line"><span class="cl">poetry add -D pytest           <span class="c1"># 添加开发依赖</span>
+</span></span><span class="line"><span class="cl">poetry install                 <span class="c1"># 安装所有依赖</span>
+</span></span><span class="line"><span class="cl">poetry update                  <span class="c1"># 更新依赖</span>
+</span></span><span class="line"><span class="cl">poetry remove requests         <span class="c1"># 移除依赖</span>
+</span></span><span class="line"><span class="cl">poetry <span class="nb">export</span> -f requirements.txt &gt; requirements.txt  <span class="c1"># 导出 requirements</span>
+</span></span></code></pre></div>
 	</article>
 
 	</main>

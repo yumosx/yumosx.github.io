@@ -22,165 +22,128 @@
 	<article class="post">
 		<h2>Python</h2>
 		<div class="post-meta">2025-9-22</div>
-		<div class="post-content"><h2 id="字符串格式化">字符串格式化</h2>
-
+		<div class="post-content"><h2 id="heading">字符串格式化</h2>
 <p>在 Python 中 <code>%</code> 左边是字符串的话，右边可以是一个值，表示对应的字符串格式化</p>
-
-<pre><code class="language-python">key = 'my_var' value = 1.234
-formatted = '%-10s = %.2f' %(key, value) print (formatted)
-&gt;&gt;&gt; my_var
-my_var = 1.23
-</code></pre>
-
-<p>在 新的 Python 中，我们可以使用 <code>format</code> 方法来格式化字符串</p>
-
-<pre><code class="language-python">key = 'my_var' value = 1.234
-formatted = '{:&lt;10s} = {:.2f}'.format(key, value) print (formatted)
-&gt;&gt;&gt; my_var
-my_var = 1.23
-</code></pre>
-
-<h2 id="new-方法">new 方法</h2>
-
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;my_var&#39;</span> <span class="n">value</span> <span class="o">=</span> <span class="mf">1.234</span>
+</span></span><span class="line"><span class="cl"><span class="n">formatted</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%-10s</span><span class="s1"> = </span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="nb">print</span> <span class="p">(</span><span class="n">formatted</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="n">my_var</span>
+</span></span><span class="line"><span class="cl"><span class="n">my_var</span> <span class="o">=</span> <span class="mf">1.23</span>
+</span></span></code></pre><p>在 新的 Python 中，我们可以使用 <code>format</code> 方法来格式化字符串</p>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;my_var&#39;</span> <span class="n">value</span> <span class="o">=</span> <span class="mf">1.234</span>
+</span></span><span class="line"><span class="cl"><span class="n">formatted</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{:&lt;10s}</span><span class="s1"> = </span><span class="si">{:.2f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="nb">print</span> <span class="p">(</span><span class="n">formatted</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="n">my_var</span>
+</span></span><span class="line"><span class="cl"><span class="n">my_var</span> <span class="o">=</span> <span class="mf">1.23</span>
+</span></span></code></pre><h2 id="new-">new 方法</h2>
 <p>在 Python 中真正构造一个对象的其实是 New 方法，而 <strong>init</strong> 方法只是一个打前阵的小兵。</p>
-
-<h2 id="classmethod-装饰器">classmethod 装饰器</h2>
-
+<h2 id="classmethod-">classmethod 装饰器</h2>
 <p><code>classmethod</code> 是 Python 内置的装饰器，用于定义类方法。类方法的第一个参数是类本身（通常命名为 <code>cls</code>），而不是实例（<code>self</code>）。</p>
-
-<h3 id="基本用法">基本用法</h3>
-
-<pre><code class="language-python">class MyClass:
-    count = 0  # 类属性
-
-    def __init__(self):
-        MyClass.count += 1
-
-    @classmethod
-    def get_count(cls):
-        &quot;&quot;&quot;获取创建的实例数量&quot;&quot;&quot;
-        return cls.count
-
-# 创建实例
-a = MyClass()
-b = MyClass()
-
-# 通过类调用
-print(MyClass.get_count())  # 输出: 2
-
-# 也可以通过实例调用
-print(a.get_count())  # 输出: 2
-</code></pre>
-
-<h3 id="核心特点">核心特点</h3>
-
+<h3 id="heading-1">基本用法</h3>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">MyClass</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># 类属性</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">MyClass</span><span class="o">.</span><span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nd">@classmethod</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">get_count</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;获取创建的实例数量&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">count</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 创建实例</span>
+</span></span><span class="line"><span class="cl"><span class="n">a</span> <span class="o">=</span> <span class="n">MyClass</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">b</span> <span class="o">=</span> <span class="n">MyClass</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 通过类调用</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">MyClass</span><span class="o">.</span><span class="n">get_count</span><span class="p">())</span>  <span class="c1"># 输出: 2</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 也可以通过实例调用</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">get_count</span><span class="p">())</span>  <span class="c1"># 输出: 2</span>
+</span></span></code></pre><h3 id="heading-2">核心特点</h3>
 <ol>
 <li><strong>第一个参数是类</strong>：<code>classmethod</code> 修饰的方法自动接收类作为第一个参数</li>
 <li><strong>可以访问类属性</strong>：能够读取和修改类级别的状态</li>
 <li><strong>支持继承</strong>：在子类中调用时，<code>cls</code> 会指向子类而非父类</li>
 </ol>
-
-<h3 id="常见应用场景">常见应用场景</h3>
-
-<h4 id="1-工厂方法">1. 工厂方法</h4>
-
+<h3 id="heading-3">常见应用场景</h3>
+<h4 id="1-">1. 工厂方法</h4>
 <p><code>classmethod</code> 最常见的用途是定义替代构造函数：</p>
-
-<pre><code class="language-python">class Person:
-    def __init__(self, name, age):
-        self.name = name
-        self.age = age
-
-    @classmethod
-    def from_birth_year(cls, name, birth_year):
-        &quot;&quot;&quot;根据出生年份创建实例&quot;&quot;&quot;
-        import datetime
-        current_year = datetime.datetime.now().year
-        age = current_year - birth_year
-        return cls(name, age)
-
-# 使用工厂方法创建
-p = Person.from_birth_year('张三', 1990)
-print(p.name, p.age)  # 输出: 张三 35
-</code></pre>
-
-<h4 id="2-支持继承的工厂方法">2. 支持继承的工厂方法</h4>
-
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">Person</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">age</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">age</span> <span class="o">=</span> <span class="n">age</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nd">@classmethod</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">from_birth_year</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">birth_year</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;根据出生年份创建实例&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="kn">import</span> <span class="nn">datetime</span>
+</span></span><span class="line"><span class="cl">        <span class="n">current_year</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">year</span>
+</span></span><span class="line"><span class="cl">        <span class="n">age</span> <span class="o">=</span> <span class="n">current_year</span> <span class="o">-</span> <span class="n">birth_year</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">age</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 使用工厂方法创建</span>
+</span></span><span class="line"><span class="cl"><span class="n">p</span> <span class="o">=</span> <span class="n">Person</span><span class="o">.</span><span class="n">from_birth_year</span><span class="p">(</span><span class="s1">&#39;张三&#39;</span><span class="p">,</span> <span class="mi">1990</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">age</span><span class="p">)</span>  <span class="c1"># 输出: 张三 35</span>
+</span></span></code></pre><h4 id="2-">2. 支持继承的工厂方法</h4>
 <p><code>classmethod</code> 在继承场景下特别有用，因为 <code>cls</code> 会自动指向正确的子类：</p>
-
-<pre><code class="language-python">class Animal:
-    def __init__(self, name):
-        self.name = name
-
-    @classmethod
-    def create(cls, name):
-        &quot;&quot;&quot;工厂方法，子类调用时返回子类实例&quot;&quot;&quot;
-        return cls(name)
-
-class Dog(Animal):
-    def speak(self):
-        return f'{self.name} says Woof!'
-
-class Cat(Animal):
-    def speak(self):
-        return f'{self.name} says Meow!'
-
-# 自动创建正确的子类实例
-dog = Dog.create('Buddy')
-cat = Cat.create('Whiskers')
-
-print(dog.speak())  # Buddy says Woof!
-print(cat.speak())  # Whiskers says Meow!
-</code></pre>
-
-<h4 id="3-类状态管理">3. 类状态管理</h4>
-
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">Animal</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nd">@classmethod</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;工厂方法，子类调用时返回子类实例&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">Dog</span><span class="p">(</span><span class="n">Animal</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">speak</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> says Woof!&#39;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">Cat</span><span class="p">(</span><span class="n">Animal</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">speak</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> says Meow!&#39;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 自动创建正确的子类实例</span>
+</span></span><span class="line"><span class="cl"><span class="n">dog</span> <span class="o">=</span> <span class="n">Dog</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="s1">&#39;Buddy&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">cat</span> <span class="o">=</span> <span class="n">Cat</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="s1">&#39;Whiskers&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">dog</span><span class="o">.</span><span class="n">speak</span><span class="p">())</span>  <span class="c1"># Buddy says Woof!</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">cat</span><span class="o">.</span><span class="n">speak</span><span class="p">())</span>  <span class="c1"># Whiskers says Meow!</span>
+</span></span></code></pre><h4 id="3-">3. 类状态管理</h4>
 <p>用于管理类级别的配置或状态：</p>
-
-<pre><code class="language-python">class Database:
-    _connection_string = None
-
-    @classmethod
-    def configure(cls, connection_string):
-        &quot;&quot;&quot;配置数据库连接&quot;&quot;&quot;
-        cls._connection_string = connection_string
-
-    @classmethod
-    def get_connection(cls):
-        &quot;&quot;&quot;获取数据库连接&quot;&quot;&quot;
-        if cls._connection_string is None:
-            raise ValueError('Database not configured')
-        return f'Connected to {cls._connection_string}'
-
-# 配置一次，全局可用
-Database.configure('postgresql://localhost/mydb')
-print(Database.get_connection())
-</code></pre>
-
-<h3 id="最佳实践">最佳实践</h3>
-
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">Database</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">_connection_string</span> <span class="o">=</span> <span class="kc">None</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nd">@classmethod</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">connection_string</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;配置数据库连接&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">cls</span><span class="o">.</span><span class="n">_connection_string</span> <span class="o">=</span> <span class="n">connection_string</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nd">@classmethod</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">get_connection</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;获取数据库连接&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_connection_string</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Database not configured&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;Connected to </span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="n">_connection_string</span><span class="si">}</span><span class="s1">&#39;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 配置一次，全局可用</span>
+</span></span><span class="line"><span class="cl"><span class="n">Database</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;postgresql://localhost/mydb&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">Database</span><span class="o">.</span><span class="n">get_connection</span><span class="p">())</span>
+</span></span></code></pre><h3 id="heading-4">最佳实践</h3>
 <ol>
 <li><strong>优先使用 classmethod 而非 staticmethod</strong>：当需要访问类属性或支持继承时，<code>classmethod</code> 是更好的选择</li>
 <li><strong>工厂方法命名约定</strong>：以 <code>from_</code> 开头，如 <code>from_dict</code>、<code>from_string</code>、<code>from_json</code></li>
 <li><strong>避免滥用</strong>：如果方法不需要访问类或实例，考虑使用普通函数或 <code>staticmethod</code></li>
 </ol>
-
-<h2 id="event-循环">event 循环</h2>
-
+<h2 id="event-">event 循环</h2>
 <p>在 go 中开启一个 thread 是非常简单的，只需要调用 <code>go</code> 关键字即可。在 python 中也有类似的操作，那就是使用 <code>threading.Thread</code> 类。</p>
-
-<pre><code class="language-python">self._loop = asyncio.new_event_loop()
-self._thread = threading.Thread(target=self._run_loop, daemon=True)
-self._thread.start()
-</code></pre>
-
-<p>这个 _run_loop 方法就是 event 循环，用于处理事件。</p>
-
-<pre><code class="language-python">def _run_loop(self):
-    asyncio.set_event_loop(self._loop)
-    self._loop.run_until_complete(你的操作)
-</code></pre>
-</div>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="bp">self</span><span class="o">.</span><span class="n">_loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="bp">self</span><span class="o">.</span><span class="n">_thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_run_loop</span><span class="p">,</span> <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="bp">self</span><span class="o">.</span><span class="n">_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+</span></span></code></pre><p>这个 _run_loop 方法就是 event 循环，用于处理事件。</p>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">_run_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">asyncio</span><span class="o">.</span><span class="n">set_event_loop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_loop</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="bp">self</span><span class="o">.</span><span class="n">_loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="n">你的操作</span><span class="p">)</span>
+</span></span></code></pre></div>
 	</article>
 
 	</main>
