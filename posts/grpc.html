@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>yumosx&#39;s 写字的地方 - gRPC 高级篇 </title>
+	<link rel="stylesheet" href="/static/style.css">
+	<link rel="alternate" type="application/rss+xml" href="/feed.xml" title="yumosx&#39;s 写字的地方 RSS Feed">
+	<script>(function(){try{var t=localStorage.getItem('blog-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.setAttribute('data-theme','dark')}catch(e){}})();</script>
+</head>
+<body>
+	<header>
+		<h1><a href="/">yumosx&#39;s 写字的地方</a></h1>
+		<button id="theme-toggle" class="theme-toggle" aria-label="切换主题">🌙</button>
+	</header>
+	<main>
+		
+	<article class="post">
+		<h2>gRPC 高级篇 </h2>
+		<div class="post-meta">2025-10-02</div>
+		<div class="post-content"><pre><code class="language-go">type UnaryServerInterceptor func(ctx context.Context, req any, info *UnaryServerInfo, handler UnaryHandler) (resp any, err error)
+</code></pre>
+
+<h2 id="参数说明">参数说明</h2>
+
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td><code>ctx</code></td>
+<td>请求上下文，可传递元数据、取消信号等</td>
+</tr>
+
+<tr>
+<td><code>req</code></td>
+<td>客户端请求对象（尚未被业务处理）</td>
+</tr>
+
+<tr>
+<td><code>info</code></td>
+<td>包含服务方法名等信息的结构体</td>
+</tr>
+
+<tr>
+<td><code>handler</code></td>
+<td>实际的业务处理函数，调用它将请求传递给下游</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="工作原理">工作原理</h2>
+
+<p>拦截器采用 <strong>中间件模式</strong>，请求流程如下：</p>
+
+<pre><code>客户端请求 → 拦截器前置逻辑 → handler() → 业务方法 → 拦截器后置逻辑 → 响应
+</code></pre>
+
+<h2 id="典型用途">典型用途</h2>
+
+<ul>
+<li><strong>日志记录</strong>：记录请求/响应、耗时统计</li>
+<li><strong>认证授权</strong>：验证 token、检查权限</li>
+<li><strong>限流熔断</strong>：保护服务免受过载</li>
+<li><strong>错误处理</strong>：统一异常转换和响应</li>
+<li><strong>链路追踪</strong>：注入/提取 trace 信息</li>
+</ul>
+
+<h2 id="示例用法">示例用法</h2>
+
+<pre><code class="language-go">func loggingInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
+    start := time.Now()
+    resp, err := handler(ctx, req)  // 调用实际业务
+    log.Printf(&quot;%s 耗时: %v&quot;, info.FullMethod, time.Since(start))
+    return resp, err
+}
+
+// 注册拦截器
+s := grpc.NewServer(grpc.UnaryInterceptor(loggingInterceptor))
+</code></pre>
+</div>
+	</article>
+
+	</main>
+	<footer>
+		<p>© 2026 yumosx&#39;s 写字的地方</p>
+	</footer>
+	<script src="/static/theme.js"></script>
+</body>
+</html>
