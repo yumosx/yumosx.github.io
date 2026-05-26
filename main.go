@@ -148,6 +148,10 @@ func (g *Generator) writeDefaultAssets() error {
 <body>
 	<header>
 		<h1><a href="/">{{.Site.Title}}</a></h1>
+		<nav class="site-nav">
+			<a href="/">首页</a>
+			<a href="/links.html">友链</a>
+		</nav>
 		<button id="theme-toggle" class="theme-toggle" aria-label="切换主题">🌙</button>
 	</header>
 	<main>
@@ -222,6 +226,13 @@ header {
 }
 	h1 { margin: 0; }
 
+.site-nav {
+	display: flex;
+	gap: 1.2em;
+	font-size: 0.95em;
+}
+	.site-nav a:hover { color: var(--link-hover); }
+
 	.theme-toggle {
 		background: none; border: none; font-size: 1.4em;
 		cursor: pointer; padding: 4px 8px; border-radius: 6px;
@@ -245,7 +256,15 @@ footer { border-top: 1px solid var(--border); padding-top: 20px; text-align: cen
 	.post-content h2 { margin-top: 40px; }
 	.post-content pre { background-color: var(--code-bg); padding: 15px; border-radius: 5px; overflow-x: auto; }
 	.post-content code { background-color: var(--code-bg); padding: 2px 5px; border-radius: 3px; }
-	.post-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 20px 0; display: block; }`
+	.post-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 20px 0; display: block; }
+
+.link-list { list-style: none; padding: 0; }
+	.link-list li { margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+	.link-list a { display: block; margin-bottom: 4px; }
+	.link-list a:hover { color: var(--link-hover); }
+	.link-title { font-weight: bold; margin-right: 0.5em; }
+	.link-url { color: var(--text-secondary); font-size: 0.9em; }
+	.link-desc { display: block; color: var(--text-secondary); font-size: 0.9em; margin-top: 4px; }`
 
 	themeJS := `(function() {
 	var KEY = 'blog-theme';
