@@ -8,12 +8,18 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/BurntSushi/toml"
-	"github.com/russross/blackfriday/v2"
+	chromahtml "github.com/alecthomas/chroma/v2/formatters/html"
+	"github.com/alecthomas/chroma/v2/styles"
+	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/extension"
+	"github.com/yuin/goldmark/parser"
+	highlighting "github.com/yuin/goldmark-highlighting/v2"
 )
 
 // Post represents a blog post
@@ -185,86 +191,10 @@ func (g *Generator) writeDefaultAssets() error {
 	</article>
 {{end}}`
 
-	css := `:root {
-	--bg: #ffffff;
-	--text: #333333;
-	--text-secondary: #777777;
-	--border: #eeeeee;
-	--link: #333333;
-	--link-hover: #007acc;
-	--code-bg: #f5f5f5;
-}
-
-[data-theme='dark'] {
-	--bg: #1a1a2e;
-	--text: #e0e0e0;
-	--text-secondary: #999999;
-	--border: #2d2d44;
-	--link: #64b5f6;
-	--link-hover: #90caf9;
-	--code-bg: #252540;
-}
-
-body {
-	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-	line-height: 1.6;
-	color: var(--text);
-	background-color: var(--bg);
-	max-width: 800px;
-	margin: 0 auto;
-	padding: 20px;
-	transition: background-color 0.3s, color 0.3s;
-}
-
-header {
-	border-bottom: 1px solid var(--border);
-	padding-bottom: 20px;
-	margin-bottom: 30px;
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-}
-	h1 { margin: 0; }
-
-.site-nav {
-	display: flex;
-	gap: 1.2em;
-	font-size: 0.95em;
-}
-	.site-nav a:hover { color: var(--link-hover); }
-
-	.theme-toggle {
-		background: none; border: none; font-size: 1.4em;
-		cursor: pointer; padding: 4px 8px; border-radius: 6px;
-		transition: background-color 0.2s;
+	css, err := buildDefaultCSS()
+	if err != nil {
+		return fmt.Errorf("生成样式: %w", err)
 	}
-		.theme-toggle:hover { background-color: var(--border); }
-
-a { color: var(--link); text-decoration: none; }
-main { margin-bottom: 40px; }
-footer { border-top: 1px solid var(--border); padding-top: 20px; text-align: center; color: var(--text-secondary); }
-
-.post-list { list-style: none; padding: 0; }
-	.post-list li { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
-	.post-list a { font-size: 1.2em; font-weight: bold; display: block; margin-bottom: 5px; }
-	.post-list a:hover { color: var(--link-hover); }
-	.post-date { display: block; color: var(--text-secondary); font-size: 0.9em; margin-bottom: 10px; }
-
-.post { margin-bottom: 40px; }
-	.post-meta { color: var(--text-secondary); margin-bottom: 20px; }
-	.post-content { line-height: 1.8; }
-	.post-content h2 { margin-top: 40px; }
-	.post-content pre { background-color: var(--code-bg); padding: 15px; border-radius: 5px; overflow-x: auto; }
-	.post-content code { background-color: var(--code-bg); padding: 2px 5px; border-radius: 3px; }
-	.post-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 20px 0; display: block; }
-
-.link-list { list-style: none; padding: 0; }
-	.link-list li { margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
-	.link-list a { display: block; margin-bottom: 4px; }
-	.link-list a:hover { color: var(--link-hover); }
-	.link-title { font-weight: bold; margin-right: 0.5em; }
-	.link-url { color: var(--text-secondary); font-size: 0.9em; }
-	.link-desc { display: block; color: var(--text-secondary); font-size: 0.9em; margin-top: 4px; }`
 
 	themeJS := `(function() {
 	var KEY = 'blog-theme';
@@ -394,12 +324,182 @@ func parsePost(filePath string) (Post, error) {
 	return post, nil
 }
 
+var (
+	markdownConverter = goldmark.New(
+		goldmark.WithParserOptions(parser.WithAutoHeadingID()),
+		goldmark.WithExtensions(
+			extension.GFM,
+			highlighting.NewHighlighting(
+				highlighting.WithStyle("github"),
+				highlighting.WithFormatOptions(chromahtml.WithClasses(true)),
+			),
+		),
+	)
+	externalLinkRe = regexp.MustCompile(`<a href="(https?://[^"]*)"`)
+)
+
 func convertMarkdownToHTML(markdownStr string) string {
-	extensions := blackfriday.WithExtensions(blackfriday.CommonExtensions | blackfriday.AutoHeadingIDs | blackfriday.FencedCode)
-	renderer := blackfriday.WithRenderer(blackfriday.NewHTMLRenderer(blackfriday.HTMLRendererParameters{
-		Flags: blackfriday.CommonHTMLFlags | blackfriday.HrefTargetBlank,
-	}))
-	return string(blackfriday.Run([]byte(markdownStr), extensions, renderer))
+	var buf bytes.Buffer
+	if err := markdownConverter.Convert([]byte(markdownStr), &buf); err != nil {
+		return markdownStr
+	}
+	return addExternalLinkTarget(buf.String())
+}
+
+func addExternalLinkTarget(html string) string {
+	return externalLinkRe.ReplaceAllString(html, `<a href="$1" target="_blank" rel="noopener noreferrer"`)
+}
+
+func chromaStyleCSS(styleName, scope string) (string, error) {
+	style := styles.Get(styleName)
+	if style == nil {
+		return "", fmt.Errorf("chroma style %q not found", styleName)
+	}
+	var buf bytes.Buffer
+	formatter := chromahtml.New(chromahtml.WithClasses(true))
+	if err := formatter.WriteCSS(&buf, style); err != nil {
+		return "", err
+	}
+	css := buf.String()
+	if scope != "" {
+		css = strings.ReplaceAll(css, ".chroma", scope+" .chroma")
+	}
+	return css, nil
+}
+
+func buildDefaultCSS() (string, error) {
+	lightChroma, err := chromaStyleCSS("github", ".post-content")
+	if err != nil {
+		return "", err
+	}
+	darkChroma, err := chromaStyleCSS("github-dark", "[data-theme='dark'] .post-content")
+	if err != nil {
+		return "", err
+	}
+
+	return `:root {
+	--bg: #ffffff;
+	--text: #333333;
+	--text-secondary: #777777;
+	--border: #eeeeee;
+	--link: #333333;
+	--link-hover: #007acc;
+	--code-bg: #f5f5f5;
+}
+
+[data-theme='dark'] {
+	--bg: #1a1a2e;
+	--text: #e0e0e0;
+	--text-secondary: #999999;
+	--border: #2d2d44;
+	--link: #64b5f6;
+	--link-hover: #90caf9;
+	--code-bg: #252540;
+}
+
+body {
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+	line-height: 1.6;
+	color: var(--text);
+	background-color: var(--bg);
+	max-width: 800px;
+	margin: 0 auto;
+	padding: 20px;
+	transition: background-color 0.3s, color 0.3s;
+}
+
+header {
+	border-bottom: 1px solid var(--border);
+	padding-bottom: 20px;
+	margin-bottom: 30px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+	h1 { margin: 0; }
+
+.site-nav {
+	display: flex;
+	gap: 1.2em;
+	font-size: 0.95em;
+}
+	.site-nav a:hover { color: var(--link-hover); }
+
+	.theme-toggle {
+		background: none; border: none; font-size: 1.4em;
+		cursor: pointer; padding: 4px 8px; border-radius: 6px;
+		transition: background-color 0.2s;
+	}
+		.theme-toggle:hover { background-color: var(--border); }
+
+a { color: var(--link); text-decoration: none; }
+main { margin-bottom: 40px; }
+footer { border-top: 1px solid var(--border); padding-top: 20px; text-align: center; color: var(--text-secondary); }
+
+.post-list { list-style: none; padding: 0; }
+	.post-list li { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+	.post-list a { font-size: 1.2em; font-weight: bold; display: block; margin-bottom: 5px; }
+	.post-list a:hover { color: var(--link-hover); }
+	.post-date { display: block; color: var(--text-secondary); font-size: 0.9em; margin-bottom: 10px; }
+
+.post { margin-bottom: 40px; }
+	.post-meta { color: var(--text-secondary); margin-bottom: 20px; }
+	.post-content { line-height: 1.8; }
+	.post-content h2 { margin-top: 40px; }
+	.post-content h3 { margin-top: 28px; }
+	.post-content blockquote {
+		margin: 1.2em 0;
+		padding: 0.5em 1em;
+		border-left: 4px solid var(--border);
+		color: var(--text-secondary);
+	}
+	.post-content table {
+		width: 100%;
+		border-collapse: collapse;
+		margin: 1.2em 0;
+		font-size: 0.95em;
+	}
+	.post-content th,
+	.post-content td {
+		border: 1px solid var(--border);
+		padding: 8px 12px;
+		text-align: left;
+	}
+	.post-content th { background-color: var(--code-bg); }
+	.post-content pre.chroma {
+		padding: 16px;
+		border-radius: 8px;
+		overflow-x: auto;
+		border: 1px solid var(--border);
+		margin: 1.2em 0;
+		font-family: 'Cascadia Code', 'JetBrains Mono', Consolas, 'Courier New', monospace;
+		font-size: 0.88em;
+		line-height: 1.55;
+	}
+	.post-content pre.chroma code {
+		background: none;
+		padding: 0;
+		border-radius: 0;
+		font-size: inherit;
+	}
+	.post-content :not(pre) > code {
+		background-color: var(--code-bg);
+		padding: 2px 6px;
+		border-radius: 4px;
+		font-family: 'Cascadia Code', 'JetBrains Mono', Consolas, 'Courier New', monospace;
+		font-size: 0.88em;
+	}
+	.post-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 20px 0; display: block; }
+
+.link-list { list-style: none; padding: 0; }
+	.link-list li { margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+	.link-list a { display: block; margin-bottom: 4px; }
+	.link-list a:hover { color: var(--link-hover); }
+	.link-title { font-weight: bold; margin-right: 0.5em; }
+	.link-url { color: var(--text-secondary); font-size: 0.9em; }
+	.link-desc { display: block; color: var(--text-secondary); font-size: 0.9em; margin-top: 4px; }
+
+` + lightChroma + "\n" + darkChroma, nil
 }
 
 func extractSummary(content string) string {
