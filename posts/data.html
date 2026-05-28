@@ -3,7 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>yumosx&#39;s 写字的地方 - RAG 和向量数据库</title>
+	<title>yumosx&#39;s 写字的地方 - 异地多活数据存储策略设计</title>
 	<link rel="stylesheet" href="/static/style.css">
 	<link rel="alternate" type="application/rss+xml" href="/feed.xml" title="yumosx&#39;s 写字的地方 RSS Feed">
 	<script>(function(){try{var t=localStorage.getItem('blog-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.setAttribute('data-theme','dark')}catch(e){}})();</script>
@@ -20,12 +20,10 @@
 	<main>
 		
 	<article class="post">
-		<h2>RAG 和向量数据库</h2>
-		<div class="post-meta">2025-9-22</div>
-		<div class="post-content"><h1 id="rag-">RAG 和向量数据库</h1>
-<p><img src="/static/images/rag.png" alt="rag"></p>
-<h2 id="heading">索引构建</h2>
-<p>首先解析对应的文档, 然后把文本切分成对饮的块，然后对文本做向量化，最后做持久化</p>
+		<h2>异地多活数据存储策略设计</h2>
+		<div class="post-meta">2025-9-20</div>
+		<div class="post-content"><p>当用户量上去的时候，我们必须要考虑到数据的分离存储，比如将主要的数据放在一个机房中，
+<img src="/static/images/db-two.png" alt="arch"></p>
 </div>
 	</article>
 
