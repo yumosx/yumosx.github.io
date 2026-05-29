@@ -363,12 +363,13 @@ func chromaStyleCSS(styleName, scope string) (string, error) {
 	css := buf.String()
 	if scope != "" {
 		css = strings.ReplaceAll(css, ".chroma", scope+" .chroma")
+		css = strings.ReplaceAll(css, ".bg {", scope+" .bg {")
 	}
 	return css, nil
 }
 
 func buildDefaultCSS() (string, error) {
-	lightChroma, err := chromaStyleCSS("github", ".post-content")
+	lightChroma, err := chromaStyleCSS("github", ":root:not([data-theme='dark']) .post-content")
 	if err != nil {
 		return "", err
 	}
