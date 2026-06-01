@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>yumosx&#39;s 写字的地方 - redis 缓存设计方案 </title>
+	<link rel="stylesheet" href="/static/style.css">
+	<link rel="alternate" type="application/rss+xml" href="/feed.xml" title="yumosx&#39;s 写字的地方 RSS Feed">
+	<script>(function(){try{var t=localStorage.getItem('blog-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.setAttribute('data-theme','dark')}catch(e){}})();</script>
+</head>
+<body>
+	<header>
+		<h1><a href="/">yumosx&#39;s 写字的地方</a></h1>
+		<nav class="site-nav">
+			<a href="/">首页</a>
+			<a href="/links.html">友链</a>
+		</nav>
+		<button id="theme-toggle" class="theme-toggle" aria-label="切换主题">🌙</button>
+	</header>
+	<main>
+		
+	<article class="post">
+		<h2>redis 缓存设计方案 </h2>
+		<div class="post-meta">2025-10-02</div>
+		<div class="post-content"><h2 id="heading">预热缓存</h2>
+<p>在程序一开始的时候把系统中高频访问的数据刷新到 redis 中去，比如用户的姓名和昵称或者是姓名</p>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="nx">config</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">configs</span><span class="p">.</span><span class="nf">Load</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">redis</span><span class="p">.</span><span class="nf">Set</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span><span class="w"> </span><span class="nx">config</span><span class="p">)</span><span class="w">
+</span></span></span></code></pre><p>过期时间设置多少，</p>
+<ul>
+<li>不是看表大小，而是看数据的访问频率和变更频率, 用户昵称这种变更少的热点数据，可以设 30 分钟甚至更长, 库存数量这种频繁变化的数据，设置 5-10 秒就够了</li>
+<li>对于一些热点数据，可以稍微把缓存时间调长一点，这样可以提高缓存命中率</li>
+</ul>
+<h2 id="heading-1">缓存更新要同步</h2>
+<p>如果在库中修改了某条数据，应该立刻去同步对应的缓存，比如某一个用户 9812 的信息被更新，应该立刻去把 key=9827 这个 redis 的 key, value 给删除，下次访问的时候继续刷新到缓存</p>
+<h3 id="heading-2">关系型数据缓存同步</h3>
+<p>关系型数据缓存同步其实是有点难的，这是因为 数据库更新一次，需要同步更新多个 key,</p>
+<p>一种比较精巧的实现是:</p>
+<ol>
+<li>使用 canal 这种中间件订阅数据库 id 的变化</li>
+<li>当出现变化的时候，将对应的 id 推送到消息队列中去，</li>
+<li>执行预设脚本刷新对应的缓存</li>
+</ol>
+<p>另外一种是异步脚本订阅刷新</p>
+<h2 id="heading-3">长期热门数据缓存</h2>
+<p>临时缓存+热点缓存思路</p>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="c1">// 尝试从缓存中直接获取用户信息</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">userinfo</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="p">:</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">Redis</span><span class="p">.</span><span class="nf">Get</span><span class="p">(</span><span class="s">&#34;user_info_9527&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="kc">nil</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="cp">//缓存命中找到，直接返回用户信息</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="k">if</span><span class="w"> </span><span class="nx">userinfo</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">userinfo</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="cp">//set 检测当前是否是热数据</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="cp">//之所以没有使用Bloom Filter是因为有概率碰撞不准</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="cp">//如果key数量超过千个，建议还是用Bloom Filter</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="cp">//这个判断也可以放在业务逻辑代码中，用配置同步做</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">isHotKey</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="p">:</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">Redis</span><span class="p">.</span><span class="nf">SISMEMBER</span><span class="p">(</span><span class="s">&#34;hot_key&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;user_info_9527&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="kc">nil</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="cp">//如果是热key</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="k">if</span><span class="w"> </span><span class="nx">isHotKey</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="cp">//没有找到就认为数据不存在</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="cp">//可能是被删除了</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="s">&#34;&#34;</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="cp">//没有命中缓存，并且没被标注是热点，被认为是临时缓存，那么从数据库中获取</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="cp">//设置更新锁set user_info_9527_lock nx ex 5</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="cp">//防止多个线程同时并发查询数据库导致数据库压力过大</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">lock</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="p">:</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">Redis</span><span class="p">.</span><span class="nf">Set</span><span class="p">(</span><span class="s">&#34;user_info_9527_lock&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;1&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;nx&#34;</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="k">if</span><span class="w"> </span><span class="p">!</span><span class="nx">lock</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="cp">//没抢到锁的直接等待1秒 然后再拿一次结果, 这是因为可能其它抢到锁的把数据给拿走了，类似singleflight实现</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="cp">//行业常见缓存服务，读并发能力很强，但写并发能力并不好</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="cp">//过高的并行刷新会刷沉缓存</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">time</span><span class="p">.</span><span class="nf">sleep</span><span class="p">(</span><span class="nx">time</span><span class="p">.</span><span class="nx">second</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="cp">//等1秒后拿数据，这个数据是抢到锁的请求填入的</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="cp">//通过这个方式降低数据库压力</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">userinfo</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="p">:</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">Redis</span><span class="p">.</span><span class="nf">Get</span><span class="p">(</span><span class="s">&#34;user_info_9527&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="kc">nil</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">userinfo</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="cp">//拿到锁的查数据库，然后填入缓存</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">userinfo</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="p">:</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">userInfoModel</span><span class="p">.</span><span class="nf">GetUserInfoById</span><span class="p">(</span><span class="mi">9527</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="kc">nil</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="cp">//查找到用户信息</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="k">if</span><span class="w"> </span><span class="nx">userinfo</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="cp">//将用户信息缓存，并设置TTL超时时间让其60秒后失效</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">Redis</span><span class="p">.</span><span class="nf">Set</span><span class="p">(</span><span class="s">&#34;user_info_9527&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">userinfo</span><span class="p">,</span><span class="w"> </span><span class="mi">60</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">userinfo</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="c1">// 没有找到，放一个空数据进去，短期内不再问数据库</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">Redis</span><span class="p">.</span><span class="nf">Set</span><span class="p">(</span><span class="s">&#34;user_info_9527&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;&#34;</span><span class="p">,</span><span class="w"> </span><span class="mi">30</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="k">return</span><span class="w"> </span><span class="kc">nil</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span><span class="w">
+</span></span></span></code></pre><p>还有一种方式来缓解热点高并发查询，在每个业务服务器上部署一个小容量的Redis来保存热点缓存数据，
+通过脚本将热点数据同步到每个服务器的小Redis上，每次查询数据之前都会在本地小Redis查找一下，
+如果找不到再去大缓存内查询，通过这个方式缓解缓存的读取性能。</p>
+</div>
+	</article>
+
+	</main>
+	<footer>
+		<p>© 2026 yumosx&#39;s 写字的地方</p>
+	</footer>
+	<script src="/static/theme.js"></script>
+</body>
+</html>

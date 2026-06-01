@@ -23,6 +23,12 @@
 	<ul class="post-list">
 	
 		<li>
+			<a href="/posts/redis.html">redis 缓存设计方案 </a>
+			<span class="post-date">2025-10-02</span>
+			<p>在程序一开始的时候把系统中高频访问的数据刷新到 redis 中去，比如用户的姓名和昵称或者是姓名 </p>
+		</li>
+	
+		<li>
 			<a href="/posts/rbac.html">RBAC 权限控制系统设计 </a>
 			<span class="post-date">2025-10-02</span>
 			<p>role -&gt; permission -&gt; resource 经过这个链路去控制用户对应资源的访问权限，实现 RBAC 权限控制。 </p>
@@ -53,12 +59,6 @@
 		</li>
 	
 		<li>
-			<a href="/posts/pym.html">Python 依赖问题</a>
-			<span class="post-date">2023-11-15</span>
-			<p>在 Python 中，没有像 Go 语言中那样的内置模块依赖管理工具（如 Go Modules）。我们通常使用 uv 或 poetry 来管理项目依赖，这两个工具都基于 Python 的虚拟环境（venv）机制。所谓的 venv，实际上是在项目目录中创建一系列文件夹，用于隔离不同项目的依赖。 当你为...</p>
-		</li>
-	
-		<li>
 			<a href="/posts/iac.html">基础设施学习</a>
 			<span class="post-date">2023-11-15</span>
 			<p>假设你需要一台有特定配置的云服务器。 *   **传统方式**：登录云服务商的网站，点点点，选择CPU、内存、硬盘大小……然后创建。 </p>
@@ -68,6 +68,12 @@
 			<a href="/posts/impl.html">Go 代码大全</a>
 			<span class="post-date">2023-11-15</span>
 			<p>在 Go 语言中，与 Java 或 Python 等语言不同，结构体（struct）无需显式声明对某个接口的实现。 例如，在 Java 中我们常会写 class Student implements Person 来明确指定接口实现，这种方式具有一定的优势。 如果采用隐式实现机制，当接口中的方法发生...</p>
+		</li>
+	
+		<li>
+			<a href="/posts/pym.html">Python 依赖问题</a>
+			<span class="post-date">2023-11-15</span>
+			<p>在 Python 中，没有像 Go 语言中那样的内置模块依赖管理工具（如 Go Modules）。我们通常使用 uv 或 poetry 来管理项目依赖，这两个工具都基于 Python 的虚拟环境（venv）机制。所谓的 venv，实际上是在项目目录中创建一系列文件夹，用于隔离不同项目的依赖。 当你为...</p>
 		</li>
 	
 		<li>
@@ -83,21 +89,15 @@
 		</li>
 	
 		<li>
-			<a href="/posts/mircroservice.html">高性能系统设计之注册中心设计</a>
-			<span class="post-date">2025-9-23</span>
-			<p>type cluster struct { </p>
-		</li>
-	
-		<li>
 			<a href="/posts/otel-text.html">opentelemetry 中的跨上下文传播</a>
 			<span class="post-date">2023-9-20</span>
 			<p>在 otel 中有一个非常神奇的接口叫做 TextMapPropagator 这个接口用来在分布式追踪系统用于跨进程传播上下文信息的核心组件。 type TextMapPropagator interface { 	Inject(ctx context.Context, carrier TextMa...</p>
 		</li>
 	
 		<li>
-			<a href="/posts/group.html">消息队列踩坑记录</a>
-			<span class="post-date">2025-9-22</span>
-			<p>在Java应用中，我们往往会使用spring-kafka组件简单的设置一下group_id, topic就开始消费消息了，其实这样会埋下巨大的安全隐患，即当消费速度过慢时有可能会触发rebalance, 这批消息被分配到另一个消费者，然后新的消费者还会消费过慢，再次rebalance, 这样一直恶性...</p>
+			<a href="/posts/mircroservice.html">高性能系统设计之注册中心设计</a>
+			<span class="post-date">2025-9-23</span>
+			<p>type cluster struct { </p>
 		</li>
 	
 		<li>
@@ -125,9 +125,15 @@
 		</li>
 	
 		<li>
+			<a href="/posts/group.html">消息队列踩坑记录</a>
+			<span class="post-date">2025-9-22</span>
+			<p>在Java应用中，我们往往会使用spring-kafka组件简单的设置一下group_id, topic就开始消费消息了，其实这样会埋下巨大的安全隐患，即当消费速度过慢时有可能会触发rebalance, 这批消息被分配到另一个消费者，然后新的消费者还会消费过慢，再次rebalance, 这样一直恶性...</p>
+		</li>
+	
+		<li>
 			<a href="/posts/data.html">异地多活数据存储策略设计</a>
 			<span class="post-date">2025-9-20</span>
-			<p>当用户量上去的时候，我们必须要考虑到数据的分离存储，比如将主要的数据放在一个机房中， ![arch](/static/images/db-two.png) </p>
+			<p>当用户量上去的时候，我们必须要考虑到数据的分离存储，比如将主要的数据放在一个机房中， ![arch](/static/images/db-two.png) 在这个方案中，数据库主库集中在一个机房，其他机房的数据库都是从库。当有数据修改请求时，核心机房的主库先完成修改，然后通过数据库主从同步把修改后的...</p>
 		</li>
 	
 		<li>

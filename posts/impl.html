@@ -57,14 +57,17 @@
 </span></span></span><span class="line"><span class="cl"><span class="kd">type</span><span class="w"> </span><span class="nx">Stream</span><span class="w"> </span><span class="kd">interface</span><span class="w"> </span><span class="p">{</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
 </span></span></span></code></pre><p>使用接口的另外一个好处就是可以去 mock 对应的实现, 这样可以在测试中去模拟对应的实现, 而不需要去依赖真实的实现。</p>
+<h3 id="heading-2">不要设计容纳一切的接口</h3>
+<p>dj 老爷子一直是 goto 有害论的提出者，goto 语句之所以被老爷子抵制的原因是因为这个东西太过于灵活，往往导致被滥用
+解决这种强大容纳一切的接口的方法就是拆分成一列有限制的设计，比如将 goto 拆分成 while 循环，if 判断，break 语句</p>
 <h2 id="context">context</h2>
-<h3 id="heading-2">超时控制</h3>
+<h3 id="heading-3">超时控制</h3>
 <p>在平常的开发过程中，往往会存在一些耗时的操作阻塞住我们的 go 程，比如调用一些第三方的接口，数据库查询，从某个 chan 中去读取对应的数据，
 那这个时候往往就很有必要去做好超时控制， 在 Go 语言中去实现超时控制是非常简单的，只需要使用 context.WithTimeout()，</p>
 <pre><code>ctx, cancelFunc := context.WithTimeout(context.Background(), 1*time.Second)
 defer cancelFunc()
 </code></pre>
-<h3 id="heading-3">上下文信息传递</h3>
+<h3 id="heading-4">上下文信息传递</h3>
 <p>有时候我们还希望使用 context 去携带一些信息，比如某个服务的链路 Id, 这一点在一些 可观测场景或者是微服务框架中非常的常见, 但是由于 context.WithValue 的接口其实并不是类型
 安全的，因为它的接口是一个 interfance{} 类型，所以我们可以把任何数据给塞到这个 context 里面去的，如果你把一切塞到 context 里面去的话，我们也许就会写出下面这种代码:
 这样导致的后果就是无法根据函数参数去判断函数是做什么的。</p>
@@ -108,7 +111,7 @@ defer cancelFunc()
 </span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
 </span></span></span></code></pre><h2 id="iterseq">iter.Seq</h2>
 <p>Go 1.23+ 引入的迭代器模式，用于 range 遍历自定义数据结构。</p>
-<h3 id="heading-4">基本用法</h3>
+<h3 id="heading-5">基本用法</h3>
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="c1">// Seq[T] 单值迭代器</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="nx">All</span><span class="p">[</span><span class="nx">E</span><span class="w"> </span><span class="kt">any</span><span class="p">](</span><span class="nx">s</span><span class="w"> </span><span class="p">[]</span><span class="nx">E</span><span class="p">)</span><span class="w"> </span><span class="nx">iter</span><span class="p">.</span><span class="nx">Seq</span><span class="p">[</span><span class="nx">E</span><span class="p">]</span><span class="w"> </span><span class="p">{</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="kd">func</span><span class="p">(</span><span class="nx">yield</span><span class="w"> </span><span class="kd">func</span><span class="p">(</span><span class="nx">E</span><span class="p">)</span><span class="w"> </span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -139,7 +142,7 @@ defer cancelFunc()
 </span></span></span><span class="line"><span class="cl"><span class="k">for</span><span class="w"> </span><span class="nx">k</span><span class="p">,</span><span class="w"> </span><span class="nx">v</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nf">Entries</span><span class="p">(</span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">int</span><span class="p">{</span><span class="s">&#34;a&#34;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;b&#34;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">})</span><span class="w"> </span><span class="p">{</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="nx">k</span><span class="p">,</span><span class="w"> </span><span class="nx">v</span><span class="p">)</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
-</span></span></span></code></pre><h3 id="heading-5">实际场景：分页查询</h3>
+</span></span></span></code></pre><h3 id="heading-6">实际场景：分页查询</h3>
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="nf">Paginate</span><span class="p">(</span><span class="nx">db</span><span class="w"> </span><span class="o">*</span><span class="nx">sql</span><span class="p">.</span><span class="nx">DB</span><span class="p">,</span><span class="w"> </span><span class="nx">query</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="nx">iter</span><span class="p">.</span><span class="nx">Seq2</span><span class="p">[</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="p">[]</span><span class="nx">User</span><span class="p">]</span><span class="w"> </span><span class="p">{</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="kd">func</span><span class="p">(</span><span class="nx">yield</span><span class="w"> </span><span class="kd">func</span><span class="p">(</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="p">[]</span><span class="nx">User</span><span class="p">)</span><span class="w"> </span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nx">page</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mi">1</span><span class="w">
@@ -164,8 +167,8 @@ defer cancelFunc()
 </span></span></span><span class="line"><span class="cl"><span class="k">for</span><span class="w"> </span><span class="nx">pageNum</span><span class="p">,</span><span class="w"> </span><span class="nx">users</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nf">Paginate</span><span class="p">(</span><span class="nx">db</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;SELECT * FROM users&#34;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nf">Printf</span><span class="p">(</span><span class="s">&#34;第%d页: %d条记录\n&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">pageNum</span><span class="p">,</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="nx">users</span><span class="p">))</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
-</span></span></span></code></pre><h2 id="heading-6">模式</h2>
-<h3 id="heading-7">懒加载</h3>
+</span></span></span></code></pre><h2 id="heading-7">模式</h2>
+<h3 id="heading-8">懒加载</h3>
 <p>这源自于我的一个场景，原先我在编写一段程序的时候是在一开始加载所有的资源，但是后来我发现在有些场景下，我只需要在需要的时候去加载资源，而不是在一开始加载所有的资源，所以我就使用了这种模式</p>
 <p>在go 语言中我的实现如下:</p>
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="kd">type</span><span class="w"> </span><span class="nx">LazyLoader</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span><span class="w">
