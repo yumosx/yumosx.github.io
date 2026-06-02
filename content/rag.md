@@ -51,7 +51,7 @@ for chunk in chunks:
 ```
 
 
-```
+```python
 def retrieval_process(query, index, chunks, embedding_model, top_k=3):
     """
     检索流程：将用户查询Query转化为嵌入向量，并在Faiss索引中检索最相似的前k个文本块。
