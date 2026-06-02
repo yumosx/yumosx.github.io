@@ -24,8 +24,83 @@
 		<div class="post-meta">2025-9-22</div>
 		<div class="post-content"><h1 id="rag-">RAG 和向量数据库</h1>
 <p><img src="/static/images/rag.png" alt="rag"></p>
-<h2 id="heading">索引构建</h2>
-<p>首先解析对应的文档, 然后把文本切分成对饮的块，然后对文本做向量化，最后做持久化</p>
+<h2 id="heading">填充</h2>
+<ul>
+<li>使用一些库对文档进行加载并提取对应的信息, 比如说 pdf, word, html</li>
+<li>然后使用 text split 对文档进行分块，这部分可以使用 langchain</li>
+<li>利用一个专用的模型比如 bge 将上面的分块进行向量化处理,</li>
+<li>将对应的向量存储到向量库中</li>
+</ul>
+<h2 id="heading-1">检索</h2>
+<ul>
+<li>使用专用模型对用户查询进行向量化处理</li>
+<li>使用向量库对上一步的向量做相似度匹配，从而检索最相似的部分</li>
+</ul>
+<h2 id="heading-2">生成</h2>
+<ul>
+<li>检索+ 大模型 相结合回答用户的问题</li>
+</ul>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="n">embedding_model</span> <span class="o">=</span> <span class="n">get_embedding_model</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">pdf_loader</span> <span class="o">=</span> <span class="n">PyPDFLoader</span><span class="p">(</span><span class="n">pdf_file</span><span class="p">,</span> <span class="n">extract_images</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># 配置RecursiveCharacterTextSplitter分割文本块库参数，每个文本块的大小为768字符（非token），相邻文本块之间的重叠256字符（非token）</span>
+</span></span><span class="line"><span class="cl"><span class="n">text_splitter</span> <span class="o">=</span> <span class="n">RecursiveCharacterTextSplitter</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">chunk_size</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span> <span class="n">chunk_overlap</span><span class="o">=</span><span class="mi">128</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 加载PDF文档,提取所有页的文本内容</span>
+</span></span><span class="line"><span class="cl"><span class="n">pdf_content_list</span> <span class="o">=</span> <span class="n">pdf_loader</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># 将每页的文本内容用换行符连接，合并为PDF文档的完整文本</span>
+</span></span><span class="line"><span class="cl"><span class="n">pdf_text</span> <span class="o">=</span> <span class="s2">&#34;</span><span class="se">\n</span><span class="s2">&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">page</span><span class="o">.</span><span class="n">page_content</span> <span class="k">for</span> <span class="n">page</span> <span class="ow">in</span> <span class="n">pdf_content_list</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 将PDF文档文本分割成文本块Chunk</span>
+</span></span><span class="line"><span class="cl"><span class="n">chunks</span> <span class="o">=</span> <span class="n">text_splitter</span><span class="o">.</span><span class="n">split_text</span><span class="p">(</span><span class="n">pdf_text</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;分割的文本Chunk数量: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">chunks</span><span class="p">)</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span> 
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 文本块转化为嵌入向量列表，normalize_embeddings表示对嵌入向量进行归一化，用于准确计算相似度</span>
+</span></span><span class="line"><span class="cl"><span class="n">embeddings</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">chunks</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">embedding</span> <span class="o">=</span> <span class="n">embedding_model</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">chunk</span><span class="p">,</span> <span class="n">normalize_embeddings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">embeddings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">embedding</span><span class="p">)</span>
+</span></span></code></pre><pre><code>def retrieval_process(query, index, chunks, embedding_model, top_k=3):
+    &quot;&quot;&quot;
+    检索流程：将用户查询Query转化为嵌入向量，并在Faiss索引中检索最相似的前k个文本块。
+    :param query: 用户查询语句
+    :param index: 已建立的Faiss向量索引
+    :param chunks: 原始文本块内容列表
+    :param embedding_model: 预加载的嵌入模型
+    :param top_k: 返回最相似的前K个结果
+    :return: 返回最相似的文本块及其相似度得分
+    &quot;&quot;&quot;
+    # 将查询转化为嵌入向量，normalize_embeddings表示对嵌入向量进行归一化
+    query_embedding = embedding_model.encode(query, normalize_embeddings=True)
+    # 将嵌入向量转化为numpy数组，Faiss索引操作需要numpy数组输入
+    query_embedding = np.array([query_embedding])
+
+    # 在 Faiss 索引中使用 query_embedding 进行搜索，检索出最相似的前 top_k 个结果。
+    # 返回查询向量与每个返回结果之间的相似度得分（在使用余弦相似度时，值越大越相似）排名列表distances，最相似的 top_k 个文本块在原始 chunks 列表中的索引indices。
+    distances, indices = index.search(query_embedding, top_k)
+
+    print(f&quot;查询语句: {query}&quot;)
+    print(f&quot;最相似的前{top_k}个文本块:&quot;)
+
+    # 输出查询出的top_k个文本块及其相似度得分
+    results = []
+    for i in range(top_k):
+        # 获取相似文本块的原始内容
+        result_chunk = chunks[indices[0][i]]
+        print(f&quot;文本块 {i}:\n{result_chunk}&quot;) 
+
+        # 获取相似文本块的相似度得分
+        result_distance = distances[0][i]
+        print(f&quot;相似度得分: {result_distance}\n&quot;)
+
+        # 将相似文本块存储在结果列表中
+        results.append(result_chunk)
+
+    print(&quot;检索过程完成.&quot;)
+    return results
+</code></pre>
 </div>
 	</article>
 
