@@ -4,12 +4,15 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>yumosx&#39;s 写字的地方 - yumosx&#39;s 写字的地方</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 	<link rel="stylesheet" href="/static/style.css">
 	<link rel="alternate" type="application/rss+xml" href="/feed.xml" title="yumosx&#39;s 写字的地方 RSS Feed">
 	<script>(function(){try{var t=localStorage.getItem('blog-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.setAttribute('data-theme','dark')}catch(e){}})();</script>
 </head>
 <body>
-	<header>
+	<header class="site-header">
 		<h1><a href="/">yumosx&#39;s 写字的地方</a></h1>
 		<nav class="site-nav">
 			<a href="/">首页</a>
@@ -19,159 +22,205 @@
 	</header>
 	<main>
 		
-	<h2>博客文章</h2>
-	<ul class="post-list">
-	
-		<li>
-			<a href="/posts/redis.html">redis 缓存设计方案 </a>
-			<span class="post-date">2025-10-02</span>
-			<p>在程序一开始的时候把系统中高频访问的数据刷新到 redis 中去，比如用户的姓名和昵称或者是姓名 </p>
-		</li>
-	
-		<li>
-			<a href="/posts/rbac.html">RBAC 权限控制系统设计 </a>
-			<span class="post-date">2025-10-02</span>
-			<p>role -&gt; permission -&gt; resource 经过这个链路去控制用户对应资源的访问权限，实现 RBAC 权限控制。 所以至少需要 5 张表: </p>
-		</li>
-	
-		<li>
-			<a href="/posts/grpc.html">gRPC 高级篇 </a>
-			<span class="post-date">2025-10-02</span>
-			<p>type UnaryServerInterceptor func(ctx context.Context, req any, info *UnaryServerInfo, handler UnaryHandler) (resp any, err error) </p>
-		</li>
-	
-		<li>
-			<a href="/posts/grom.html">GORM 高级篇 </a>
-			<span class="post-date">2025-10-01</span>
-			<p>type Plugin interface { 	Name() string 	Initialize(*DB) error } </p>
-		</li>
-	
-		<li>
-			<a href="/posts/sign.html">如何给 commit sign 一下</a>
-			<span class="post-date">2023-11-16</span>
-			<p>最近在参加开源项目的时候，其中 Approver 要求我去给我的 commit sign 一下，也就是给对应的 commit 加上一个签名，这种签名有两种方式 Signed-off-by（您提供的这种)：是一文本记录，用于表明责任和许可同意。它很容易被任何人复制和添加。 - GPG 签名（git c...</p>
-		</li>
-	
-		<li>
-			<a href="/posts/alembic.html">Alembic 数据库迁移工具</a>
-			<span class="post-date">2023-11-15</span>
-			<p>Alembic 是一个 Python 环境中的数据库迁移工具，类似于 Go 语言中 GORM 的数据库迁移功能。它是 SQLAlchemy 的迁移工具扩展，用于管理数据库架构变更的版本控制。 在 Alembic 中最简单的命令就是初始化项目： alembic init migrations </p>
-		</li>
-	
-		<li>
-			<a href="/posts/pym.html">Python 依赖问题</a>
-			<span class="post-date">2023-11-15</span>
-			<p>在 Python 中，没有像 Go 语言中那样的内置模块依赖管理工具（如 Go Modules）。我们通常使用 uv 或 poetry 来管理项目依赖，这两个工具都基于 Python 的虚拟环境（venv）机制。所谓的 venv，实际上是在项目目录中创建一系列文件夹，用于隔离不同项目的依赖。 当你为...</p>
-		</li>
-	
-		<li>
-			<a href="/posts/iac.html">基础设施学习</a>
-			<span class="post-date">2023-11-15</span>
-			<p>假设你需要一台有特定配置的云服务器。 *   **传统方式**：登录云服务商的网站，点点点，选择CPU、内存、硬盘大小……然后创建。 </p>
-		</li>
-	
-		<li>
-			<a href="/posts/impl.html">Go 代码大全</a>
-			<span class="post-date">2023-11-15</span>
-			<p>在 Go 语言中，与 Java 或 Python 等语言不同，结构体（struct）无需显式声明对某个接口的实现。 例如，在 Java 中我们常会写 class Student implements Person 来明确指定接口实现，这种方式具有一定的优势。 如果采用隐式实现机制，当接口中的方法发生...</p>
-		</li>
-	
-		<li>
-			<a href="/posts/otel-reader.html">OTEL Manual Reader 组件</a>
-			<span class="post-date">2025-9-20</span>
-			<p>首先我们需要看下这个接口是如何使用的 1. 创建一个 manual reader 组件, 并传递给 meter provider </p>
-		</li>
-	
-		<li>
-			<a href="/posts/python.html">Python</a>
-			<span class="post-date">2025-9-22</span>
-			<p>在 Python 中 `%` 左边是字符串的话，右边可以是一个值，表示对应的字符串格式化 </p>
-		</li>
-	
-		<li>
-			<a href="/posts/otel-part.html">OTLP 导出器的部分失败问题</a>
-			<span class="post-date">2025-9-20</span>
-			<p>OTLP 是 opentelemetry 中的协议传输标准，在收集到对应的metrics， trace，log 这些数据之后，我们往往会把对应的数据发送到远端，比如对应的 collector 对于整个数据传输的结果其实是存在三种状态的: 1. 失败状态: 比如因为网络问题出现的失败 2. 部分失败:...</p>
-		</li>
-	
-		<li>
-			<a href="/posts/language-ranking-anxiety.html">编程语言排行榜就是制造焦虑的烂玩意</a>
-			<span class="post-date">2025-1-27</span>
-			<p>每隔几个月，就有各种&#34;编程语言排行榜&#34;刷屏——TIOBE、PYPL、Stack Overflow 开发者调查、GitHub Octoverse……它们被包装成&#34;权威数据&#34;，被媒体转载，被培训机构引用，甚至被一些管理者用来做技术选型决策。 但真相是：**这些排行榜本质上就是制造焦虑的营销工具，对真正的...</p>
-		</li>
-	
-		<li>
-			<a href="/posts/otel-text.html">opentelemetry 中的跨上下文传播</a>
-			<span class="post-date">2023-9-20</span>
-			<p>在 otel 中有一个非常神奇的接口叫做 TextMapPropagator 这个接口用来在分布式追踪系统用于跨进程传播上下文信息的核心组件。 type TextMapPropagator interface { 	Inject(ctx context.Context, carrier TextMa...</p>
-		</li>
-	
-		<li>
-			<a href="/posts/group.html">消息队列踩坑记录</a>
-			<span class="post-date">2025-9-22</span>
-			<p>在Java应用中，我们往往会使用spring-kafka组件简单的设置一下group_id, topic就开始消费消息了，其实这样会埋下巨大的安全隐患，即当消费速度过慢时有可能会触发rebalance, 这批消息被分配到另一个消费者，然后新的消费者还会消费过慢，再次rebalance, 这样一直恶性...</p>
-		</li>
-	
-		<li>
-			<a href="/posts/pyproc.html">PyProc 源码分析 (持续更新中)</a>
-			<span class="post-date">2025-9-22</span>
-			<p>PyProc 的 frame 结构分成了两个部分, 第一个部分是对应的帧头, 第二部是对应的 数据部分, 也就是对应的数据部分，类型下面这样 [header][payload] </p>
-		</li>
-	
-		<li>
-			<a href="/posts/mircroservice.html">高性能系统设计之注册中心设计</a>
-			<span class="post-date">2025-9-23</span>
-			<p>type cluster struct { </p>
-		</li>
-	
-		<li>
-			<a href="/posts/rabbitmq.html">RabbitMQ 与 Aio-Pika</a>
-			<span class="post-date">2025-9-22</span>
-			<p>整个 rabbitmq 分成了 四个部分 1. producer: 用来生成对应的消息, 将消息发送出去 2. exchange: 用来按照对应的 router 把消息转发到对应的 queue 上面去 3. queue： 负责持久化对应的消息，兔子mq 的消息持久化机制是通过 Erlang 的 分布...</p>
-		</li>
-	
-		<li>
-			<a href="/posts/rag.html">RAG 和向量数据库</a>
-			<span class="post-date">2025-9-22</span>
-			<p>![rag](/static/images/rag.png) </p>
-		</li>
-	
-		<li>
-			<a href="/posts/data.html">异地多活数据存储策略设计</a>
-			<span class="post-date">2025-9-20</span>
-			<p>当用户量上去的时候，我们必须要考虑到数据的分离存储，比如将主要的数据放在一个机房中， ![arch](/static/images/db-two.png) 在这个方案中，数据库主库集中在一个机房，其他机房的数据库都是从库。当有数据修改请求时，核心机房的主库先完成修改，然后通过数据库主从同步把修改后的...</p>
-		</li>
-	
-		<li>
-			<a href="/posts/build-backend.html">Poetry build_wheel 子进程退出问题排查</a>
-			<span class="post-date">2025-9-22</span>
-			<p></p>
-		</li>
-	
-		<li>
-			<a href="/posts/session.html">Python ORM </a>
-			<span class="post-date">2025-9-22</span>
-			<p>首先一句话解释一下 session 是一个数据库会话，它是一个用对象抽象过程的简单接口，用于与数据库进行交互。 </p>
-		</li>
-	
-		<li>
-			<a href="/posts/sharding.html">高性能系统设计之数据库设计</a>
-			<span class="post-date">2025-9-22</span>
-			<p>分库分表的原则: 1. 垂直拆分: 比如说按照用户类型来拆分，比如普通用户和管理员用户 </p>
-		</li>
-	
-		<li>
-			<a href="/posts/apschedule.html">APSchduler 介绍</a>
-			<span class="post-date">2025-9-22</span>
-			<p>是的，**在你当前的代码中使用 `AsyncIOScheduler` 时，默认情况下会等到上一个 `self.run()` 执行完毕之后，才会开启下一个 job**。 这正是 APScheduler 的 **interval trigger**（间隔触发器）的默认行为，具体由参数 `coalesce...</p>
-		</li>
-	
-	</ul>
+	<section class="profile-card" aria-label="个人简介">
+		<div class="profile-row profile-header">
+			<div class="profile-identity">
+				<img class="profile-avatar" src="https://github.com/yumosx.png" alt="Ian Wang" width="72" height="72" loading="eager">
+				<div class="profile-name-block">
+					<h2 class="profile-name">Ian Wang<span class="typing-cursor" aria-hidden="true"></span></h2>
+					<p class="profile-handle">[@yumosx]</p>
+				</div>
+			</div>
+			<div class="profile-actions">
+				<button type="button" id="copy-profile" class="icon-btn" aria-label="复制主页链接" title="复制链接">
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+				</button>
+			</div>
+		</div>
+
+		<nav class="profile-row profile-links" aria-label="社交链接">
+			<a href="https://github.com/yumosx" class="profile-link" target="_blank" rel="noopener noreferrer">
+				<svg class="link-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+				<span>yumosx</span>
+			</a>
+			<a href="https://opentelemetry.io" class="profile-link" target="_blank" rel="noopener noreferrer">
+				<svg class="link-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+				<span>OpenTelemetry</span>
+			</a>
+			<a href="/links.html" class="profile-link">
+				<svg class="link-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+				<span>友链</span>
+			</a>
+		</nav>
+
+		<div class="profile-divider" aria-hidden="true"></div>
+
+		<div class="profile-row profile-bio">
+			<p class="profile-intro">Hi there, I'm Ian Wang (<a href="https://github.com/yumosx" target="_blank" rel="noopener noreferrer">@yumosx</a>). Gopher · OpenTelemetry CNCF Member · Open-source Addict.</p>
+			<p class="profile-status">
+				<span class="status-indicator" aria-hidden="true"></span>
+				Currently making observability simpler, faster, and more fun in Go.
+			</p>
+		</div>
+	</section>
+
+	<section class="posts-section">
+		<h2 class="section-title">博客文章</h2>
+		<ul class="post-list">
+		
+			<li>
+				<a href="/posts/redis.html">redis 缓存设计方案 </a>
+				<span class="post-date">2025-10-02</span>
+				<p>在程序一开始的时候把系统中高频访问的数据刷新到 redis 中去，比如用户的姓名和昵称或者是姓名 </p>
+			</li>
+		
+			<li>
+				<a href="/posts/rbac.html">RBAC 权限控制系统设计 </a>
+				<span class="post-date">2025-10-02</span>
+				<p>role -&gt; permission -&gt; resource 经过这个链路去控制用户对应资源的访问权限，实现 RBAC 权限控制。 所以至少需要 5 张表: </p>
+			</li>
+		
+			<li>
+				<a href="/posts/grpc.html">gRPC 高级篇 </a>
+				<span class="post-date">2025-10-02</span>
+				<p>type UnaryServerInterceptor func(ctx context.Context, req any, info *UnaryServerInfo, handler UnaryHandler) (resp any, err error) </p>
+			</li>
+		
+			<li>
+				<a href="/posts/grom.html">GORM 高级篇 </a>
+				<span class="post-date">2025-10-01</span>
+				<p>type Plugin interface { 	Name() string 	Initialize(*DB) error } </p>
+			</li>
+		
+			<li>
+				<a href="/posts/sign.html">如何给 commit sign 一下</a>
+				<span class="post-date">2023-11-16</span>
+				<p>最近在参加开源项目的时候，其中 Approver 要求我去给我的 commit sign 一下，也就是给对应的 commit 加上一个签名，这种签名有两种方式 Signed-off-by（您提供的这种)：是一文本记录，用于表明责任和许可同意。它很容易被任何人复制和添加。 - GPG 签名（git c...</p>
+			</li>
+		
+			<li>
+				<a href="/posts/alembic.html">Alembic 数据库迁移工具</a>
+				<span class="post-date">2023-11-15</span>
+				<p>Alembic 是一个 Python 环境中的数据库迁移工具，类似于 Go 语言中 GORM 的数据库迁移功能。它是 SQLAlchemy 的迁移工具扩展，用于管理数据库架构变更的版本控制。 在 Alembic 中最简单的命令就是初始化项目： alembic init migrations </p>
+			</li>
+		
+			<li>
+				<a href="/posts/pym.html">Python 依赖问题</a>
+				<span class="post-date">2023-11-15</span>
+				<p>在 Python 中，没有像 Go 语言中那样的内置模块依赖管理工具（如 Go Modules）。我们通常使用 uv 或 poetry 来管理项目依赖，这两个工具都基于 Python 的虚拟环境（venv）机制。所谓的 venv，实际上是在项目目录中创建一系列文件夹，用于隔离不同项目的依赖。 当你为...</p>
+			</li>
+		
+			<li>
+				<a href="/posts/iac.html">基础设施学习</a>
+				<span class="post-date">2023-11-15</span>
+				<p>假设你需要一台有特定配置的云服务器。 *   **传统方式**：登录云服务商的网站，点点点，选择CPU、内存、硬盘大小……然后创建。 </p>
+			</li>
+		
+			<li>
+				<a href="/posts/impl.html">Go 代码大全</a>
+				<span class="post-date">2023-11-15</span>
+				<p>在 Go 语言中，与 Java 或 Python 等语言不同，结构体（struct）无需显式声明对某个接口的实现。 例如，在 Java 中我们常会写 class Student implements Person 来明确指定接口实现，这种方式具有一定的优势。 如果采用隐式实现机制，当接口中的方法发生...</p>
+			</li>
+		
+			<li>
+				<a href="/posts/otel-reader.html">OTEL Manual Reader 组件</a>
+				<span class="post-date">2025-9-20</span>
+				<p>首先我们需要看下这个接口是如何使用的 1. 创建一个 manual reader 组件, 并传递给 meter provider </p>
+			</li>
+		
+			<li>
+				<a href="/posts/python.html">Python</a>
+				<span class="post-date">2025-9-22</span>
+				<p>在 Python 中 `%` 左边是字符串的话，右边可以是一个值，表示对应的字符串格式化 </p>
+			</li>
+		
+			<li>
+				<a href="/posts/otel-part.html">OTLP 导出器的部分失败问题</a>
+				<span class="post-date">2025-9-20</span>
+				<p>OTLP 是 opentelemetry 中的协议传输标准，在收集到对应的metrics， trace，log 这些数据之后，我们往往会把对应的数据发送到远端，比如对应的 collector 对于整个数据传输的结果其实是存在三种状态的: 1. 失败状态: 比如因为网络问题出现的失败 2. 部分失败:...</p>
+			</li>
+		
+			<li>
+				<a href="/posts/language-ranking-anxiety.html">编程语言排行榜就是制造焦虑的烂玩意</a>
+				<span class="post-date">2025-1-27</span>
+				<p>每隔几个月，就有各种&#34;编程语言排行榜&#34;刷屏——TIOBE、PYPL、Stack Overflow 开发者调查、GitHub Octoverse……它们被包装成&#34;权威数据&#34;，被媒体转载，被培训机构引用，甚至被一些管理者用来做技术选型决策。 但真相是：**这些排行榜本质上就是制造焦虑的营销工具，对真正的...</p>
+			</li>
+		
+			<li>
+				<a href="/posts/otel-text.html">opentelemetry 中的跨上下文传播</a>
+				<span class="post-date">2023-9-20</span>
+				<p>在 otel 中有一个非常神奇的接口叫做 TextMapPropagator 这个接口用来在分布式追踪系统用于跨进程传播上下文信息的核心组件。 type TextMapPropagator interface { 	Inject(ctx context.Context, carrier TextMa...</p>
+			</li>
+		
+			<li>
+				<a href="/posts/group.html">消息队列踩坑记录</a>
+				<span class="post-date">2025-9-22</span>
+				<p>在Java应用中，我们往往会使用spring-kafka组件简单的设置一下group_id, topic就开始消费消息了，其实这样会埋下巨大的安全隐患，即当消费速度过慢时有可能会触发rebalance, 这批消息被分配到另一个消费者，然后新的消费者还会消费过慢，再次rebalance, 这样一直恶性...</p>
+			</li>
+		
+			<li>
+				<a href="/posts/pyproc.html">PyProc 源码分析 (持续更新中)</a>
+				<span class="post-date">2025-9-22</span>
+				<p>PyProc 的 frame 结构分成了两个部分, 第一个部分是对应的帧头, 第二部是对应的 数据部分, 也就是对应的数据部分，类型下面这样 [header][payload] </p>
+			</li>
+		
+			<li>
+				<a href="/posts/mircroservice.html">高性能系统设计之注册中心设计</a>
+				<span class="post-date">2025-9-23</span>
+				<p>type cluster struct { </p>
+			</li>
+		
+			<li>
+				<a href="/posts/rabbitmq.html">RabbitMQ 与 Aio-Pika</a>
+				<span class="post-date">2025-9-22</span>
+				<p>整个 rabbitmq 分成了 四个部分 1. producer: 用来生成对应的消息, 将消息发送出去 2. exchange: 用来按照对应的 router 把消息转发到对应的 queue 上面去 3. queue： 负责持久化对应的消息，兔子mq 的消息持久化机制是通过 Erlang 的 分布...</p>
+			</li>
+		
+			<li>
+				<a href="/posts/rag.html">RAG 和向量数据库</a>
+				<span class="post-date">2025-9-22</span>
+				<p>![rag](/static/images/rag.png) </p>
+			</li>
+		
+			<li>
+				<a href="/posts/data.html">异地多活数据存储策略设计</a>
+				<span class="post-date">2025-9-20</span>
+				<p>当用户量上去的时候，我们必须要考虑到数据的分离存储，比如将主要的数据放在一个机房中， ![arch](/static/images/db-two.png) 在这个方案中，数据库主库集中在一个机房，其他机房的数据库都是从库。当有数据修改请求时，核心机房的主库先完成修改，然后通过数据库主从同步把修改后的...</p>
+			</li>
+		
+			<li>
+				<a href="/posts/build-backend.html">Poetry build_wheel 子进程退出问题排查</a>
+				<span class="post-date">2025-9-22</span>
+				<p></p>
+			</li>
+		
+			<li>
+				<a href="/posts/session.html">Python ORM </a>
+				<span class="post-date">2025-9-22</span>
+				<p>首先一句话解释一下 session 是一个数据库会话，它是一个用对象抽象过程的简单接口，用于与数据库进行交互。 </p>
+			</li>
+		
+			<li>
+				<a href="/posts/sharding.html">高性能系统设计之数据库设计</a>
+				<span class="post-date">2025-9-22</span>
+				<p>分库分表的原则: 1. 垂直拆分: 比如说按照用户类型来拆分，比如普通用户和管理员用户 </p>
+			</li>
+		
+			<li>
+				<a href="/posts/apschedule.html">APSchduler 介绍</a>
+				<span class="post-date">2025-9-22</span>
+				<p>是的，**在你当前的代码中使用 `AsyncIOScheduler` 时，默认情况下会等到上一个 `self.run()` 执行完毕之后，才会开启下一个 job**。 这正是 APScheduler 的 **interval trigger**（间隔触发器）的默认行为，具体由参数 `coalesce...</p>
+			</li>
+		
+		</ul>
+	</section>
 
 	</main>
 	<footer>
 		<p>© 2026 yumosx&#39;s 写字的地方</p>
 	</footer>
 	<script src="/static/theme.js"></script>
+	<script src="/static/profile.js"></script>
 </body>
 </html>
+
