@@ -259,3 +259,35 @@ type Broker interface {
 }
 ```
 
+## 强大的 sync.Pool
+
+sync.Pool 可以说是go 语言中最强大的兵器之一了, 最常见的一种用法就是下面这个:
+
+```go
+var attrs = sync.Pool{
+	New: func() any {
+		return & Type {}
+	}
+}
+```
+
+但是这其实我们是固定思维模式在作祟，其实我们也可以这样用:
+
+```go
+type Processor struct{
+	batch int
+}
+
+
+func NewProcessor(batch int) *Processor{
+	attr.New = func() any {
+		return &Type{}
+	}
+	return &Processor{}
+}
+
+
+func (p *Processor) Process() {
+	attrs.Get().(*Type{})
+}
+```
