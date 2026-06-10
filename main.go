@@ -147,12 +147,15 @@ func (g *Generator) writeDefaultAssets() error {
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>{{.Site.Title}} - {{.Title}}</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 	<link rel="stylesheet" href="/static/style.css">
 	<link rel="alternate" type="application/rss+xml" href="/feed.xml" title="{{.Site.Title}} RSS Feed">
 	<script>(function(){try{var t=localStorage.getItem('blog-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.setAttribute('data-theme','dark')}catch(e){}})();</script>
 </head>
 <body>
-	<header>
+	<header class="site-header">
 		<h1><a href="/">{{.Site.Title}}</a></h1>
 		<nav class="site-nav">
 			<a href="/">首页</a>
@@ -167,20 +170,65 @@ func (g *Generator) writeDefaultAssets() error {
 		<p>© {{now.Format "2006"}} {{.Site.Title}}</p>
 	</footer>
 	<script src="/static/theme.js"></script>
+	<script src="/static/profile.js"></script>
 </body>
 </html>`
 
 	indexTmpl := `{{define "content"}}
-	<h2>博客文章</h2>
-	<ul class="post-list">
-	{{range .Posts}}
-		<li>
-			<a href="/posts/{{.Slug}}.html">{{.Title}}</a>
-			<span class="post-date">{{.Date}}</span>
-			<p>{{.Summary}}</p>
-		</li>
-	{{end}}
-	</ul>
+	<section class="profile-card" aria-label="个人简介">
+		<div class="profile-row profile-header">
+			<div class="profile-identity">
+				<img class="profile-avatar" src="https://github.com/yumosx.png" alt="Ian Wang" width="72" height="72" loading="eager">
+				<div class="profile-name-block">
+					<h2 class="profile-name">Ian Wang<span class="typing-cursor" aria-hidden="true"></span></h2>
+					<p class="profile-handle">[@yumosx]</p>
+				</div>
+			</div>
+			<div class="profile-actions">
+				<button type="button" id="copy-profile" class="icon-btn" aria-label="复制主页链接" title="复制链接">
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+				</button>
+			</div>
+		</div>
+
+		<nav class="profile-row profile-links" aria-label="社交链接">
+			<a href="https://github.com/yumosx" class="profile-link" target="_blank" rel="noopener noreferrer">
+				<svg class="link-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+				<span>yumosx</span>
+			</a>
+			<a href="https://opentelemetry.io" class="profile-link" target="_blank" rel="noopener noreferrer">
+				<svg class="link-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+				<span>OpenTelemetry</span>
+			</a>
+			<a href="/links.html" class="profile-link">
+				<svg class="link-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+				<span>友链</span>
+			</a>
+		</nav>
+
+		<div class="profile-divider" aria-hidden="true"></div>
+
+		<div class="profile-row profile-bio">
+			<p class="profile-intro">Hi there, I'm Ian Wang (<a href="https://github.com/yumosx" target="_blank" rel="noopener noreferrer">@yumosx</a>). Gopher · OpenTelemetry CNCF Member · Open-source Addict.</p>
+			<p class="profile-status">
+				<span class="status-indicator" aria-hidden="true"></span>
+				Currently making observability simpler, faster, and more fun in Go.
+			</p>
+		</div>
+	</section>
+
+	<section class="posts-section">
+		<h2 class="section-title">博客文章</h2>
+		<ul class="post-list">
+		{{range .Posts}}
+			<li>
+				<a href="/posts/{{.Slug}}.html">{{.Title}}</a>
+				<span class="post-date">{{.Date}}</span>
+				<p>{{.Summary}}</p>
+			</li>
+		{{end}}
+		</ul>
+	</section>
 {{end}}`
 
 	postTmpl := `{{define "content"}}
@@ -233,14 +281,63 @@ func (g *Generator) writeDefaultAssets() error {
 	}
 })();`
 
+	profileJS := `(function () {
+	function initCopyButton() {
+		var btn = document.getElementById('copy-profile');
+		if (!btn) return;
+
+		btn.addEventListener('click', function () {
+			var url = window.location.origin + '/';
+			if (navigator.clipboard && navigator.clipboard.writeText) {
+				navigator.clipboard.writeText(url).then(showCopied).catch(fallbackCopy);
+			} else {
+				fallbackCopy(url);
+			}
+		});
+
+		function fallbackCopy(text) {
+			var ta = document.createElement('textarea');
+			ta.value = text;
+			ta.style.position = 'fixed';
+			ta.style.opacity = '0';
+			document.body.appendChild(ta);
+			ta.select();
+			try {
+				document.execCommand('copy');
+				showCopied();
+			} catch (e) {}
+			document.body.removeChild(ta);
+		}
+
+		function showCopied() {
+			btn.classList.add('copied');
+			btn.setAttribute('aria-label', '已复制');
+			setTimeout(function () {
+				btn.classList.remove('copied');
+				btn.setAttribute('aria-label', '复制主页链接');
+			}, 2000);
+		}
+	}
+
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', initCopyButton);
+	} else {
+		initCopyButton();
+	}
+})();`
+
 	paths := map[string]string{
 		filepath.Join(g.cfg.TemplatesDir, "main.html"):  mainTmpl,
 		filepath.Join(g.cfg.TemplatesDir, "index.html"): indexTmpl,
 		filepath.Join(g.cfg.TemplatesDir, "post.html"):  postTmpl,
 		filepath.Join(g.cfg.StaticDir, "style.css"):     css,
 		filepath.Join(g.cfg.StaticDir, "theme.js"):      themeJS,
+		filepath.Join(g.cfg.StaticDir, "profile.js"):    profileJS,
 	}
 	for path, body := range paths {
+		if _, err := os.Stat(path); err == nil {
+			continue
+		}
 		if err := os.WriteFile(path, []byte(body), 0644); err != nil {
 			return fmt.Errorf("写入 %s: %w", path, err)
 		}

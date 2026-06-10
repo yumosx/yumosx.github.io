@@ -27,3 +27,6 @@ public/
 *.swp
 *.swo
 *~
+
+# macOS
+.DS_Store
