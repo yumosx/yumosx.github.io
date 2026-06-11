@@ -3,7 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>yumosx&#39;s 写字的地方 - 基础设施运维相关</title>
+	<title>yumosx&#39;s 写字的地方 - 分布式链路追踪系统设计 </title>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -23,28 +23,9 @@
 	<main>
 		
 	<article class="post">
-		<h2>基础设施运维相关</h2>
+		<h2>分布式链路追踪系统设计 </h2>
 		<div class="post-meta">2023-11-15</div>
-		<div class="post-content"><h3 id="heading">一个简单的例子：</h3>
-<p>假设你需要一台有特定配置的云服务器。</p>
-<ul>
-<li>
-<p><strong>传统方式</strong>：登录云服务商的网站，点点点，选择CPU、内存、硬盘大小……然后创建。</p>
-</li>
-<li>
-<p><strong>IaC 方式</strong>：你写一个这样的配置文件（这里是 Terraform 的简化例子）：</p>
-<pre><code>resource &quot;aws_instance&quot; &quot;my_web_server&quot; {
-  ami           = &quot;ami-12345678&quot;
-  instance_type = &quot;t2.micro&quot;
-  tags = {
-    Name = &quot;HelloWorldServer&quot;
-  }
-}
-</code></pre>
-<p>然后运行一条命令 <code>terraform apply</code>，工具就会自动帮你在云上创建出这台服务器。</p>
-</li>
-</ul>
-<h2 id="heading-1">网站状态建设</h2>
+		<div class="post-content"><p>log with id =&gt;</p>
 </div>
 	</article>
 
