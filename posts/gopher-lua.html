@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>yumosx&#39;s 写字的地方 - Gopher Lua 编写</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="/static/style.css">
+	<link rel="alternate" type="application/rss+xml" href="/feed.xml" title="yumosx&#39;s 写字的地方 RSS Feed">
+	<script>(function(){try{var t=localStorage.getItem('blog-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.setAttribute('data-theme','dark')}catch(e){}})();</script>
+</head>
+<body>
+	<header class="site-header">
+		<h1><a href="/">yumosx&#39;s 写字的地方</a></h1>
+		<nav class="site-nav">
+			<a href="/">首页</a>
+			<a href="/links.html">友链</a>
+		</nav>
+		<button id="theme-toggle" class="theme-toggle" aria-label="切换主题">🌙</button>
+	</header>
+	<main>
+		
+	<article class="post">
+		<h2>Gopher Lua 编写</h2>
+		<div class="post-meta">2025-10-02</div>
+		<div class="post-content"><h2 id="heading">基本使用</h2>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="kn">package</span><span class="w"> </span><span class="nx">main</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nx">lua</span><span class="w"> </span><span class="s">&#34;github.com/yuin/gopher-lua&#34;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">L</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">lua</span><span class="p">.</span><span class="nf">NewState</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">defer</span><span class="w"> </span><span class="nx">L</span><span class="p">.</span><span class="nf">Close</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="c1">// 执行 Lua 字符串</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">L</span><span class="p">.</span><span class="nf">DoString</span><span class="p">(</span><span class="s">`print(&#34;Hello from Lua!&#34;)`</span><span class="p">);</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="c1">// 执行 Lua 文件</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="c1">// if err := L.DoFile(&#34;script.lua&#34;); err != nil { ... }</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre><h2 id="lsetglobal">设置全局变量；L.SetGlobal()</h2>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="c1">// Go 设置全局变量</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">L</span><span class="p">.</span><span class="nf">SetGlobal</span><span class="p">(</span><span class="s">&#34;name&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">lua</span><span class="p">.</span><span class="nf">LString</span><span class="p">(</span><span class="s">&#34;gopher&#34;</span><span class="p">))</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">L</span><span class="p">.</span><span class="nf">SetGlobal</span><span class="p">(</span><span class="s">&#34;age&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">lua</span><span class="p">.</span><span class="nf">LNumber</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="c1">// 在 Lua 中使用</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">L</span><span class="p">.</span><span class="nf">DoString</span><span class="p">(</span><span class="s">`print(name, age)`</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="c1">// Go 获取 Lua 全局变量</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">L</span><span class="p">.</span><span class="nf">DoString</span><span class="p">(</span><span class="s">`version = &#34;1.0&#34;`</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">ver</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">L</span><span class="p">.</span><span class="nf">GetGlobal</span><span class="p">(</span><span class="s">&#34;version&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="k">if</span><span class="w"> </span><span class="nx">str</span><span class="p">,</span><span class="w"> </span><span class="nx">ok</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">ver</span><span class="p">.(</span><span class="nx">lua</span><span class="p">.</span><span class="nx">LString</span><span class="p">);</span><span class="w"> </span><span class="nx">ok</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;Version:&#34;</span><span class="p">,</span><span class="w"> </span><span class="nb">string</span><span class="p">(</span><span class="nx">str</span><span class="p">))</span><span class="w"> </span><span class="c1">// 输出: 1.0</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre><h2 id="-lnewfunction">设置函数 L.NewFunction()</h2>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="c1">// 定义一个加法函数</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">L</span><span class="p">.</span><span class="nf">SetGlobal</span><span class="p">(</span><span class="s">&#34;add&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">L</span><span class="p">.</span><span class="nf">NewFunction</span><span class="p">(</span><span class="kd">func</span><span class="p">(</span><span class="nx">L</span><span class="w"> </span><span class="o">*</span><span class="nx">lua</span><span class="p">.</span><span class="nx">LState</span><span class="p">)</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">a</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">L</span><span class="p">.</span><span class="nf">CheckNumber</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="c1">// 第一个参数</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">b</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">L</span><span class="p">.</span><span class="nf">CheckNumber</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="c1">// 第二个参数</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">L</span><span class="p">.</span><span class="nf">Push</span><span class="p">(</span><span class="nx">lua</span><span class="p">.</span><span class="nf">LNumber</span><span class="p">(</span><span class="nx">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">b</span><span class="p">))</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="c1">// 返回值个数</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}))</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="c1">// Lua 中调用</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">L</span><span class="p">.</span><span class="nf">DoString</span><span class="p">(</span><span class="s">`print(add(10, 20))`</span><span class="p">)</span><span class="w"> </span><span class="c1">// 输出 30</span><span class="w">
+</span></span></span></code></pre><h2 id="heading-1">设置表和调用表</h2>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="nx">tbl</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">L</span><span class="p">.</span><span class="nf">NewTable</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">L</span><span class="p">.</span><span class="nf">SetField</span><span class="p">(</span><span class="nx">tbl</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;x&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">lua</span><span class="p">.</span><span class="nf">LNumber</span><span class="p">(</span><span class="mi">100</span><span class="p">))</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">L</span><span class="p">.</span><span class="nf">SetField</span><span class="p">(</span><span class="nx">tbl</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;y&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">lua</span><span class="p">.</span><span class="nf">LNumber</span><span class="p">(</span><span class="mi">200</span><span class="p">))</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="c1">// 也可以像数组一样</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">tbl</span><span class="p">.</span><span class="nf">RawSetInt</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nx">lua</span><span class="p">.</span><span class="nf">LString</span><span class="p">(</span><span class="s">&#34;first&#34;</span><span class="p">))</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">tbl</span><span class="p">.</span><span class="nf">RawSetInt</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nx">lua</span><span class="p">.</span><span class="nf">LString</span><span class="p">(</span><span class="s">&#34;second&#34;</span><span class="p">))</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">L</span><span class="p">.</span><span class="nf">SetGlobal</span><span class="p">(</span><span class="s">&#34;point&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">tbl</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">L</span><span class="p">.</span><span class="nf">DoString</span><span class="p">(</span><span class="s">`print(point.x, point.y, point[1], point[2])`</span><span class="p">)</span><span class="w">
+</span></span></span></code></pre><h2 id="-go--lua">将 Go 数据传递给 Lua</h2>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="kd">type</span><span class="w"> </span><span class="nx">Person</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">Name</span><span class="w"> </span><span class="kt">string</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">Age</span><span class="w">  </span><span class="kt">int</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="c1">// 注册一个构造器</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">L</span><span class="p">.</span><span class="nf">SetGlobal</span><span class="p">(</span><span class="s">&#34;newPerson&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">L</span><span class="p">.</span><span class="nf">NewFunction</span><span class="p">(</span><span class="kd">func</span><span class="p">(</span><span class="nx">L</span><span class="w"> </span><span class="o">*</span><span class="nx">lua</span><span class="p">.</span><span class="nx">LState</span><span class="p">)</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">name</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">L</span><span class="p">.</span><span class="nf">CheckString</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">age</span><span class="w">  </span><span class="o">:=</span><span class="w"> </span><span class="nx">L</span><span class="p">.</span><span class="nf">CheckInt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">p</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">Person</span><span class="p">{</span><span class="nx">Name</span><span class="p">:</span><span class="w"> </span><span class="nx">name</span><span class="p">,</span><span class="w"> </span><span class="nx">Age</span><span class="p">:</span><span class="w"> </span><span class="nx">age</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">ud</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">L</span><span class="p">.</span><span class="nf">NewUserData</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">ud</span><span class="p">.</span><span class="nx">Value</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">p</span><span class="w">     </span><span class="c1">// 存储 Go 对象</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">L</span><span class="p">.</span><span class="nf">SetMetatable</span><span class="p">(</span><span class="nx">ud</span><span class="p">,</span><span class="w"> </span><span class="nx">L</span><span class="p">.</span><span class="nf">GetTypeMetatable</span><span class="p">(</span><span class="s">&#34;person&#34;</span><span class="p">))</span><span class="w"> </span><span class="c1">// 设置元表</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">L</span><span class="p">.</span><span class="nf">Push</span><span class="p">(</span><span class="nx">ud</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}))</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="c1">// 定义元方法 __index，让 userdata 支持属性访问</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">mt</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">L</span><span class="p">.</span><span class="nf">NewTypeMetatable</span><span class="p">(</span><span class="s">&#34;person&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">L</span><span class="p">.</span><span class="nf">SetField</span><span class="p">(</span><span class="nx">mt</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;__index&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">L</span><span class="p">.</span><span class="nf">NewFunction</span><span class="p">(</span><span class="kd">func</span><span class="p">(</span><span class="nx">L</span><span class="w"> </span><span class="o">*</span><span class="nx">lua</span><span class="p">.</span><span class="nx">LState</span><span class="p">)</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">p</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">L</span><span class="p">.</span><span class="nf">CheckUserData</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="nx">Value</span><span class="p">.(</span><span class="o">*</span><span class="nx">Person</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">key</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">L</span><span class="p">.</span><span class="nf">CheckString</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">switch</span><span class="w"> </span><span class="nx">key</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="s">&#34;name&#34;</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nx">L</span><span class="p">.</span><span class="nf">Push</span><span class="p">(</span><span class="nx">lua</span><span class="p">.</span><span class="nf">LString</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">Name</span><span class="p">))</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="s">&#34;age&#34;</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nx">L</span><span class="p">.</span><span class="nf">Push</span><span class="p">(</span><span class="nx">lua</span><span class="p">.</span><span class="nf">LNumber</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">Age</span><span class="p">))</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">default</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nx">L</span><span class="p">.</span><span class="nf">Push</span><span class="p">(</span><span class="nx">lua</span><span class="p">.</span><span class="nx">LNil</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}))</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="c1">// Lua 中即可使用</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">L</span><span class="p">.</span><span class="nf">DoString</span><span class="p">(</span><span class="s">`
+</span></span></span><span class="line"><span class="cl"><span class="s">    local p = newPerson(&#34;Alice&#34;, 30)
+</span></span></span><span class="line"><span class="cl"><span class="s">    print(p.name, p.age)
+</span></span></span><span class="line"><span class="cl"><span class="s">`</span><span class="p">)</span><span class="w">
+</span></span></span></code></pre></div>
+	</article>
+
+	</main>
+	<footer>
+		<p>© 2026 yumosx&#39;s 写字的地方</p>
+	</footer>
+	<script src="/static/theme.js"></script>
+	<script src="/static/profile.js"></script>
+</body>
+</html>
