@@ -3,7 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>yumosx&#39;s 写字的地方 - OTLP 导出器的部分失败问题</title>
+	<title>yumosx&#39;s 写字的地方 - opentelemetry go 随手记 </title>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -23,9 +23,11 @@
 	<main>
 		
 	<article class="post">
-		<h2>OTLP 导出器的部分失败问题</h2>
+		<h2>opentelemetry go 随手记 </h2>
 		<div class="post-meta">2025-9-20</div>
-		<div class="post-content"><p>OTLP 是 opentelemetry 中的协议传输标准，在收集到对应的metrics， trace，log 这些数据之后，我们往往会把对应的数据发送到远端，比如对应的 collector
+		<div class="post-content"><p>本文档记录我参与 OTEL 开源项目碰到的坑，碰到有趣的点</p>
+<h2 id="otlp-">OTLP 导出器的部分失败问题</h2>
+<p>OTLP 是 opentelemetry 中的协议传输标准，在收集到对应的metrics， trace，log 这些数据之后，我们往往会把对应的数据发送到远端，比如对应的 collector
 对于整个数据传输的结果其实是存在三种状态的:</p>
 <ol>
 <li>失败状态: 比如因为网络问题出现的失败</li>
@@ -39,30 +41,101 @@
 <pre><code>The client MUST NOT retry the request when it receives a partial success response where the partial_success is populated.
 </code></pre>
 <p>下面这段代码处理的方式其实也说明了这一点, 当出现部分失败的时候是不会 return 一个 err 的</p>
-<pre><code>return errors.Join(uploadErr, c.requestFunc(ctx, func(ctx context.Context) error {
-    success = count
-    resp, err := c.lsc.Export(ctx, &amp;collogpb.ExportLogsServiceRequest{
-        ResourceLogs: rl,
-    })
-    if resp != nil &amp;&amp; resp.PartialSuccess != nil {
-        msg := resp.PartialSuccess.GetErrorMessage()
-        n := resp.PartialSuccess.GetRejectedLogRecords()
-        success -= n
-        if n != 0 || msg != &quot;&quot; {
-            err := errPartial{msg: msg, n: n}
-            uploadErr = errors.Join(uploadErr, err)
-        }
-    }
-    // nil is converted to OK.
-    if status.Code(err) == codes.OK {
-        // Success.
-        return nil
-    }
-    success = 0
-    return err
-}))
-</code></pre>
-</div>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="k">return</span><span class="w"> </span><span class="nx">errors</span><span class="p">.</span><span class="nf">Join</span><span class="p">(</span><span class="nx">uploadErr</span><span class="p">,</span><span class="w"> </span><span class="nx">c</span><span class="p">.</span><span class="nf">requestFunc</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="kd">func</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">)</span><span class="w"> </span><span class="kt">error</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">success</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">count</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">resp</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">c</span><span class="p">.</span><span class="nx">lsc</span><span class="p">.</span><span class="nf">Export</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">collogpb</span><span class="p">.</span><span class="nx">ExportLogsServiceRequest</span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nx">ResourceLogs</span><span class="p">:</span><span class="w"> </span><span class="nx">rl</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">})</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">resp</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">resp</span><span class="p">.</span><span class="nx">PartialSuccess</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nx">msg</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">resp</span><span class="p">.</span><span class="nx">PartialSuccess</span><span class="p">.</span><span class="nf">GetErrorMessage</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nx">n</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">resp</span><span class="p">.</span><span class="nx">PartialSuccess</span><span class="p">.</span><span class="nf">GetRejectedLogRecords</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nx">success</span><span class="w"> </span><span class="o">-=</span><span class="w"> </span><span class="nx">n</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">n</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">msg</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="s">&#34;&#34;</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">errPartial</span><span class="p">{</span><span class="nx">msg</span><span class="p">:</span><span class="w"> </span><span class="nx">msg</span><span class="p">,</span><span class="w"> </span><span class="nx">n</span><span class="p">:</span><span class="w"> </span><span class="nx">n</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="nx">uploadErr</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">errors</span><span class="p">.</span><span class="nf">Join</span><span class="p">(</span><span class="nx">uploadErr</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// nil is converted to OK.</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">status</span><span class="p">.</span><span class="nf">Code</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nx">codes</span><span class="p">.</span><span class="nx">OK</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// Success.</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="kc">nil</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">success</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">err</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}))</span><span class="w">
+</span></span></span></code></pre><h2 id="otel--manual-reader-">otel 的 manual reader 组件</h2>
+<p>这个接口可以让我们直接去读取相对应的指标, 首先我们需要看下这个接口是如何使用的</p>
+<ol>
+<li>创建一个 manual reader 组件, 并传递给 meter provider</li>
+</ol>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="nx">reader</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">otel</span><span class="p">.</span><span class="nf">NewManualReader</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">mp</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">metrics</span><span class="p">.</span><span class="nf">NewMeterProvider</span><span class="p">(</span><span class="nx">metrics</span><span class="p">.</span><span class="nf">WithReader</span><span class="p">(</span><span class="nx">reader</span><span class="p">))</span><span class="w">
+</span></span></span></code></pre><ol start="2">
+<li>使用 collect 接口去收集对应的 metric</li>
+</ol>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="kd">var</span><span class="w"> </span><span class="nx">got</span><span class="w"> </span><span class="nx">metricdata</span><span class="p">.</span><span class="nx">ResourceMetrics</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nx">reader</span><span class="p">.</span><span class="nf">Collect</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">got</span><span class="p">)</span><span class="w">
+</span></span></span></code></pre><ol start="3">
+<li>我们查看一下 got 中是否有我们期望的 metric</li>
+</ol>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="nx">assert</span><span class="p">.</span><span class="nf">Equal</span><span class="p">(</span><span class="nx">t</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="nx">got</span><span class="p">.</span><span class="nx">ResourceMetrics</span><span class="p">))</span><span class="w">
+</span></span></span></code></pre><h2 id="otel-">otel 的跨上下文传播组件</h2>
+<p>在 otel 中有一个非常神奇的接口叫做 TextMapPropagator 这个接口用来在分布式追踪系统用于跨进程传播上下文信息的核心组件。</p>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="kd">type</span><span class="w"> </span><span class="nx">TextMapPropagator</span><span class="w"> </span><span class="kd">interface</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nf">Inject</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">carrier</span><span class="w"> </span><span class="nx">TextMapCarrier</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nf">Extract</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">carrier</span><span class="w"> </span><span class="nx">TextMapCarrier</span><span class="p">)</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nf">Fields</span><span class="p">()</span><span class="w"> </span><span class="p">[]</span><span class="kt">string</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre><ul>
+<li>Inject: 将当前上下文 ctx 中的跨进程,写入到载体 carrier 中</li>
+<li>Extract: 从载体 carrier 中提取跨进程信息,并返回一个新的上下文</li>
+<li>Fields: 返回 propagator 支持的字段</li>
+</ul>
+<p>下面是一段 Client/Server 代码来详细的演示这个流程:</p>
+<ol>
+<li>首先 client 创建根 span</li>
+<li>然后通过 inject 方法注入到追踪上下文中的 http 请求头中去</li>
+<li>服务端从请求头中拿到对应的追踪上下文</li>
+<li>在服务端创建对应的子 span</li>
+<li>返回对应的响应</li>
+<li>子 span 结束</li>
+</ol>
+<p>server 端的代码:</p>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="nf">handler</span><span class="p">(</span><span class="nx">w</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span><span class="w"> </span><span class="nx">r</span><span class="w"> </span><span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">propagator</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">otel</span><span class="p">.</span><span class="nf">GetTextMapPropagator</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">ctx</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">propagator</span><span class="p">.</span><span class="nf">Extract</span><span class="p">(</span><span class="nx">r</span><span class="p">.</span><span class="nf">Context</span><span class="p">(),</span><span class="w"> </span><span class="nx">propagation</span><span class="p">.</span><span class="nf">HeaderCarrier</span><span class="p">(</span><span class="nx">r</span><span class="p">.</span><span class="nx">Header</span><span class="p">))</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">span</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">tracer</span><span class="p">.</span><span class="nf">Start</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;server-header&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">defer</span><span class="w"> </span><span class="nx">span</span><span class="p">.</span><span class="nf">End</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">w</span><span class="p">.</span><span class="nf">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusOK</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">w</span><span class="p">.</span><span class="nf">Write</span><span class="p">([]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&#34;hello, world&#34;</span><span class="p">))</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre><p>client的代码:</p>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="nf">request</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nx">err</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">propagator</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">otel</span><span class="p">.</span><span class="nf">GetTextMapPropagator</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">req</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nf">NewRequestWithContext</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;GET&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;http://localhost:8080&#34;</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="k">return</span><span class="w"> </span><span class="nx">err</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">propagator</span><span class="p">.</span><span class="nf">Inject</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">propagation</span><span class="p">.</span><span class="nf">HeaderCarrier</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">Header</span><span class="p">))</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">client</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">http</span><span class="p">.</span><span class="nx">Client</span><span class="p">{}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">resp</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nf">Do</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="k">return</span><span class="w"> </span><span class="nx">err</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">defer</span><span class="w"> </span><span class="nx">resp</span><span class="p">.</span><span class="nx">Body</span><span class="p">.</span><span class="nf">Close</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="kc">nil</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre><p>client 创建对应的子 span:</p>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">span</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">tracer</span><span class="p">.</span><span class="nf">Start</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nf">Background</span><span class="p">(),</span><span class="w"> </span><span class="s">&#34;client-operation&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="k">defer</span><span class="w"> </span><span class="nx">span</span><span class="p">.</span><span class="nf">End</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nf">request</span><span class="p">(</span><span class="nx">ctx</span><span class="p">);</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="nx">log</span><span class="p">.</span><span class="nf">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div>
 	</article>
 
 	</main>

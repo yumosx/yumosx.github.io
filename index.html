@@ -117,21 +117,21 @@
 			</li>
 		
 			<li>
-				<a href="/posts/iac.html">基础设施运维相关</a>
-				<span class="post-date">2023-11-15</span>
-				<p>假设你需要一台有特定配置的云服务器。 *   **传统方式**：登录云服务商的网站，点点点，选择CPU、内存、硬盘大小……然后创建。 </p>
-			</li>
-		
-			<li>
-				<a href="/posts/otel-part.html">OTLP 导出器的部分失败问题</a>
+				<a href="/posts/otel-part.html">opentelemetry go 随手记 </a>
 				<span class="post-date">2025-9-20</span>
-				<p>OTLP 是 opentelemetry 中的协议传输标准，在收集到对应的metrics， trace，log 这些数据之后，我们往往会把对应的数据发送到远端，比如对应的 collector 对于整个数据传输的结果其实是存在三种状态的: 1. 失败状态: 比如因为网络问题出现的失败 2. 部分失败:...</p>
+				<p>本文档记录我参与 OTEL 开源项目碰到的坑，碰到有趣的点 </p>
 			</li>
 		
 			<li>
-				<a href="/posts/qps.html">分布式系统指标计算</a>
-				<span class="post-date">2025-9-23</span>
-				<p>在日常工作中经常需要去做一些系统优化相关的 </p>
+				<a href="/posts/rabbitmq.html">RabbitMQ 与 Aio-Pika</a>
+				<span class="post-date">2025-9-22</span>
+				<p>整个 rabbitmq 分成了 四个部分 1. producer: 用来生成对应的消息, 将消息发送出去 2. exchange: 用来按照对应的 router 把消息转发到对应的 queue 上面去 3. queue： 负责持久化对应的消息，兔子mq 的消息持久化机制是通过 Erlang 的 分布...</p>
+			</li>
+		
+			<li>
+				<a href="/posts/language-ranking-anxiety.html">编程语言排行榜就是制造焦虑的烂玩意</a>
+				<span class="post-date">2025-1-27</span>
+				<p>每隔几个月，就有各种&#34;编程语言排行榜&#34;刷屏——TIOBE、PYPL、Stack Overflow 开发者调查、GitHub Octoverse……它们被包装成&#34;权威数据&#34;，被媒体转载，被培训机构引用，甚至被一些管理者用来做技术选型决策。 但真相是：**这些排行榜本质上就是制造焦虑的营销工具，对真正的...</p>
 			</li>
 		
 			<li>
@@ -144,18 +144,6 @@
 				<a href="/posts/grpc.html">微服务框架选型: gRPC 高级篇 </a>
 				<span class="post-date">2025-9-24</span>
 				<p>type UnaryServerInterceptor func(ctx context.Context, req any, info *UnaryServerInfo, handler UnaryHandler) (resp any, err error) </p>
-			</li>
-		
-			<li>
-				<a href="/posts/otel-reader.html">OTEL Manual Reader 组件</a>
-				<span class="post-date">2025-9-20</span>
-				<p>首先我们需要看下这个接口是如何使用的 1. 创建一个 manual reader 组件, 并传递给 meter provider </p>
-			</li>
-		
-			<li>
-				<a href="/posts/otel-text.html">opentelemetry 中的跨上下文传播</a>
-				<span class="post-date">2023-9-20</span>
-				<p>在 otel 中有一个非常神奇的接口叫做 TextMapPropagator 这个接口用来在分布式追踪系统用于跨进程传播上下文信息的核心组件。 type TextMapPropagator interface { 	Inject(ctx context.Context, carrier TextMa...</p>
 			</li>
 		
 			<li>
@@ -177,15 +165,15 @@
 			</li>
 		
 			<li>
-				<a href="/posts/language-ranking-anxiety.html">编程语言排行榜就是制造焦虑的烂玩意</a>
-				<span class="post-date">2025-1-27</span>
-				<p>每隔几个月，就有各种&#34;编程语言排行榜&#34;刷屏——TIOBE、PYPL、Stack Overflow 开发者调查、GitHub Octoverse……它们被包装成&#34;权威数据&#34;，被媒体转载，被培训机构引用，甚至被一些管理者用来做技术选型决策。 但真相是：**这些排行榜本质上就是制造焦虑的营销工具，对真正的...</p>
+				<a href="/posts/qps.html">分布式系统指标计算</a>
+				<span class="post-date">2025-9-23</span>
+				<p>在日常工作中经常需要去做一些系统优化相关的 </p>
 			</li>
 		
 			<li>
-				<a href="/posts/rabbitmq.html">RabbitMQ 与 Aio-Pika</a>
-				<span class="post-date">2025-9-22</span>
-				<p>整个 rabbitmq 分成了 四个部分 1. producer: 用来生成对应的消息, 将消息发送出去 2. exchange: 用来按照对应的 router 把消息转发到对应的 queue 上面去 3. queue： 负责持久化对应的消息，兔子mq 的消息持久化机制是通过 Erlang 的 分布...</p>
+				<a href="/posts/iac.html">基础设施运维相关</a>
+				<span class="post-date">2023-9-24</span>
+				<p>假设你需要一台有特定配置的云服务器。 *   **传统方式**：登录云服务商的网站，点点点，选择CPU、内存、硬盘大小……然后创建。 </p>
 			</li>
 		
 			<li>
@@ -196,7 +184,7 @@
 		
 			<li>
 				<a href="/posts/data.html">异地多活数据存储策略设计</a>
-				<span class="post-date">2025-9-20</span>
+				<span class="post-date">2025-9-25</span>
 				<p>当用户量上去的时候，我们必须要考虑到数据的分离存储，比如将主要的数据放在一个机房中， ![arch](/static/images/db-two.png) 在这个方案中，数据库主库集中在一个机房，其他机房的数据库都是从库。当有数据修改请求时，核心机房的主库先完成修改，然后通过数据库主从同步把修改后的...</p>
 			</li>
 		
