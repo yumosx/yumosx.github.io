@@ -69,6 +69,12 @@
 		<ul class="post-list">
 		
 			<li>
+				<a href="/posts/lib-api-sche.html">APSchduler 库学习 </a>
+				<span class="post-date">2025-10-22</span>
+				<p>**在你当前的代码中使用 `AsyncIOScheduler` 时，默认情况下会等到上一个 `self.run()` 执行完毕之后，才会开启下一个 job**。 这正是 APScheduler 的 **interval trigger**（间隔触发器）的默认行为，具体由参数 `coalesce` 和...</p>
+			</li>
+		
+			<li>
 				<a href="/posts/redis.html">redis 缓存设计方案 </a>
 				<span class="post-date">2025-10-02</span>
 				<p>在程序启动之前的时候把系统中高频访问的数据刷新到 redis 中去，比如商品列表信息，课程信息，当刷新完毕之后，将对外的api 端口打开 加载缓存的时候，我们可以在 go 中去嵌入 lua 脚本 对一些数据做清洗 </p>
@@ -117,33 +123,33 @@
 			</li>
 		
 			<li>
-				<a href="/posts/otel-part.html">opentelemetry go 随手记 </a>
-				<span class="post-date">2025-9-20</span>
-				<p>本文档记录我参与 OTEL 开源项目碰到的坑，碰到有趣的点 </p>
-			</li>
-		
-			<li>
-				<a href="/posts/rabbitmq.html">RabbitMQ 与 Aio-Pika</a>
-				<span class="post-date">2025-9-22</span>
-				<p>整个 rabbitmq 分成了 四个部分 1. producer: 用来生成对应的消息, 将消息发送出去 2. exchange: 用来按照对应的 router 把消息转发到对应的 queue 上面去 3. queue： 负责持久化对应的消息，兔子mq 的消息持久化机制是通过 Erlang 的 分布...</p>
-			</li>
-		
-			<li>
-				<a href="/posts/language-ranking-anxiety.html">编程语言排行榜就是制造焦虑的烂玩意</a>
-				<span class="post-date">2025-1-27</span>
-				<p>每隔几个月，就有各种&#34;编程语言排行榜&#34;刷屏——TIOBE、PYPL、Stack Overflow 开发者调查、GitHub Octoverse……它们被包装成&#34;权威数据&#34;，被媒体转载，被培训机构引用，甚至被一些管理者用来做技术选型决策。 但真相是：**这些排行榜本质上就是制造焦虑的营销工具，对真正的...</p>
-			</li>
-		
-			<li>
 				<a href="/posts/mircroservice.html">高性能系统设计之注册中心设计</a>
 				<span class="post-date">2025-9-23</span>
 				<p>type cluster struct { </p>
 			</li>
 		
 			<li>
+				<a href="/posts/rabbitmq.html">RabbitMQ 与 Aio-Pika</a>
+				<span class="post-date">2025-9-21</span>
+				<p>整个 rabbitmq 分成了 四个部分 1. producer: 用来生成对应的消息, 将消息发送出去 2. exchange: 用来按照对应的 router 把消息转发到对应的 queue 上面去 3. queue： 负责持久化对应的消息，兔子mq 的消息持久化机制是通过 Erlang 的 分布...</p>
+			</li>
+		
+			<li>
+				<a href="/posts/iac.html">基础设施运维相关</a>
+				<span class="post-date">2023-9-24</span>
+				<p>假设你需要一台有特定配置的云服务器。 *   **传统方式**：登录云服务商的网站，点点点，选择CPU、内存、硬盘大小……然后创建。 </p>
+			</li>
+		
+			<li>
 				<a href="/posts/grpc.html">微服务框架选型: gRPC 高级篇 </a>
 				<span class="post-date">2025-9-24</span>
 				<p>type UnaryServerInterceptor func(ctx context.Context, req any, info *UnaryServerInfo, handler UnaryHandler) (resp any, err error) </p>
+			</li>
+		
+			<li>
+				<a href="/posts/otel-part.html">opentelemetry go 随手记 </a>
+				<span class="post-date">2025-9-20</span>
+				<p>本文档记录我参与 OTEL 开源项目碰到的坑，碰到有趣的点 </p>
 			</li>
 		
 			<li>
@@ -167,18 +173,18 @@
 			<li>
 				<a href="/posts/qps.html">分布式系统指标计算</a>
 				<span class="post-date">2025-9-23</span>
-				<p>在日常工作中经常需要去做一些系统优化相关的 </p>
+				<p>在日常工作中经常需要去做一些系统优化相关的 并发数 = 系统吞吐量 * 任务平均执行时间 </p>
 			</li>
 		
 			<li>
-				<a href="/posts/iac.html">基础设施运维相关</a>
-				<span class="post-date">2023-9-24</span>
-				<p>假设你需要一台有特定配置的云服务器。 *   **传统方式**：登录云服务商的网站，点点点，选择CPU、内存、硬盘大小……然后创建。 </p>
+				<a href="/posts/language-ranking-anxiety.html">编程语言排行榜就是制造焦虑的烂玩意</a>
+				<span class="post-date">2025-1-27</span>
+				<p>每隔几个月，就有各种&#34;编程语言排行榜&#34;刷屏——TIOBE、PYPL、Stack Overflow 开发者调查、GitHub Octoverse……它们被包装成&#34;权威数据&#34;，被媒体转载，被培训机构引用，甚至被一些管理者用来做技术选型决策。 但真相是：**这些排行榜本质上就是制造焦虑的营销工具，对真正的...</p>
 			</li>
 		
 			<li>
 				<a href="/posts/rag.html">RAG 和向量数据库</a>
-				<span class="post-date">2025-9-22</span>
+				<span class="post-date">2025-9-20</span>
 				<p>![rag](/static/images/rag.png) </p>
 			</li>
 		
@@ -207,9 +213,9 @@
 			</li>
 		
 			<li>
-				<a href="/posts/apschedule.html">APSchduler 介绍</a>
+				<a href="/posts/apschedule.html">高性能任务调度系统设计实战 </a>
 				<span class="post-date">2025-9-22</span>
-				<p>是的，**在你当前的代码中使用 `AsyncIOScheduler` 时，默认情况下会等到上一个 `self.run()` 执行完毕之后，才会开启下一个 job**。 这正是 APScheduler 的 **interval trigger**（间隔触发器）的默认行为，具体由参数 `coalesce...</p>
+				<p>在我们的日常开发中经常会碰到一些长时间，异步任务的执行，比如一个执行很耗时间的任务，可以长达 20多分钟, 这些任务的执行显然不能设计成阻塞形式的，如果是阻塞形式的系统很显然是扛不住的，所以这种系统很显然需要设计成非阻塞的异步的。 </p>
 			</li>
 		
 			<li>
