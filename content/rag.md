@@ -1,6 +1,6 @@
 ---
 Title: RAG 和向量数据库
-Date: 2025-9-22
+Date: 2025-9-20
 ---
 
 # RAG 和向量数据库
@@ -25,7 +25,7 @@ Date: 2025-9-22
 
 
 
-```py
+```python
 embedding_model = get_embedding_model()
 
 pdf_loader = PyPDFLoader(pdf_file, extract_images=False)

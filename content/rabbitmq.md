@@ -1,6 +1,6 @@
 ---
 Title: RabbitMQ 与 Aio-Pika
-Date: 2025-9-22
+Date: 2025-9-21
 ---
 
 整个 rabbitmq 分成了 四个部分
