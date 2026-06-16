@@ -81,19 +81,19 @@
 			</li>
 		
 			<li>
-				<a href="/posts/rbac.html">RBAC 权限控制系统设计 </a>
-				<span class="post-date">2025-10-02</span>
-				<p>role -&gt; permission -&gt; resource 经过这个链路去控制用户对应资源的访问权限，实现 RBAC 权限控制。 所以至少需要 5 张表: </p>
-			</li>
-		
-			<li>
 				<a href="/posts/gopher-lua.html">Gopher Lua 编写</a>
 				<span class="post-date">2025-10-02</span>
 				<p>package main </p>
 			</li>
 		
 			<li>
-				<a href="/posts/grom.html">GORM 高级篇 </a>
+				<a href="/posts/rbac.html">RBAC 权限控制系统设计 </a>
+				<span class="post-date">2025-10-02</span>
+				<p>role -&gt; permission -&gt; resource 经过这个链路去控制用户对应资源的访问权限，实现 RBAC 权限控制。 所以至少需要 5 张表: </p>
+			</li>
+		
+			<li>
+				<a href="/posts/gorm.html">GORM 高级篇 </a>
 				<span class="post-date">2025-10-01</span>
 				<p>type Plugin interface { 	Name() string 	Initialize(*DB) error } </p>
 			</li>
@@ -102,12 +102,6 @@
 				<a href="/posts/sign.html">如何给 commit sign 一下</a>
 				<span class="post-date">2023-11-16</span>
 				<p>最近在参加开源项目的时候，其中 Approver 要求我去给我的 commit sign 一下，也就是给对应的 commit 加上一个签名，这种签名有两种方式 Signed-off-by（您提供的这种)：是一文本记录，用于表明责任和许可同意。它很容易被任何人复制和添加。 - GPG 签名（git c...</p>
-			</li>
-		
-			<li>
-				<a href="/posts/impl.html">Go 代码大全</a>
-				<span class="post-date">2023-11-15</span>
-				<p>在 Go 语言中，与 Java 或 Python 等语言不同，结构体（struct）无需显式声明对某个接口的实现。 例如，在 Java 中我们常会写 class Student implements Person 来明确指定接口实现，这种方式具有一定的优势。 如果采用隐式实现机制，当接口中的方法发生...</p>
 			</li>
 		
 			<li>
@@ -123,27 +117,9 @@
 			</li>
 		
 			<li>
-				<a href="/posts/mircroservice.html">高性能系统设计之注册中心设计</a>
-				<span class="post-date">2025-9-23</span>
-				<p>type cluster struct { </p>
-			</li>
-		
-			<li>
-				<a href="/posts/rabbitmq.html">RabbitMQ 与 Aio-Pika</a>
-				<span class="post-date">2025-9-21</span>
-				<p>整个 rabbitmq 分成了 四个部分 1. producer: 用来生成对应的消息, 将消息发送出去 2. exchange: 用来按照对应的 router 把消息转发到对应的 queue 上面去 3. queue： 负责持久化对应的消息，兔子mq 的消息持久化机制是通过 Erlang 的 分布...</p>
-			</li>
-		
-			<li>
-				<a href="/posts/iac.html">基础设施运维相关</a>
-				<span class="post-date">2023-9-24</span>
-				<p>假设你需要一台有特定配置的云服务器。 *   **传统方式**：登录云服务商的网站，点点点，选择CPU、内存、硬盘大小……然后创建。 </p>
-			</li>
-		
-			<li>
-				<a href="/posts/grpc.html">微服务框架选型: gRPC 高级篇 </a>
-				<span class="post-date">2025-9-24</span>
-				<p>type UnaryServerInterceptor func(ctx context.Context, req any, info *UnaryServerInfo, handler UnaryHandler) (resp any, err error) </p>
+				<a href="/posts/impl.html">Go 代码大全</a>
+				<span class="post-date">2023-11-15</span>
+				<p>在 Go 语言中，与 Java 或 Python 等语言不同，结构体（struct）无需显式声明对某个接口的实现。 例如，在 Java 中我们常会写 class Student implements Person 来明确指定接口实现，这种方式具有一定的优势。 如果采用隐式实现机制，当接口中的方法发生...</p>
 			</li>
 		
 			<li>
@@ -153,9 +129,27 @@
 			</li>
 		
 			<li>
-				<a href="/posts/group.html">消息队列踩坑记录</a>
-				<span class="post-date">2025-9-22</span>
-				<p>在Java应用中，我们往往会使用spring-kafka组件简单的设置一下group_id, topic就开始消费消息了，其实这样会埋下巨大的安全隐患，即当消费速度过慢时有可能会触发rebalance, 这批消息被分配到另一个消费者，然后新的消费者还会消费过慢，再次rebalance, 这样一直恶性...</p>
+				<a href="/posts/rag.html">RAG 和向量数据库</a>
+				<span class="post-date">2025-9-20</span>
+				<p>![rag](/static/images/rag.png) </p>
+			</li>
+		
+			<li>
+				<a href="/posts/mircroservice.html">高性能系统设计之注册中心设计</a>
+				<span class="post-date">2025-9-23</span>
+				<p>type cluster struct { </p>
+			</li>
+		
+			<li>
+				<a href="/posts/iac.html">基础设施相关</a>
+				<span class="post-date">2023-9-24</span>
+				<p></p>
+			</li>
+		
+			<li>
+				<a href="/posts/grpc.html">微服务框架选型: gRPC 高级篇 </a>
+				<span class="post-date">2025-9-24</span>
+				<p>type UnaryServerInterceptor func(ctx context.Context, req any, info *UnaryServerInfo, handler UnaryHandler) (resp any, err error) </p>
 			</li>
 		
 			<li>
@@ -173,7 +167,13 @@
 			<li>
 				<a href="/posts/qps.html">分布式系统指标计算</a>
 				<span class="post-date">2025-9-23</span>
-				<p>在日常工作中经常需要去做一些系统优化相关的 并发数 = 系统吞吐量 * 任务平均执行时间 </p>
+				<p>在日常工作中经常需要去做一些系统优化相关的容量评估，核心是用 **Little 定律** 把吞吐量、响应时间和并发数联系起来： 并发数 = 系统吞吐量 * 任务平均执行时间 </p>
+			</li>
+		
+			<li>
+				<a href="/posts/rabbitmq.html">RabbitMQ 与 Aio-Pika</a>
+				<span class="post-date">2025-9-21</span>
+				<p>整个 rabbitmq 分成了 四个部分 1. producer: 用来生成对应的消息, 将消息发送出去 2. exchange: 用来按照对应的 router 把消息转发到对应的 queue 上面去 3. queue： 负责持久化对应的消息，兔子mq 的消息持久化机制是通过 Erlang 的 分布...</p>
 			</li>
 		
 			<li>
@@ -183,21 +183,15 @@
 			</li>
 		
 			<li>
-				<a href="/posts/rag.html">RAG 和向量数据库</a>
-				<span class="post-date">2025-9-20</span>
-				<p>![rag](/static/images/rag.png) </p>
+				<a href="/posts/group.html">消息队列踩坑记录</a>
+				<span class="post-date">2025-9-22</span>
+				<p>在Java应用中，我们往往会使用spring-kafka组件简单的设置一下group_id, topic就开始消费消息了，其实这样会埋下巨大的安全隐患，即当消费速度过慢时有可能会触发rebalance, 这批消息被分配到另一个消费者，然后新的消费者还会消费过慢，再次rebalance, 这样一直恶性...</p>
 			</li>
 		
 			<li>
 				<a href="/posts/data.html">异地多活数据存储策略设计</a>
 				<span class="post-date">2025-9-25</span>
 				<p>当用户量上去的时候，我们必须要考虑到数据的分离存储，比如将主要的数据放在一个机房中， ![arch](/static/images/db-two.png) 在这个方案中，数据库主库集中在一个机房，其他机房的数据库都是从库。当有数据修改请求时，核心机房的主库先完成修改，然后通过数据库主从同步把修改后的...</p>
-			</li>
-		
-			<li>
-				<a href="/posts/build-backend.html">Poetry build_wheel 子进程退出问题排查</a>
-				<span class="post-date">2025-9-22</span>
-				<p></p>
 			</li>
 		
 			<li>
@@ -213,15 +207,27 @@
 			</li>
 		
 			<li>
-				<a href="/posts/apschedule.html">高性能任务调度系统设计实战 </a>
+				<a href="/posts/build-backend.html">Poetry build_wheel 子进程退出问题排查</a>
 				<span class="post-date">2025-9-22</span>
-				<p>在我们的日常开发中经常会碰到一些长时间，异步任务的执行，比如一个执行很耗时间的任务，可以长达 20多分钟, 这些任务的执行显然不能设计成阻塞形式的，如果是阻塞形式的系统很显然是扛不住的，所以这种系统很显然需要设计成非阻塞的异步的。 </p>
+				<p></p>
+			</li>
+		
+			<li>
+				<a href="/posts/token.html">高性能系统之用户鉴权 token 设计 </a>
+				<span class="post-date">2025-9-20</span>
+				<p>jwt 有三个部分组成 1: 首先是 header 部分，header 部分主要用来做 2: 第二部分是 payload 部分，用来存放对应的信息 </p>
 			</li>
 		
 			<li>
 				<a href="/posts/trace-log.html">分布式链路追踪系统设计 </a>
 				<span class="post-date">2025-9-23</span>
 				<p>在大型项目中往往是多个服务并行运行的，比如我曾经呆过的一家公司将一个系统就拆成了这几个服务 1. 后台服务 2. 用户中心鉴权服务 2. 客户端服务 3. 数据统计服务 </p>
+			</li>
+		
+			<li>
+				<a href="/posts/worker.html">高性能任务调度系统设计实战 </a>
+				<span class="post-date">2025-9-22</span>
+				<p>在我们的日常开发中经常会碰到一些长时间，异步任务的执行，比如一个执行很耗时间的任务，可以长达 20多分钟, 这些任务的执行显然不能设计成阻塞形式的，如果是阻塞形式的系统很显然是扛不住的，所以这种系统很显然需要设计成非阻塞的异步的。 设计这种系统可用大概拆分出这样几个架构: 1. 调度对应的任务，调度...</p>
 			</li>
 		
 		</ul>

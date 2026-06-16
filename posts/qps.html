@@ -25,9 +25,74 @@
 	<article class="post">
 		<h2>分布式系统指标计算</h2>
 		<div class="post-meta">2025-9-23</div>
-		<div class="post-content"><p>在日常工作中经常需要去做一些系统优化相关的</p>
+		<div class="post-content"><p>在日常工作中经常需要去做一些系统优化相关的容量评估，核心是用 <strong>Little 定律</strong> 把吞吐量、响应时间和并发数联系起来：</p>
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="nx">并发数</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">系统吞吐量</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">任务平均执行时间</span><span class="w">
-</span></span></span></code></pre></div>
+</span></span></span></code></pre><p>系统吞吐量的计算方式为，<strong>任务数量除以任务执行时间</strong>（单位时间内完成的任务数，即 QPS/TPS）：</p>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="nx">吞吐量</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">任务数量</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">任务执行时间</span><span class="w">
+</span></span></span></code></pre><h2 id="heading">常见中间件吞吐参考</h2>
+<p>以下是单机、典型硬件、简单负载下的<strong>经验量级</strong>，实际值会因 CPU/内存/磁盘/网络、payload 大小、是否持久化、是否跨机房等差一个数量级，用来估容量和反推并发数够用。</p>
+<table>
+<thead>
+<tr>
+<th>中间件</th>
+<th>典型吞吐</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Redis</td>
+<td>10 万 ~ 20 万+ QPS</td>
+<td>纯内存 GET/SET，本地网卡、小 value；开启 AOF/大 value/复杂命令会明显下降</td>
+</tr>
+<tr>
+<td>MySQL</td>
+<td>读 5k ~ 2 万 QPS；写 1k ~ 5k TPS</td>
+<td>主键点查 + 连接池 + SSD；复杂 JOIN/全表扫描可能只有几百 QPS</td>
+</tr>
+<tr>
+<td>PostgreSQL</td>
+<td>与 MySQL 同量级</td>
+<td>简单点查几千~上万；复杂分析查询更低</td>
+</tr>
+<tr>
+<td>Kafka</td>
+<td>单分区 1 万 ~ 10 万+ msg/s</td>
+<td>小消息（几百字节）；更常按 MB/s 看，单 broker 常见几十 ~ 几百 MB/s</td>
+</tr>
+<tr>
+<td>RabbitMQ</td>
+<td>2 万 ~ 5 万 msg/s</td>
+<td>小消息、内存队列；持久化、镜像队列会降很多</td>
+</tr>
+<tr>
+<td>Nginx</td>
+<td>静态 5 万 ~ 10 万+ req/s</td>
+<td>反向代理/带 upstream 常见 2 万 ~ 5 万 req/s</td>
+</tr>
+<tr>
+<td>Elasticsearch</td>
+<td>写入 5k ~ 5 万 doc/s</td>
+<td>bulk 写入较高；聚合/全文检索视复杂度而定</td>
+</tr>
+<tr>
+<td>MongoDB</td>
+<td>简单读 1 万 ~ 5 万 QPS</td>
+<td>索引点查；写通常更低</td>
+</tr>
+<tr>
+<td>Memcached</td>
+<td>20 万+ QPS</td>
+<td>比 Redis 略高（功能更少）</td>
+</tr>
+<tr>
+<td>业务 HTTP 服务</td>
+<td>单实例 1k ~ 1 万 QPS</td>
+<td>含 DB/缓存/下游 RPC；纯内存计算可更高</td>
+</tr>
+</tbody>
+</table>
+</div>
 	</article>
 
 	</main>
