@@ -25,7 +25,8 @@
 	<article class="post">
 		<h2>redis 缓存设计方案 </h2>
 		<div class="post-meta">2025-10-02</div>
-		<div class="post-content"><h2 id="heading">预热缓存</h2>
+		<div class="post-content"><h2 id="-redis-">老系统 redis 改造</h2>
+<h2 id="heading">预热缓存</h2>
 <p>在程序启动之前的时候把系统中高频访问的数据刷新到 redis 中去，比如商品列表信息，课程信息，当刷新完毕之后，将对外的api 端口打开
 加载缓存的时候，我们可以在 go 中去嵌入 lua 脚本 对一些数据做清洗</p>
 <p>同样在预热缓存的时候，我们可以先把这些预热缓存的东西刷新到 Rocksdb 中去，避免直接读csv，大json 文件</p>

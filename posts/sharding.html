@@ -25,7 +25,34 @@
 	<article class="post">
 		<h2>高性能系统设计之数据库设计</h2>
 		<div class="post-meta">2025-9-22</div>
-		<div class="post-content"><h1 id="heading">分库分表</h1>
+		<div class="post-content"><p>在高性能系统中，往往数据库的读写性能非常重要，但是数据库的性能瓶颈往往和很多东西有关，</p>
+<ol>
+<li>数据量有关系，数据量会影响B+ 数的高度</li>
+<li>索引建立的好不好，比如一些高频数据库查询</li>
+<li>数据迁移，往往之前的表设计的不好，需要把表的数据迁移到新的表上面</li>
+<li>分库分表，分库分表通常分为垂直拆分和水平拆分</li>
+</ol>
+<h2 id="b-">B+ 树的基本原理</h2>
+<p>MySQL 底层的树使用的是 B+ 树，理解这种数据结构对我们优化数据库非常重要，首先 B+ 树是存储在磁盘中的，如果树的高度比较高，就会导致磁盘的 IO
+是非常高的，其次B+ 树的非叶子节点不存放数据，非叶子节点存储的都是索引，叶子节点存储的才是数据，如果索引不是聚簇索引那么还得回表找一下主键，然后从主键找到对应的数据。</p>
+<p><strong>如果一个叶子数量超过一个根节点可以存储的指针数量，那么B+ 树就会扩容一层</strong>
+一个索引的大小条目是主键8 个字节 + 指针 6 个字节，大概是 14 个字节, 加上一些额外开销我们估算为20个字节。</p>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="mi">15270</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">20</span><span class="w"> </span><span class="err">≈</span><span class="w"> </span><span class="mi">763</span><span class="w"> </span><span class="nx">条索引记录</span><span class="w">
+</span></span></span></code></pre><p>那也就是意味着是可以有 763 个叶子节点节点的，因为一个指针指向一个叶子节点</p>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="w">         </span><span class="p">[</span><span class="w"> </span><span class="nx">根节点</span><span class="w"> </span><span class="p">]</span><span class="w">          </span><span class="err">←</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="nx">个</span><span class="w"> </span><span class="nx">page</span><span class="err">，</span><span class="nx">只存索引</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">指针</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="o">/</span><span class="w">    </span><span class="p">|</span><span class="w">    </span><span class="o">...</span><span class="w">   </span><span class="err">\</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">   </span><span class="p">[</span><span class="nx">页1</span><span class="p">]</span><span class="w"> </span><span class="p">[</span><span class="nx">页2</span><span class="p">]</span><span class="w"> </span><span class="o">...</span><span class="w"> </span><span class="p">[</span><span class="nx">页763</span><span class="p">]</span><span class="w">   </span><span class="err">←</span><span class="w"> </span><span class="mi">763</span><span class="w"> </span><span class="nx">个</span><span class="w"> </span><span class="nx">page</span><span class="err">，</span><span class="nx">存真实数据行</span><span class="w">
+</span></span></span></code></pre><p>根据上面的估算一下那大概就有12208 行数据</p>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="mi">763</span><span class="w"> </span><span class="err">×</span><span class="w"> </span><span class="mi">16</span><span class="w"> </span><span class="err">≈</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span><span class="mi">208</span><span class="w"> </span><span class="nx">行</span><span class="w">
+</span></span></span></code></pre><p>上面这个计算的是 2 层的数据，那如果是 三层就会是 763 * 763 这样的</p>
+<p>B+ 树的高度是多少层，通过主键查找一行数据最坏就需要多少次磁盘 I/O
+查找路径是这样的：</p>
+<ul>
+<li>读根节点（第 1 次 I/O）</li>
+<li>根据根节点里的指针，读对应的中间层节点（第 2 次 I/O）</li>
+<li>根据中间节点的指针，读对应的叶子节点（数据页）（第 3 次 I/O）</li>
+</ul>
+<h1 id="heading">分库分表</h1>
 <p>分库分表的原则:</p>
 <ol>
 <li>垂直拆分: 比如说按照用户类型来拆分，比如普通用户和管理员用户</li>
