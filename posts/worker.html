@@ -38,10 +38,36 @@
 <li>可观测性设计，可观测性设计非常重要在这种任务执行中</li>
 </ol>
 <p>下面我们一条条拆开分析</p>
+<h2 id="heading">调度策略</h2>
+<p>首先调度策略的选择上，我们是选择轮询调度还是，定时调度，这两个都有好处，</p>
+<p>首先轮询调度的好处就是对 CPU 不是很友好，但是实时性比较好。因为一旦有新的任务进来，轮询调度可以及时发现，而定时调度则需要等待定时时间，才能发现新的任务。因此轮询调度比较适合任务执行时间短、且对实时性要求高的场景（短任务配合高频轮询才能摊薄 CPU 开销；如果任务本身就长，轮询会让 worker 大量空转，CPU 反而吃不消）。</p>
+<p>定时调度的好处对 CPU 较好，但是实时性比较差，因为定时调度需要等待定时时间，才能发现新的任务。但是在某些场景下我觉得是很合适的，比如一个任务执行时间很长，且你限制了同一时刻任务执行的数量，出于资源考虑，可以考虑定时调度。</p>
+<p>在调度中缓存策略的设计，需要考虑两个方面：什么东西应该放入缓存、放入缓存的过期时间是多少。
+根据我的实践，我觉得下面几个东西应该放到缓存中:</p>
+<p>（1）当前 worker 中任务执行的数量，这个数量的计算是通过 <code>select count(*) from tasks where status = 'running'</code>；如果不加索引的话性能也是非常差，加上索引之后性能会提高很多。由于任务执行时间较长，running 数量在短期窗口内变化很小（主要取决于任务的进入/退出速率），所以适合缓存，缓存的过期时间可以设置为 cron 周期的 2 倍。这样既能容忍一次漏读，也不会因为缓存值过于陈旧而误判 worker 容量（前提是 cron 周期 T 远小于任务平均执行时长 D，否则缓存会严重滞后于真实并发数，导致超出 worker 容量限流）。</p>
+<p>（2）预取下一批任务：在上一次调度的时候，就把下一批要调度的任务一起查出来。也就是说原来你的 SQL 只 <code>limit 8</code>，现在改为 <code>limit 16</code>，把下一批任务一并查出放入缓存。这样原来需要两次 IO，现在只需要一次 IO，减少了主路径的数据库访问次数。</p>
+<h2 id="heading-1">消息队列设计</h2>
+<p>因为我们是异步任务，所以消息队列的设计就比较重要了。Topic 划分的本质是按<strong>消费语义</strong>切分：不同 topic 的消费速度、积压容忍度、处理逻辑都不一样，混在同一个 topic 里会出现 head-of-line blocking（一条慢消息阻塞后续所有消息）。</p>
+<p>如果你使用的是 Kafka，<strong>核心 topic 至少要设计 3 个</strong>：</p>
 <ol>
-<li>调度策略
-首先调度策略的选择上，我们是选择轮询调度还是，定时调度，这两个都有好处，首先轮询调度的好处就是对 CPU 不是太好，但是实时性比较好</li>
+<li><strong>任务调度 topic</strong>：向 worker 分发待执行任务</li>
+<li><strong>高优先级任务 topic</strong>：用于抢占式插队，避免被低优先级任务阻塞</li>
+<li><strong>任务失败 topic</strong>：消费失败任务的重试入口</li>
 </ol>
+<blockquote>
+<p>为什么&quot;高优先级&quot;要单独开 topic？独立 topic 能物理隔离，避免被低优先级任务阻塞；代价是 topic 数量膨胀、运维成本上升。另一种方案是在同 topic 内加 <code>priority</code> 字段，由消费者侧实现优先级队列——更省 topic，但消费者实现复杂，且仍可能被 head-of-line 阻塞。两种方案各有 trade-off，按业务规模选择。</p>
+</blockquote>
+<p>结合文章开头的架构清单（第 5 条&quot;实时返回任务进度&quot;、第 7 条&quot;失败重试&quot;），还建议额外增加两个 topic：</p>
+<ul>
+<li><strong>任务进度 topic</strong>：worker 实时回传任务进度（架构第 5 条）</li>
+<li><strong>死信 topic（DLQ）</strong>：多次重试仍失败、或消息格式无法解析时进入此 topic，等待人工介入</li>
+</ul>
+<h3 id="consumer-group--partition">Consumer Group 与 Partition</h3>
+<p>通常为每个 topic 设计一个 consumer group 来消费对应的消息，目的是<strong>并行度隔离</strong>（不同 topic 互不影响消费速度）。例外场景：监控/审计旁路消费、跨 topic 聚合（如 Flink 同时订阅多个 topic），可以一个 topic 对应多个 group。</p>
+<p><strong>关键设计</strong>（也是这里最容易漏掉的）：每个 topic 的 <strong>partition 数 ≥ worker 实例数</strong>，并预留扩容空间。原因是一个 consumer group 内，<strong>partition 数 = 最大并行度</strong>；partition 数定下来后只能加不能减（减会丢消息），所以宁可一次多配。</p>
+<blockquote>
+<p>如果你用的是 RabbitMQ 而非 Kafka，对应概念是 <strong>queue + 多 consumer</strong>：RabbitMQ 的 queue 即 Kafka 的 partition，单个 queue 上的 consumer 数有上限（受 prefetch 限制），多配的 consumer 同样会闲置。</p>
+</blockquote>
 </div>
 	</article>
 
