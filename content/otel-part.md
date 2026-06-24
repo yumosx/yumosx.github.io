@@ -146,3 +146,9 @@ if err := request(ctx); err != nil {
 	log.Fatal(err)
 }
 ```
+
+## Trace configator
+
+```go
+type Configator func(config *InstrumentationScope) Config
+```

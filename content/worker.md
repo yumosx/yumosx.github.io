@@ -55,4 +55,49 @@ Date: 2025-9-22
 
 **关键设计**（也是这里最容易漏掉的）：每个 topic 的 **partition 数 ≥ worker 实例数**，并预留扩容空间。原因是一个 consumer group 内，**partition 数 = 最大并行度**；partition 数定下来后只能加不能减（减会丢消息），所以宁可一次多配。
 
+在一个 consumer group 内， 一个 partition 同时只能被一个 consumer 消费 （不能像线程池那样一个 partition 分给多个 consumer 抢）。
+
 > 如果你用的是 RabbitMQ 而非 Kafka，对应概念是 **queue + 多 consumer**：RabbitMQ 的 queue 即 Kafka 的 partition，单个 queue 上的 consumer 数有上限（受 prefetch 限制），多配的 consumer 同样会闲置。
+
+```txt
+broker 上的 topic: cache-consumer  (假设 6 个 partition)
+┌─────────┬─────────┬─────────┬─────────┬─────────┬─────────┐
+│ part 0  │ part 1  │ part 2  │ part 3  │ part 4  │ part 5  │
+└────┬────┴────┬────┴────┬────┴────┬────┴────┬────┴────┬────┘
+     │         │         │         │         │         │
+     │  rebalance 把 6 个 partition 摊到 N 个 consumer
+     ▼         ▼         ▼         ▼         ▼         ▼
+
+process A (group=cache-consumer)            process B (group=cache-consumer)
+└── client = ConsumerGroup                   └── client = ConsumerGroup
+    └── *Consumer (1 个)                        └── *Consumer (1 个)
+        ├── ConsumeClaim goroutine p0             ├── ConsumeClaim goroutine p2
+        ├── ConsumeClaim goroutine p1             ├── ConsumeClaim goroutine p4
+        └── ConsumeClaim goroutine p5             └── ConsumeClaim goroutine p3
+```
+
+
+
+## 幂等设计
+
+每次 schedule 时为 task 生成新的 effective_id（UUID）并写入 DB，同时把 effective_id 一起发到消息里。worker 侧用 UPDATE ... WHERE id=? AND status='pending' 原子抢占执行权，抢不到的 worker（affected_rows=0）说明任务已被其他 worker 抢占或已完成，直接 ack 消息不执行。effective_id 主要用于 日志/排查 （区分是哪次调度触发的执行），不是幂等的核心机制。
+
+
+## 参数自动升级降级策略
+
+自适应调级：策略等级与对应参数定义。
+
+L0 NORMAL       - 正常运行
+L1 WARNING      - 预警：降低单次投递量，告警
+L2 DEGRADED     - 降级：限制并发，缩小允许的 task kind
+L3 CIRCUIT_OPEN - 熔断：暂停普通任务，仅保留重试
+L4 EMERGENCY    - 紧急：完全停止调度，等待人工恢复
+
+## 失败任务重新调度
+
+失败任务走的是一个单独的 topic， 用于重试。这样是避免失败任务阻塞正常任务的执行。
+
+## 可观测性设计
+
+这是一个多服务系统，一旦一个服务出现问题，排查起来比较麻烦。所以需要设计一个可观测性机制，来监控这个链路的性能和稳定性。
+为此我设计了一个 trace id，来跟踪每个请求的链路。同时设计了一个多级id， 设计了一个 trace log 系统
