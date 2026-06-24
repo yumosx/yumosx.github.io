@@ -65,9 +65,38 @@
 <h3 id="consumer-group--partition">Consumer Group 与 Partition</h3>
 <p>通常为每个 topic 设计一个 consumer group 来消费对应的消息，目的是<strong>并行度隔离</strong>（不同 topic 互不影响消费速度）。例外场景：监控/审计旁路消费、跨 topic 聚合（如 Flink 同时订阅多个 topic），可以一个 topic 对应多个 group。</p>
 <p><strong>关键设计</strong>（也是这里最容易漏掉的）：每个 topic 的 <strong>partition 数 ≥ worker 实例数</strong>，并预留扩容空间。原因是一个 consumer group 内，<strong>partition 数 = 最大并行度</strong>；partition 数定下来后只能加不能减（减会丢消息），所以宁可一次多配。</p>
+<p>在一个 consumer group 内， 一个 partition 同时只能被一个 consumer 消费 （不能像线程池那样一个 partition 分给多个 consumer 抢）。</p>
 <blockquote>
 <p>如果你用的是 RabbitMQ 而非 Kafka，对应概念是 <strong>queue + 多 consumer</strong>：RabbitMQ 的 queue 即 Kafka 的 partition，单个 queue 上的 consumer 数有上限（受 prefetch 限制），多配的 consumer 同样会闲置。</p>
 </blockquote>
+<pre class="chroma"><code><span class="line"><span class="cl">broker 上的 topic: cache-consumer  (假设 6 个 partition)
+</span></span><span class="line"><span class="cl">┌─────────┬─────────┬─────────┬─────────┬─────────┬─────────┐
+</span></span><span class="line"><span class="cl">│ part 0  │ part 1  │ part 2  │ part 3  │ part 4  │ part 5  │
+</span></span><span class="line"><span class="cl">└────┬────┴────┬────┴────┬────┴────┬────┴────┬────┴────┬────┘
+</span></span><span class="line"><span class="cl">     │         │         │         │         │         │
+</span></span><span class="line"><span class="cl">     │  rebalance 把 6 个 partition 摊到 N 个 consumer
+</span></span><span class="line"><span class="cl">     ▼         ▼         ▼         ▼         ▼         ▼
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">process A (group=cache-consumer)            process B (group=cache-consumer)
+</span></span><span class="line"><span class="cl">└── client = ConsumerGroup                   └── client = ConsumerGroup
+</span></span><span class="line"><span class="cl">    └── *Consumer (1 个)                        └── *Consumer (1 个)
+</span></span><span class="line"><span class="cl">        ├── ConsumeClaim goroutine p0             ├── ConsumeClaim goroutine p2
+</span></span><span class="line"><span class="cl">        ├── ConsumeClaim goroutine p1             ├── ConsumeClaim goroutine p4
+</span></span><span class="line"><span class="cl">        └── ConsumeClaim goroutine p5             └── ConsumeClaim goroutine p3
+</span></span></code></pre><h2 id="heading-2">幂等设计</h2>
+<p>每次 schedule 时为 task 生成新的 effective_id（UUID）并写入 DB，同时把 effective_id 一起发到消息里。worker 侧用 UPDATE ... WHERE id=? AND status='pending' 原子抢占执行权，抢不到的 worker（affected_rows=0）说明任务已被其他 worker 抢占或已完成，直接 ack 消息不执行。effective_id 主要用于 日志/排查 （区分是哪次调度触发的执行），不是幂等的核心机制。</p>
+<h2 id="heading-3">参数自动升级降级策略</h2>
+<p>自适应调级：策略等级与对应参数定义。</p>
+<p>L0 NORMAL       - 正常运行
+L1 WARNING      - 预警：降低单次投递量，告警
+L2 DEGRADED     - 降级：限制并发，缩小允许的 task kind
+L3 CIRCUIT_OPEN - 熔断：暂停普通任务，仅保留重试
+L4 EMERGENCY    - 紧急：完全停止调度，等待人工恢复</p>
+<h2 id="heading-4">失败任务重新调度</h2>
+<p>失败任务走的是一个单独的 topic， 用于重试。这样是避免失败任务阻塞正常任务的执行。</p>
+<h2 id="heading-5">可观测性设计</h2>
+<p>这是一个多服务系统，一旦一个服务出现问题，排查起来比较麻烦。所以需要设计一个可观测性机制，来监控这个链路的性能和稳定性。
+为此我设计了一个 trace id，来跟踪每个请求的链路。同时设计了一个多级id， 设计了一个 trace log 系统</p>
 </div>
 	</article>
 

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>yumosx&#39;s 写字的地方 - 规则引擎设计</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="/static/style.css">
+	<link rel="alternate" type="application/rss+xml" href="/feed.xml" title="yumosx&#39;s 写字的地方 RSS Feed">
+	<script>(function(){try{var t=localStorage.getItem('blog-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.setAttribute('data-theme','dark')}catch(e){}})();</script>
+</head>
+<body>
+	<header class="site-header">
+		<h1><a href="/">yumosx&#39;s 写字的地方</a></h1>
+		<nav class="site-nav">
+			<a href="/">首页</a>
+			<a href="/links.html">友链</a>
+		</nav>
+		<button id="theme-toggle" class="theme-toggle" aria-label="切换主题">🌙</button>
+	</header>
+	<main>
+		
+	<article class="post">
+		<h2>规则引擎设计</h2>
+		<div class="post-meta">2025-9-26</div>
+		<div class="post-content"><p>目前我设计一个规则引擎分成两个部分</p>
+<ul>
+<li>规则: when</li>
+<li>执行器或者叫做 action</li>
+</ul>
+<p>使用 代码表示其实就类似下面这样写法:</p>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="k">if</span><span class="w"> </span><span class="n">car</span><span class="p">.</span><span class="na">owner</span><span class="p">.</span><span class="na">hasCellPhone</span><span class="w"> </span><span class="n">then</span><span class="w"> </span><span class="n">premium</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">100</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="k">if</span><span class="w"> </span><span class="n">car</span><span class="p">.</span><span class="na">model</span><span class="p">.</span><span class="na">theftRating</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">4</span><span class="w"> </span><span class="n">then</span><span class="w"> </span><span class="n">premium</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">200</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="k">if</span><span class="w"> </span><span class="n">car</span><span class="p">.</span><span class="na">owner</span><span class="p">.</span><span class="na">livesInDodgyArea</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">car</span><span class="p">.</span><span class="na">model</span><span class="p">.</span><span class="na">theftRating</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">2</span><span class="w"> 
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">then</span><span class="w"> </span><span class="n">premium</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">300</span><span class="p">;</span><span class="w">
+</span></span></span></code></pre></div>
+	</article>
+
+	</main>
+	<footer>
+		<p>© 2026 yumosx&#39;s 写字的地方</p>
+	</footer>
+	<script src="/static/theme.js"></script>
+	<script src="/static/profile.js"></script>
+</body>
+</html>
