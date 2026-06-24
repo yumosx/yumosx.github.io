@@ -55,9 +55,15 @@ Date: 2025-9-22
 
 **关键设计**（也是这里最容易漏掉的）：每个 topic 的 **partition 数 ≥ worker 实例数**，并预留扩容空间。原因是一个 consumer group 内，**partition 数 = 最大并行度**；partition 数定下来后只能加不能减（减会丢消息），所以宁可一次多配。
 
-在一个 consumer group 内， 一个 partition 同时只能被一个 consumer 消费 （不能像线程池那样一个 partition 分给多个 consumer 抢）。
+| partition 数 | consumer 数 | 实际并行度 | 结果 |
+| --- | --- | --- | --- |
+| 2 | 4 | 2 | ⚠️ 2 个 worker 闲置 |
+| 4 | 4 | 4 | ✅ 刚好 |
+| 8 | 4 | 4 | ✅ 4 个 worker 都工作，4 个 partition 排队等 |
+| 4 | 8 | 4 | ⚠️ 4 个 worker 闲置 |
 
-> 如果你用的是 RabbitMQ 而非 Kafka，对应概念是 **queue + 多 consumer**：RabbitMQ 的 queue 即 Kafka 的 partition，单个 queue 上的 consumer 数有上限（受 prefetch 限制），多配的 consumer 同样会闲置。
+在一个 consumer group 内， 一个 partition 同时只能被一个 consumer 消费 （不能像线程池那样一个 partition 分给多个 consumer 抢）。
+但是，一个 consumer 可以消费多个 partition。所以 partition 数 >= 最大并行度。这样就可以把 worker 给打满。
 
 ```txt
 broker 上的 topic: cache-consumer  (假设 6 个 partition)
@@ -76,6 +82,17 @@ process A (group=cache-consumer)            process B (group=cache-consumer)
         └── ConsumeClaim goroutine p5             └── ConsumeClaim goroutine p3
 ```
 
+一个 partition = 一个只能追加的日志（append-only log）
+
+```txt
+一个 partition = 一个只能追加的日志（append-only log）
+
+partition 0:
+┌──────┬──────┬──────┬──────┬──────┬──────┬──────┬──────┐
+│ msg0 │ msg1 │ msg2 │ msg3 │ msg4 │ msg5 │ msg6 │ ...  │
+└──────┴──────┴──────┴──────┴──────┴──────┴──────┴──────┘
+  offset=0  1      2      3      4      5      6
+```
 
 
 ## 幂等设计
