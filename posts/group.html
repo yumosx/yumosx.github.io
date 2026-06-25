@@ -118,7 +118,173 @@ RabbitMQ 4.0 移除了对第四种类型——<strong>非持久化共享队列</
 </span></span></code></pre></li>
 </ul>
 <p>具体选哪个，取决于你的业务需求。一般情况下，如果希望消息不因服务重启而丢失，选 <strong><code>durable=True</code></strong> 会更常见。</p>
+<h2 id="heading-1">官方文档在哪里</h2>
+<p>和这次踩坑相关的，主要看 RabbitMQ 官方这几处：</p>
+<h3 id="1-deprecation-">1. 废弃特性总览（deprecation 阶段）</h3>
+<ul>
+<li><a href="https://www.rabbitmq.com/docs/deprecated-features" target="_blank" rel="noopener noreferrer">Deprecated Features</a></li>
+<li><a href="https://www.rabbitmq.com/release-information/deprecated-features-list" target="_blank" rel="noopener noreferrer">Deprecated Features List</a></li>
+</ul>
+<p><code>transient_nonexcl_queues</code> 在 <strong>4.3.0</strong> 从 <code>permitted_by_default</code> 变成 <strong><code>denied_by_default</code></strong>。</p>
+<h3 id="2-transient-durablefalse---exclusive">2. transient 非独占队列（<code>durable=false</code> + 非 exclusive）</h3>
+<ul>
+<li><a href="https://www.rabbitmq.com/docs/queues#durability" target="_blank" rel="noopener noreferrer">Queues - Durability</a></li>
+<li><a href="https://github.com/rabbitmq/rabbitmq-server/releases/tag/v4.3.0" target="_blank" rel="noopener noreferrer">4.3.0 Release Notes</a>（Deprecated Features 章节）</li>
+</ul>
+<p>允许旧行为需在 <code>rabbitmq.conf</code> 里显式打开：</p>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="na">deprecated_features.permit.transient_nonexcl_queues</span> <span class="o">=</span> <span class="s">true</span>
+</span></span></code></pre><h3 id="3-x-consumer-timeoutclassic-">3. <code>x-consumer-timeout</code>（classic 队列不再支持）</h3>
+<ul>
+<li><a href="https://github.com/rabbitmq/rabbitmq-server/blob/main/consumer_timeouts.md" target="_blank" rel="noopener noreferrer">consumer_timeouts.md（rabbitmq-server 源码文档）</a></li>
+<li><a href="https://www.rabbitmq.com/blog/2026/04/23/rabbitmq-4.3-release" target="_blank" rel="noopener noreferrer">RabbitMQ 4.3 Highlights - Consumer Timeouts</a></li>
+<li><a href="https://techdocs.broadcom.com/us/en/vmware-tanzu/data-solutions/open-source-rabbitmq/4-3/opn-src-rabbitmq/site-release-notes.html" target="_blank" rel="noopener noreferrer">4.3 Release Notes - Consumer Timeouts</a></li>
+</ul>
+<p>要点：<strong>4.3 起 classic 队列不再处理 consumer timeout</strong>；<code>x-consumer-timeout</code> 作为<strong>队列声明参数</strong>在 classic 上会被拒绝（你看到的 <code>invalid arg</code>）。</p>
+<h3 id="4-quorum--consumer-timeout">4. Quorum 队列上的 consumer timeout</h3>
+<ul>
+<li><a href="https://www.rabbitmq.com/docs/quorum-queues#consumer-timeout" target="_blank" rel="noopener noreferrer">Quorum Queues - Consumer Timeout</a></li>
+</ul>
 <hr>
+<h2 id="heading-2">为什么线上有的服务还能跑？</h2>
+<p>不是「参数没问题」，而是 <strong>触发的时机和 RabbitMQ 版本不同</strong>。</p>
+<h3 id="1-rabbitmq-">1. RabbitMQ 版本不同（最常见）</h3>
+<table>
+<thead>
+<tr>
+<th>版本</th>
+<th>transient 非独占队列</th>
+<th>classic 上 <code>x-consumer-timeout</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>3.12.x</td>
+<td>允许</td>
+<td>声明时允许，会生效</td>
+</tr>
+<tr>
+<td>4.0–4.2</td>
+<td>逐步收紧</td>
+<td>仍可能声明成功</td>
+</tr>
+<tr>
+<td><strong>4.3.x</strong>（你本地 <code>4.3.1</code>）</td>
+<td>默认<strong>拒绝</strong>声明</td>
+<td>classic 上<strong>拒绝</strong>该参数</td>
+</tr>
+</tbody>
+</table>
+<p>线上若还有 <strong>3.x / 4.2</strong>，旧代码可能一直能跑；升到 <strong>4.3</strong> 后，<strong>新声明</strong>会失败。</p>
+<h3 id="2-exchange-">2. 队列/Exchange 早就建好了，服务只连不重建</h3>
+<p>RabbitMQ 规则：<strong>已存在的队列不会因为 broker 升级自动删掉</strong>。</p>
+<p>典型情况：</p>
+<ul>
+<li>很久以前用 <code>durable=false</code> / 带 <code>x-consumer-timeout</code> 建好了 <code>vector.taskiq</code></li>
+<li>服务启动时若<strong>不再 declare</strong>（或 declare 与现有参数一致），只是 <code>basic.consume</code> → <strong>照常消费</strong></li>
+<li><strong>scheduler / 新 worker 镜像</strong>启动时会 <code>queue.declare</code> → 参数和现网不一致或带了 4.3 不支持的参数 → <strong>崩</strong></li>
+</ul>
+<p>所以会出现：<strong>worker 能 <code>Listening started</code>，scheduler 起不来</strong>。</p>
+<h3 id="3-">3. 线上开了废弃特性白名单</h3>
+<p>若 <code>rabbitmq.conf</code> 里有：</p>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="na">deprecated_features.permit.transient_nonexcl_queues</span> <span class="o">=</span> <span class="s">true</span>
+</span></span></code></pre><p>则 transient 非独占队列仍可声明，和 4.3 默认行为不同。各环境配置不一致时，就会出现「有的集群能跑、有的不能」。</p>
+<h3 id="4-">4. 服务角色不同</h3>
+<table>
+<thead>
+<tr>
+<th>服务</th>
+<th>典型行为</th>
+<th>是否容易踩坑</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>api</strong></td>
+<td>发任务、可能 declare exchange/queue</td>
+<td>中等</td>
+</tr>
+<tr>
+<td><strong>worker</strong></td>
+<td>启动时 declare + consume</td>
+<td>高</td>
+</tr>
+<tr>
+<td><strong>scheduler</strong></td>
+<td>启动时 declare（taskiq broker startup）</td>
+<td><strong>最高</strong></td>
+</tr>
+<tr>
+<td>其他业务</td>
+<td>只用现成队列、不 declare</td>
+<td>可能完全不受影响</td>
+</tr>
+</tbody>
+</table>
+<p>paas-vector 里 <strong>taskiq 的 declare 逻辑集中在 broker startup</strong>，scheduler 几乎每次都会撞声明逻辑。</p>
+<h3 id="5-x-consumer-timeout-">5. <code>x-consumer-timeout</code> 在旧队列上「挂着但不生效」</h3>
+<p>你本地队列里仍有：</p>
+<pre><code>x-consumer-timeout = 43200000  (720 分钟)
+</code></pre>
+<p>在 <strong>RabbitMQ 4.3 + classic</strong> 上：</p>
+<ul>
+<li><strong>已存在的队列</strong>：参数留在元数据里，但 <strong>4.3 不再对 classic 执行 consumer timeout</strong></li>
+<li><strong>新声明</strong>带这个参数：直接 <code>invalid arg</code></li>
+</ul>
+<p>所以老 worker 可能一直在跑，新 scheduler 一声明就挂。</p>
+<h3 id="6-">6. 镜像/代码版本不一致</h3>
+<p>线上常见：</p>
+<ul>
+<li>worker 是旧镜像（无 <code>durable=True</code>、仍有 <code>x-consumer-timeout</code>），队列是历史遗留</li>
+<li>只更新了 scheduler → durable / timeout 冲突</li>
+<li>或 api/worker/scheduler <strong>不是同一次 build</strong> → <code>inequivalent arg 'durable'</code></li>
+</ul>
+<hr>
+<h2 id="heading-3">和你们项目的对应关系</h2>
+<table>
+<thead>
+<tr>
+<th>废弃/变更项</th>
+<th>你们代码里原来</th>
+<th>4.3 行为</th>
+<th>修复</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>transient 非独占</td>
+<td><code>durable=False</code>（taskiq 默认）</td>
+<td>拒绝声明</td>
+<td><code>durable=True</code></td>
+</tr>
+<tr>
+<td><code>x-consumer-timeout</code> on classic</td>
+<td>720 分钟</td>
+<td>拒绝声明</td>
+<td>已去掉</td>
+</tr>
+<tr>
+<td>exchange <code>durable</code> 不一致</td>
+<td>新旧混用</td>
+<td><code>PRECONDITION_FAILED</code></td>
+<td>统一 durable + 清旧资源</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="heading-4">怎么确认线上是哪种情况</h2>
+<p>在<strong>线上</strong> RabbitMQ 容器执行：</p>
+<pre class="chroma"><code><span class="line"><span class="cl">rabbitmqctl version
+</span></span><span class="line"><span class="cl">rabbitmqctl list_queues name durable arguments <span class="p">|</span> grep taskiq
+</span></span><span class="line"><span class="cl">rabbitmqctl list_exchanges name durable <span class="p">|</span> grep taskiq
+</span></span><span class="line"><span class="cl">cat /etc/rabbitmq/rabbitmq.conf 2&gt;/dev/null <span class="p">|</span> grep deprecated_features
+</span></span></code></pre><p>看三点：</p>
+<ol>
+<li>版本是不是 <strong>4.3.x</strong></li>
+<li>队列是否还带 <code>x-consumer-timeout</code>、<code>durable</code> 是否统一</li>
+<li>是否开了 <code>transient_nonexcl_queues</code> 白名单</li>
+</ol>
+<hr>
+<p><strong>一句话</strong>：文档在 RabbitMQ 4.3 的 <a href="https://www.rabbitmq.com/docs/deprecated-features" target="_blank" rel="noopener noreferrer">deprecated features</a> 和 <a href="https://github.com/rabbitmq/rabbitmq-server/blob/main/consumer_timeouts.md" target="_blank" rel="noopener noreferrer">consumer timeout 说明</a>；线上有的服务还能跑，多半是 <strong>旧队列还在 + 没重新 declare</strong>，或 <strong>RabbitMQ 版本/配置更宽松</strong>；scheduler 每次启动都要 declare，所以最先暴露问题。</p>
 </div>
 	</article>
 
