@@ -81,15 +81,15 @@
 			</li>
 		
 			<li>
-				<a href="/posts/gopher-lua.html">Gopher Lua 编写</a>
-				<span class="post-date">2025-10-02</span>
-				<p>package main </p>
-			</li>
-		
-			<li>
 				<a href="/posts/rbac.html">RBAC 权限控制系统设计 </a>
 				<span class="post-date">2025-10-02</span>
 				<p>role -&gt; permission -&gt; resource 经过这个链路去控制用户对应资源的访问权限，实现 RBAC 权限控制。 所以至少需要 5 张表: </p>
+			</li>
+		
+			<li>
+				<a href="/posts/gopher-lua.html">Gopher Lua 编写</a>
+				<span class="post-date">2025-10-02</span>
+				<p>package main </p>
 			</li>
 		
 			<li>
@@ -105,12 +105,6 @@
 			</li>
 		
 			<li>
-				<a href="/posts/alembic.html">Alembic 数据库迁移工具</a>
-				<span class="post-date">2023-11-15</span>
-				<p>Alembic 是一个 Python 环境中的数据库迁移工具，类似于 Go 语言中 GORM 的数据库迁移功能。它是 SQLAlchemy 的迁移工具扩展，用于管理数据库架构变更的版本控制。 在 Alembic 中最简单的命令就是初始化项目： alembic init migrations </p>
-			</li>
-		
-			<li>
 				<a href="/posts/pym.html">Python 依赖问题</a>
 				<span class="post-date">2023-11-15</span>
 				<p>在 Python 中，没有像 Go 语言中那样的内置模块依赖管理工具（如 Go Modules）。我们通常使用 uv 或 poetry 来管理项目依赖，这两个工具都基于 Python 的虚拟环境（venv）机制。所谓的 venv，实际上是在项目目录中创建一系列文件夹，用于隔离不同项目的依赖。 当你为...</p>
@@ -123,15 +117,27 @@
 			</li>
 		
 			<li>
-				<a href="/posts/pyproc.html">PyProc 源码分析 (持续更新中)</a>
-				<span class="post-date">2025-9-22</span>
-				<p>PyProc 的 frame 结构分成了两个部分, 第一个部分是对应的帧头, 第二部是对应的 数据部分, 也就是对应的数据部分，类型下面这样 [header][payload] </p>
+				<a href="/posts/alembic.html">Alembic 数据库迁移工具</a>
+				<span class="post-date">2023-11-15</span>
+				<p>Alembic 是一个 Python 环境中的数据库迁移工具，类似于 Go 语言中 GORM 的数据库迁移功能。它是 SQLAlchemy 的迁移工具扩展，用于管理数据库架构变更的版本控制。 在 Alembic 中最简单的命令就是初始化项目： alembic init migrations </p>
 			</li>
 		
 			<li>
-				<a href="/posts/rag.html">RAG 和向量数据库</a>
-				<span class="post-date">2025-9-20</span>
-				<p>![rag](/static/images/rag.png) </p>
+				<a href="/posts/qps.html">分布式系统指标计算</a>
+				<span class="post-date">2025-9-23</span>
+				<p>在日常工作中经常需要去做一些系统优化相关的容量评估，核心是用 **Little 定律** 把吞吐量、响应时间和并发数联系起来： 并发数 = 系统吞吐量 * 任务平均执行时间 </p>
+			</li>
+		
+			<li>
+				<a href="/posts/db.html">各种数据库选型场景</a>
+				<span class="post-date">2025-9-28</span>
+				<p>mysql 不适合查询场景。 </p>
+			</li>
+		
+			<li>
+				<a href="/posts/group.html">消息队列踩坑记录</a>
+				<span class="post-date">2025-9-22</span>
+				<p>在 Java 应用中，使用 spring-kafka 只需配置 `group_id` 和 `topic` 就能消费消息，但这会埋下安全隐患：消费速度过慢时触发 rebalance，消息被分配给另一个消费者，新消费者同样消费过慢，再次 rebalance，形成恶性循环。 </p>
 			</li>
 		
 			<li>
@@ -153,9 +159,9 @@
 			</li>
 		
 			<li>
-				<a href="/posts/grpc.html">微服务框架选型: gRPC 高级篇 </a>
-				<span class="post-date">2025-9-24</span>
-				<p>type UnaryServerInterceptor func(ctx context.Context, req any, info *UnaryServerInfo, handler UnaryHandler) (resp any, err error) </p>
+				<a href="/posts/pyproc.html">PyProc 源码分析 (持续更新中)</a>
+				<span class="post-date">2025-9-22</span>
+				<p>PyProc 的 frame 结构分成了两个部分, 第一个部分是对应的帧头, 第二部是对应的 数据部分, 也就是对应的数据部分，类型下面这样 [header][payload] </p>
 			</li>
 		
 			<li>
@@ -165,9 +171,9 @@
 			</li>
 		
 			<li>
-				<a href="/posts/qps.html">分布式系统指标计算</a>
-				<span class="post-date">2025-9-23</span>
-				<p>在日常工作中经常需要去做一些系统优化相关的容量评估，核心是用 **Little 定律** 把吞吐量、响应时间和并发数联系起来： 并发数 = 系统吞吐量 * 任务平均执行时间 </p>
+				<a href="/posts/grpc.html">微服务框架选型: gRPC 高级篇 </a>
+				<span class="post-date">2025-9-24</span>
+				<p>type UnaryServerInterceptor func(ctx context.Context, req any, info *UnaryServerInfo, handler UnaryHandler) (resp any, err error) </p>
 			</li>
 		
 			<li>
@@ -177,15 +183,15 @@
 			</li>
 		
 			<li>
-				<a href="/posts/language-ranking-anxiety.html">编程语言排行榜就是制造焦虑的烂玩意</a>
-				<span class="post-date">2025-1-27</span>
-				<p>每隔几个月，就有各种&#34;编程语言排行榜&#34;刷屏——TIOBE、PYPL、Stack Overflow 开发者调查、GitHub Octoverse……它们被包装成&#34;权威数据&#34;，被媒体转载，被培训机构引用，甚至被一些管理者用来做技术选型决策。 但真相是：**这些排行榜本质上就是制造焦虑的营销工具，对真正的...</p>
+				<a href="/posts/rag.html">RAG 和向量数据库</a>
+				<span class="post-date">2025-9-20</span>
+				<p>![rag](/static/images/rag.png) </p>
 			</li>
 		
 			<li>
-				<a href="/posts/group.html">消息队列踩坑记录</a>
-				<span class="post-date">2025-9-22</span>
-				<p>在 Java 应用中，使用 spring-kafka 只需配置 `group_id` 和 `topic` 就能消费消息，但这会埋下安全隐患：消费速度过慢时触发 rebalance，消息被分配给另一个消费者，新消费者同样消费过慢，再次 rebalance，形成恶性循环。 </p>
+				<a href="/posts/language-ranking-anxiety.html">编程语言排行榜就是制造焦虑的烂玩意</a>
+				<span class="post-date">2025-1-27</span>
+				<p>每隔几个月，就有各种&#34;编程语言排行榜&#34;刷屏——TIOBE、PYPL、Stack Overflow 开发者调查、GitHub Octoverse……它们被包装成&#34;权威数据&#34;，被媒体转载，被培训机构引用，甚至被一些管理者用来做技术选型决策。 但真相是：**这些排行榜本质上就是制造焦虑的营销工具，对真正的...</p>
 			</li>
 		
 			<li>
@@ -197,7 +203,7 @@
 			<li>
 				<a href="/posts/rule.html">规则引擎设计</a>
 				<span class="post-date">2025-9-26</span>
-				<p>目前我设计一个规则引擎分成两个部分 - 规则: when - 执行器或者叫做 action 使用 代码表示其实就类似下面这样写法: </p>
+				<p>&gt; 规则引擎旨在提供一种替代的计算模型。与通常由条件语句和循环语句组成的命令式模型不同，规则引擎基于产生式规则系统。产生式规则系统是一组产生式规则，每条规则都包含一个条件和一个动作——简单来说，你可以把它想象成一系列“如果……那么……”语句。 &gt; 巧妙之处在于规则可以以任意顺序编写，引擎会根据自身情...</p>
 			</li>
 		
 			<li>
@@ -239,7 +245,7 @@
 			<li>
 				<a href="/posts/xa.html">分布式事务入门</a>
 				<span class="post-date">2025-9-27</span>
-				<p>xa数据库原生支持这种特性 </p>
+				<p>xa数据库原生支持这种特性 - ap： 应用程序 - 事务协调者: 用来管理所有的本地事务 </p>
 			</li>
 		
 		</ul>

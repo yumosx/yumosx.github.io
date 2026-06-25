@@ -25,17 +25,30 @@
 	<article class="post">
 		<h2>规则引擎设计</h2>
 		<div class="post-meta">2025-9-26</div>
-		<div class="post-content"><p>目前我设计一个规则引擎分成两个部分</p>
-<ul>
-<li>规则: when</li>
-<li>执行器或者叫做 action</li>
-</ul>
+		<div class="post-content"><h1 id="heading">规则引擎设计</h1>
+<blockquote>
+<p>规则引擎旨在提供一种替代的计算模型。与通常由条件语句和循环语句组成的命令式模型不同，规则引擎基于产生式规则系统。产生式规则系统是一组产生式规则，每条规则都包含一个条件和一个动作——简单来说，你可以把它想象成一系列“如果……那么……”语句。
+巧妙之处在于规则可以以任意顺序编写，引擎会根据自身情况决定何时执行这些规则。一种比较好的理解方式是，系统会遍历所有规则，筛选出满足条件的规则，然后执行相应的操作。这种方法的优点在于，许多问题都天然符合这种模型：</p>
+</blockquote>
 <p>使用 代码表示其实就类似下面这样写法:</p>
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="k">if</span><span class="w"> </span><span class="n">car</span><span class="p">.</span><span class="na">owner</span><span class="p">.</span><span class="na">hasCellPhone</span><span class="w"> </span><span class="n">then</span><span class="w"> </span><span class="n">premium</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">100</span><span class="p">;</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="k">if</span><span class="w"> </span><span class="n">car</span><span class="p">.</span><span class="na">model</span><span class="p">.</span><span class="na">theftRating</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">4</span><span class="w"> </span><span class="n">then</span><span class="w"> </span><span class="n">premium</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">200</span><span class="p">;</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="k">if</span><span class="w"> </span><span class="n">car</span><span class="p">.</span><span class="na">owner</span><span class="p">.</span><span class="na">livesInDodgyArea</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">car</span><span class="p">.</span><span class="na">model</span><span class="p">.</span><span class="na">theftRating</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">2</span><span class="w"> 
 </span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">then</span><span class="w"> </span><span class="n">premium</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">300</span><span class="p">;</span><span class="w">
-</span></span></span></code></pre></div>
+</span></span></span></code></pre><h2 id="-">规则引擎的 版本设计</h2>
+<p>规则引擎一定要考虑版本设计，因为规则是动态变化的，比如某个地方新增了一个字段，和之前的规则是不兼容的，可能就导致出现大面积的报错，比如我呆过的一家公司，曾经我们的版本规则是这样的：</p>
+<p>最新的任务走的是最新的规则，旧的任务在创建的时候可能使用的是旧的规则，但是在执行的时候就却使用了最新的规则， 这种就是没有做好兼容性设计，因此我们在设计这种规则引擎的时候，一定要考虑版本兼容性。老的规则配置也要保留。</p>
+<h2 id="heading-1">动态执行能力</h2>
+<p>规则引擎最重要的能力就是动态执行规则，比如 输入 A ——&gt; 我们可以根据 A 来动态执行不同的规则。这就要求我们需要设计约定 type, 比如 当 one-of 为 true 时，我们就可以根据 A 来动态执行不同的规则。如果 one-of 为 false 时，我们就可以根据 A 来动态执行不同的规则。</p>
+<p>比如在公司中就设计了一套规则引擎:</p>
+<ul>
+<li>前端是一个版本, 用来配置前端传递的参数，前端页面显示的样式，这样做的好处就是我们可以快速的组合出一套 UI 出来</li>
+<li>后端是一个版本，用来执行规则，解析规则然后传递到对应的服务上去。其实有点类似 nginx 的 location 配置。</li>
+<li>自动修复能力，当规则引擎检测到规则有错误的时候，会自动修复，而不是让任务失败。</li>
+</ul>
+<h2 id="heading-2">规则引擎必须要严守规范</h2>
+<p>规则引擎必须要严守规范，首先规则引擎是受限的，不是通用的计算框架，像 编程语言一样，如果不按照规范来的话，很可能会出现打上很多补丁，导致这个规则引擎最终变成一个丑陋的编程语言。</p>
+</div>
 	</article>
 
 	</main>
