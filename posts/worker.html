@@ -141,6 +141,9 @@
 </span></span><span class="line"><span class="cl">   ↑ 4 个任务真正并发
 </span></span></code></pre><h2 id="heading-2">幂等设计</h2>
 <p>每次 schedule 时为 task 生成新的 effective_id（UUID）并写入 DB，同时把 effective_id 一起发到消息里。worker 侧用 UPDATE ... WHERE id=? AND status='running' 原子抢占执行权，抢不到的 worker（affected_rows=0）说明任务已被其他 worker 抢占或已完成，直接 ack 消息不执行。effective_id 主要用于 日志/排查 （区分是哪次调度触发的执行），不是幂等的核心机制。</p>
+<pre><code>A:10:00 -&gt; update task set status='running', effective_id=? where id=? and status='pending' -&gt; affected_rows=1 -&gt; 执行任务
+B:10:00 -&gt; update task set status='running', effective_id=? where id=? and status='pending' -&gt; affected_rows=0 -&gt; 拒绝执行
+</code></pre>
 <h2 id="heading-3">参数自动升级降级策略</h2>
 <p>自适应调级：策略等级与对应参数定义。</p>
 <p>L0 NORMAL       - 正常运行
