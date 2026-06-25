@@ -61,6 +61,21 @@ dj 老爷子一直是 goto 有害论的提出者，goto 语句之所以被老爷
 
 ## context
 
+```go
+type Context interface {
+    // 返回上下文的截止时间，以及截止时间是否已过
+    Deadline() (deadline time.Time, ok bool)
+    // 返回一个 channel, 当上下文被取消或者超时的时候, 会 channel 会关闭
+    // 如果关闭之后, 可以通过 Err() 方法�获取到对应的错误信息
+    Done() <-chan struct{}
+    Err() error
+    // 返回上下文中的值
+    // 如果上下文中没有对应的值, 则返回 nil
+    Value(key any) any
+}
+```
+
+
 ### 超时控制
 
 在平常的开发过程中，往往会存在一些耗时的操作阻塞住我们的 go 程，比如调用一些第三方的接口，数据库查询，从某个 chan 中去读取对应的数据，
@@ -70,6 +85,10 @@ dj 老爷子一直是 goto 有害论的提出者，goto 语句之所以被老爷
 ctx, cancelFunc := context.WithTimeout(context.Background(), 1*time.Second)
 defer cancelFunc()
 ```
+
+超时风暴问题, A->B->C->D, 这条链路可能网关超时，A 调用 B 超时，B 调用 C 超时，C 调用 D 超时，导致整个链路超时。所以每个环境都需要做好超时控制，1业务限制超时时间，2业务限制并发数。
+
+
 
 ### 上下文信息传递
 
@@ -291,6 +310,97 @@ func (p *Processor) Process() {
 	attrs.Get().(*Type{})
 }
 ```
+### 源码分析
+
+```go
+type Pool struct {
+	noCopy noCopy
+
+	local     unsafe.Pointer // local fixed-size per-P pool, actual type is [P]poolLocal
+	localSize uintptr        // size of the local array
+
+	victim     unsafe.Pointer // local from previous cycle
+	victimSize uintptr        // size of victims array
+	// New optionally specifies a function to generate
+	// a value when Get would otherwise return nil.
+	// It may not be changed concurrently with calls to Get.
+	New func() any
+}
+```
+
+pool 中存在两个字段，第一个字段叫做 local, 第二个字段叫做 victim。每次垃圾回收的时候，Pool 会把 victim 中的资源释放出来，然后把 local 中的资源赋值给 victim。
+
+```go
+func poolCleanup() {
+    // 丢弃当前victim, STW所以不用加锁
+    for _, p := range oldPools {
+        p.victim = nil
+        p.victimSize = 0
+    }
+
+    // 将local复制给victim, 并将原local置为nil
+    for _, p := range allPools {
+        p.victim = p.local
+        p.victimSize = p.localSize
+        p.local = nil
+        p.localSize = 0
+    }
+    oldPools, allPools = allPools, nil
+}
+```
+
+sync.Pool 中有一个 local 指针，这个指针指向叫做 poolLocalInternal 的结构体。
+```go
+type poolLocalInternal struct {
+	private any       // Can be used only by the respective P.
+	shared  poolChain // Local P can pushHead/popHead; any P can popTail.
+}
+```
+
+put 方法 中有一个很好玩的东西，那就是 pin 方法。这个方法的作用就是将当前 goroutine 固定到 P 上去，也就是说这个 P 只能执行这一个G,
+其次如果 private 字段是空的，直接设置这个字段，这样也意味着只有这个P 可以访问这个字段，其次把 x 加入到 shared 队列中。
+
+可以由任意的 P 访问，但是只有本地的 P 才能 pushHead/popHead，其它 P 可以 popTail，相当于只有一个本地的 P 作为生产者（Producer），多个 P 作为消费者（Consumer），它是使用一个 local-free 的 queue 列表实现的。
+```go
+func (p *Pool) Put(x interface{}) {
+    if x == nil { // nil值直接丢弃
+        return
+    }
+    l, _ := p.pin()
+    if l.private == nil { // 如果本地private没有值，直接设置这个值即可
+        l.private = x
+        x = nil
+    }
+    if x != nil { // 否则加入到本地队列中
+        l.shared.pushHead(x)
+    }
+    runtime_procUnpin()
+}
+```
+
+然后我们看看 Get 方法:
+```go
+func (p *Pool) Get() interface{} {
+    // 把当前goroutine固定在当前的P上
+    l, pid := p.pin()
+    x := l.private // 优先从local的private字段取，快速
+    l.private = nil
+    if x == nil {
+        // 从当前的local.shared弹出一个，注意是从head读取并移除
+        x, _ = l.shared.popHead()
+        if x == nil { // 如果没有，则去偷一个
+            x = p.getSlow(pid) 
+        }
+    }
+    runtime_procUnpin()
+    // 如果没有获取到，尝试使用New函数生成一个新的
+    if x == nil && p.New != nil {
+        x = p.New()
+    }
+    return x
+}
+```
+> **这段话的意思**：sync.Pool 在 OTel 这种"大量小对象、字符串密集"的解析场景下，**只能减少几个百分点的分配**，治标不治本。要真正优化收益更大的是另外两件事——**避免结构里的多余指针**（或用 arena 分配器一整块申请、用完整块释放，跳过逐对象 GC）和**反序列化时用 `[]byte` 引用原始 buffer 而不是 `string` 拷贝**。前两点收益比 sync.Pool 高一个数量级。
 
 ## mutex
 
