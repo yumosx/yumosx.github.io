@@ -291,3 +291,9 @@ func (p *Processor) Process() {
 	attrs.Get().(*Type{})
 }
 ```
+
+## mutex
+
+在 Go 语言中实现并发同步的方式就是使用 sync.Mutex 来实现互斥锁，来保护共享资源的访问。sync.Mutex 里面包含了一个状态变量，来记录当前是否有 goroutine 正在持有锁。所以这个 sync.Mutex 是不能被拷贝的，否则会导致锁的释放问题。
+
+其次go 语言的互斥锁其实不是 可以重新进入的，也就是相同的 goroutine 不能重新进入锁，否则会导致死锁。

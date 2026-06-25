@@ -113,7 +113,7 @@ Kafka topic（4 个 partition）
 
 ## 幂等设计
 
-每次 schedule 时为 task 生成新的 effective_id（UUID）并写入 DB，同时把 effective_id 一起发到消息里。worker 侧用 UPDATE ... WHERE id=? AND status='pending' 原子抢占执行权，抢不到的 worker（affected_rows=0）说明任务已被其他 worker 抢占或已完成，直接 ack 消息不执行。effective_id 主要用于 日志/排查 （区分是哪次调度触发的执行），不是幂等的核心机制。
+每次 schedule 时为 task 生成新的 effective_id（UUID）并写入 DB，同时把 effective_id 一起发到消息里。worker 侧用 UPDATE ... WHERE id=? AND status='running' 原子抢占执行权，抢不到的 worker（affected_rows=0）说明任务已被其他 worker 抢占或已完成，直接 ack 消息不执行。effective_id 主要用于 日志/排查 （区分是哪次调度触发的执行），不是幂等的核心机制。
 
 
 ## 参数自动升级降级策略
@@ -126,11 +126,45 @@ L2 DEGRADED     - 降级：限制并发，缩小允许的 task kind
 L3 CIRCUIT_OPEN - 熔断：暂停普通任务，仅保留重试
 L4 EMERGENCY    - 紧急：完全停止调度，等待人工恢复
 
+
+## 任务动态执行上下文
+
+在数据库表中，每个任务的每个阶段都会存在一个上下文，来存储任务的执行状态。例如: 任务1 执行到阶段1，上下文为: {"stage": 1, "status": "pending"}。这个上下文会在任务执行过程中，动态更新。这样在重跑的时候，就可以直接跳过已经执行过的阶段。并拿到他的上下文。
+
+```python
+class TaskContext:
+    def __init__(self, task_id: str, stage: int, status: str):
+        self.task_id = task_id
+        self.stage = stage
+        self.status = status
+        self.context = {}
+    def set(self, key: str, value: str):
+        self.context[key] = value
+    def get(self, key: str) -> str:
+        return self.context.get(key, None)
+```
+
 ## 失败任务重新调度
 
-失败任务走的是一个单独的 topic， 用于重试。这样是避免失败任务阻塞正常任务的执行。
+失败任务走的是一个单独的 topic， 用于重试。这样是避免失败任务阻塞正常任务的执行。因为很多失败任务因为网络波动，第三方服务 down 导致的。
+
+## serverless 服务设计
+
 
 ## 可观测性设计
 
 这是一个多服务系统，一旦一个服务出现问题，排查起来比较麻烦。所以需要设计一个可观测性机制，来监控这个链路的性能和稳定性。
 为此我设计了一个 trace id，来跟踪每个请求的链路。同时设计了一个多级id， 设计了一个 trace log 系统
+
+worker, scheduler, 都需要设计对应的指标:
+
+- worker 并发数
+- worker 执行时间
+- worker 执行失败数
+- worker 执行成功数
+- worker 执行任务数
+
+- scheduler 执行任务数
+- scheduler 排队任务数量
+- scheduler 执行失败数
+- scheduler 执行成功数
