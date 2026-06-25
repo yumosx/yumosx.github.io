@@ -100,4 +100,141 @@ INTERNAL_ERROR - Feature `transient_nonexcl_queues` is deprecated.
 
 具体选哪个，取决于你的业务需求。一般情况下，如果希望消息不因服务重启而丢失，选 **`durable=True`** 会更常见。
 
+## 官方文档在哪里
+
+和这次踩坑相关的，主要看 RabbitMQ 官方这几处：
+
+### 1. 废弃特性总览（deprecation 阶段）
+
+- [Deprecated Features](https://www.rabbitmq.com/docs/deprecated-features)
+- [Deprecated Features List](https://www.rabbitmq.com/release-information/deprecated-features-list)
+
+`transient_nonexcl_queues` 在 **4.3.0** 从 `permitted_by_default` 变成 **`denied_by_default`**。
+
+### 2. transient 非独占队列（`durable=false` + 非 exclusive）
+
+- [Queues - Durability](https://www.rabbitmq.com/docs/queues#durability)
+- [4.3.0 Release Notes](https://github.com/rabbitmq/rabbitmq-server/releases/tag/v4.3.0)（Deprecated Features 章节）
+
+允许旧行为需在 `rabbitmq.conf` 里显式打开：
+
+```ini
+deprecated_features.permit.transient_nonexcl_queues = true
+```
+
+### 3. `x-consumer-timeout`（classic 队列不再支持）
+
+- [consumer_timeouts.md（rabbitmq-server 源码文档）](https://github.com/rabbitmq/rabbitmq-server/blob/main/consumer_timeouts.md)
+- [RabbitMQ 4.3 Highlights - Consumer Timeouts](https://www.rabbitmq.com/blog/2026/04/23/rabbitmq-4.3-release)
+- [4.3 Release Notes - Consumer Timeouts](https://techdocs.broadcom.com/us/en/vmware-tanzu/data-solutions/open-source-rabbitmq/4-3/opn-src-rabbitmq/site-release-notes.html)
+
+要点：**4.3 起 classic 队列不再处理 consumer timeout**；`x-consumer-timeout` 作为**队列声明参数**在 classic 上会被拒绝（你看到的 `invalid arg`）。
+
+### 4. Quorum 队列上的 consumer timeout
+
+- [Quorum Queues - Consumer Timeout](https://www.rabbitmq.com/docs/quorum-queues#consumer-timeout)
+
 ---
+
+## 为什么线上有的服务还能跑？
+
+不是「参数没问题」，而是 **触发的时机和 RabbitMQ 版本不同**。
+
+### 1. RabbitMQ 版本不同（最常见）
+
+| 版本 | transient 非独占队列 | classic 上 `x-consumer-timeout` |
+|------|---------------------|--------------------------------|
+| 3.12.x | 允许 | 声明时允许，会生效 |
+| 4.0–4.2 | 逐步收紧 | 仍可能声明成功 |
+| **4.3.x**（你本地 `4.3.1`） | 默认**拒绝**声明 | classic 上**拒绝**该参数 |
+
+线上若还有 **3.x / 4.2**，旧代码可能一直能跑；升到 **4.3** 后，**新声明**会失败。
+
+### 2. 队列/Exchange 早就建好了，服务只连不重建
+
+RabbitMQ 规则：**已存在的队列不会因为 broker 升级自动删掉**。
+
+典型情况：
+
+- 很久以前用 `durable=false` / 带 `x-consumer-timeout` 建好了 `vector.taskiq`
+- 服务启动时若**不再 declare**（或 declare 与现有参数一致），只是 `basic.consume` → **照常消费**
+- **scheduler / 新 worker 镜像**启动时会 `queue.declare` → 参数和现网不一致或带了 4.3 不支持的参数 → **崩**
+
+所以会出现：**worker 能 `Listening started`，scheduler 起不来**。
+
+### 3. 线上开了废弃特性白名单
+
+若 `rabbitmq.conf` 里有：
+
+```ini
+deprecated_features.permit.transient_nonexcl_queues = true
+```
+
+则 transient 非独占队列仍可声明，和 4.3 默认行为不同。各环境配置不一致时，就会出现「有的集群能跑、有的不能」。
+
+### 4. 服务角色不同
+
+| 服务 | 典型行为 | 是否容易踩坑 |
+|------|----------|--------------|
+| **api** | 发任务、可能 declare exchange/queue | 中等 |
+| **worker** | 启动时 declare + consume | 高 |
+| **scheduler** | 启动时 declare（taskiq broker startup） | **最高** |
+| 其他业务 | 只用现成队列、不 declare | 可能完全不受影响 |
+
+paas-vector 里 **taskiq 的 declare 逻辑集中在 broker startup**，scheduler 几乎每次都会撞声明逻辑。
+
+### 5. `x-consumer-timeout` 在旧队列上「挂着但不生效」
+
+你本地队列里仍有：
+
+```
+x-consumer-timeout = 43200000  (720 分钟)
+```
+
+在 **RabbitMQ 4.3 + classic** 上：
+
+- **已存在的队列**：参数留在元数据里，但 **4.3 不再对 classic 执行 consumer timeout**
+- **新声明**带这个参数：直接 `invalid arg`
+
+所以老 worker 可能一直在跑，新 scheduler 一声明就挂。
+
+### 6. 镜像/代码版本不一致
+
+线上常见：
+
+- worker 是旧镜像（无 `durable=True`、仍有 `x-consumer-timeout`），队列是历史遗留
+- 只更新了 scheduler → durable / timeout 冲突
+- 或 api/worker/scheduler **不是同一次 build** → `inequivalent arg 'durable'`
+
+---
+
+## 和你们项目的对应关系
+
+| 废弃/变更项 | 你们代码里原来 | 4.3 行为 | 修复 |
+|-------------|---------------|----------|------|
+| transient 非独占 | `durable=False`（taskiq 默认） | 拒绝声明 | `durable=True` |
+| `x-consumer-timeout` on classic | 720 分钟 | 拒绝声明 | 已去掉 |
+| exchange `durable` 不一致 | 新旧混用 | `PRECONDITION_FAILED` | 统一 durable + 清旧资源 |
+
+---
+
+## 怎么确认线上是哪种情况
+
+在**线上** RabbitMQ 容器执行：
+
+```bash
+rabbitmqctl version
+rabbitmqctl list_queues name durable arguments | grep taskiq
+rabbitmqctl list_exchanges name durable | grep taskiq
+cat /etc/rabbitmq/rabbitmq.conf 2>/dev/null | grep deprecated_features
+```
+
+看三点：
+
+1. 版本是不是 **4.3.x**
+2. 队列是否还带 `x-consumer-timeout`、`durable` 是否统一
+3. 是否开了 `transient_nonexcl_queues` 白名单
+
+---
+
+**一句话**：文档在 RabbitMQ 4.3 的 [deprecated features](https://www.rabbitmq.com/docs/deprecated-features) 和 [consumer timeout 说明](https://github.com/rabbitmq/rabbitmq-server/blob/main/consumer_timeouts.md)；线上有的服务还能跑，多半是 **旧队列还在 + 没重新 declare**，或 **RabbitMQ 版本/配置更宽松**；scheduler 每次启动都要 declare，所以最先暴露问题。
