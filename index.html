@@ -185,7 +185,7 @@
 			<li>
 				<a href="/posts/group.html">消息队列踩坑记录</a>
 				<span class="post-date">2025-9-22</span>
-				<p>在Java应用中，我们往往会使用spring-kafka组件简单的设置一下group_id, topic就开始消费消息了，其实这样会埋下巨大的安全隐患，即当消费速度过慢时有可能会触发rebalance, 这批消息被分配到另一个消费者，然后新的消费者还会消费过慢，再次rebalance, 这样一直恶性...</p>
+				<p>在 Java 应用中，使用 spring-kafka 只需配置 `group_id` 和 `topic` 就能消费消息，但这会埋下安全隐患：消费速度过慢时触发 rebalance，消息被分配给另一个消费者，新消费者同样消费过慢，再次 rebalance，形成恶性循环。 </p>
 			</li>
 		
 			<li>
