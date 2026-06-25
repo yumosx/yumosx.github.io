@@ -26,24 +26,78 @@
 		<h2>基础设施相关</h2>
 		<div class="post-meta">2023-9-24</div>
 		<div class="post-content"><h3 id="-httpdns-">如何使用 httpDNS 加速</h3>
-<h3 id="heading">一个简单的例子：</h3>
-<p>假设你需要一台有特定配置的云服务器。</p>
+<ol>
+<li>
+<p><strong>锁定依赖与基础镜像</strong></p>
 <ul>
-<li>
-<p><strong>传统方式</strong>：登录云服务商的网站，点点点，选择CPU、内存、硬盘大小……然后创建。</p>
+<li>在 Dockerfile 或 <code>docker-compose.yml</code> 中明确指定 RabbitMQ 等中间件的版本号，使用固定的镜像 digest，确保环境一致性。</li>
+</ul>
 </li>
 <li>
-<p><strong>IaC 方式</strong>：你写一个这样的配置文件（这里是 Terraform 的简化例子）：</p>
-<pre><code>resource &quot;aws_instance&quot; &quot;my_web_server&quot; {
-  ami           = &quot;ami-12345678&quot;
-  instance_type = &quot;t2.micro&quot;
-  tags = {
-    Name = &quot;HelloWorldServer&quot;
-  }
-}
-</code></pre>
-<p>然后运行一条命令 <code>terraform apply</code>，工具就会自动帮你在云上创建出这台服务器。</p>
+<p><strong>完善版本控制与 CI/CD</strong></p>
+<ul>
+<li>禁止手工修改生产环境，所有上线必须通过 CI/CD 流水线从 Git 标签构建制品。</li>
+<li>引入制品仓库，保存构建产物并附带版本元信息，部署前自动校验。</li>
+</ul>
 </li>
+<li>
+<p><strong>优化第三方调用</strong></p>
+<ul>
+<li>为所有外部 HTTP 调用设置合理超时（connect timeout + read timeout），引入重试、断路器（如 Resilience4j、Hystrix/ Sentinel），避免级联超时。</li>
+<li>增加对第三方接口的监控和告警。</li>
+</ul>
+</li>
+<li>
+<p><strong>服务间调用容错与异步</strong></p>
+<ul>
+<li>内部服务调用同样设置超时和熔断，必要时改为异步消息驱动（例如上传任务可以用消息队列解耦），减少同步等待。</li>
+</ul>
+</li>
+<li>
+<p><strong>统一服务发现与配置管理</strong></p>
+<ul>
+<li>使用内部 DNS 或服务注册中心（如 Consul、Nacos），杜绝硬编码 IP。</li>
+<li>统一在网关层或配置中心管理访问控制，确保任何调用路径都经过安全策略。</li>
+</ul>
+</li>
+<li>
+<p><strong>内部回路鉴权</strong></p>
+<ul>
+<li>在所有访问控制列表中加入服务自身的认证凭据或 IP，或通过 JWT 等令牌机制统一内部服务间认证，避免 403。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="heading">是否有使用开源工具加速流程？</h2>
+<p><strong>目前的流程存在明显的工具缺失</strong>，可以引入以下开源工具来大幅加速开发调试与问题排查：</p>
+<h3 id="1-cicd-">1. CI/CD 流水线</h3>
+<ul>
+<li><strong>Jenkins / GitLab CI / GitHub Actions</strong>：自动构建、测试、发布，保证版本一致性和环境标准化。</li>
+<li><strong>ArgoCD</strong>（若使用 Kubernetes）：实现 GitOps，确保部署状态与仓库严格一致。</li>
+</ul>
+<h3 id="2-">2. 容器化与依赖管理</h3>
+<ul>
+<li><strong>Docker Compose / Kubernetes</strong> + <strong>Helm</strong>：固化依赖服务版本。</li>
+<li><strong>Renovate / Dependabot</strong>：自动检测并更新依赖，但需配合锁定策略。</li>
+</ul>
+<h3 id="3-">3. 服务发现与配置中心</h3>
+<ul>
+<li><strong>Consul / Nacos / Etcd</strong>：动态管理服务地址与配置，消除硬编码 IP。</li>
+<li><strong>Open Policy Agent (OPA)</strong>：统一管理服务间的认证授权规则。</li>
+</ul>
+<h3 id="4-">4. 弹性容错库</h3>
+<ul>
+<li><strong>Resilience4j</strong>（Java）/ <strong>Polly</strong>（.NET）/ <strong>Sentinel</strong>（Java/Go）：一行注解或配置即可实现超时、重试、熔断，防止级联故障。</li>
+</ul>
+<h3 id="5-">5. 可观测性平台</h3>
+<ul>
+<li><strong>Prometheus + Grafana</strong>：监控请求延迟、错误率，快速定位超时。</li>
+<li><strong>Jaeger / Zipkin</strong>（分布式追踪）：一次请求经过多个服务的调用链一目了然，能立即发现是第三方超时还是自身循环调用。</li>
+<li><strong>ELK / Loki</strong>：集中日志，配合 TraceID 快速关联错误。</li>
+</ul>
+<h3 id="6-">6. 本地开发环境管理</h3>
+<ul>
+<li><strong>Telepresence / Tilt</strong>：让本地服务直接与 k8s 集群内的其他服务互通调试，缩短反馈环。</li>
 </ul>
 </div>
 	</article>
