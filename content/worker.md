@@ -114,6 +114,10 @@ Kafka topic（4 个 partition）
 ## 幂等设计
 
 每次 schedule 时为 task 生成新的 effective_id（UUID）并写入 DB，同时把 effective_id 一起发到消息里。worker 侧用 UPDATE ... WHERE id=? AND status='running' 原子抢占执行权，抢不到的 worker（affected_rows=0）说明任务已被其他 worker 抢占或已完成，直接 ack 消息不执行。effective_id 主要用于 日志/排查 （区分是哪次调度触发的执行），不是幂等的核心机制。
+```
+A:10:00 -> update task set status='running', effective_id=? where id=? and status='pending' -> affected_rows=1 -> 执行任务
+B:10:00 -> update task set status='running', effective_id=? where id=? and status='pending' -> affected_rows=0 -> 拒绝执行
+```
 
 
 ## 参数自动升级降级策略
