@@ -139,7 +139,274 @@
 </span></span><span class="line"><span class="cl">└─────────┴─────────┴─────────┴─────────┘
 </span></span><span class="line"><span class="cl">   任务1     任务2     任务3     任务4
 </span></span><span class="line"><span class="cl">   ↑ 4 个任务真正并发
-</span></span></code></pre><h2 id="heading-2">幂等设计</h2>
+</span></span></code></pre><p>下面我用一个真实场景来推算参数。</p>
+<p><strong>场景目标</strong>：48 小时内跑完 720 个任务。</p>
+<pre><code>目标吞吐量 = 720 个 / 48 h = 15 个/h
+</code></pre>
+<p>即每个小时要处理完 15 个任务。</p>
+<p><strong>已知现状</strong>：并发度（worker 数）= 4 时，48h 跑完 392 个任务。</p>
+<pre><code>当前吞吐量 = 392 / 48 = 8.17 个/h  ≈ 8.2 个/h
+</code></pre>
+<p>套 Little's Law：</p>
+<pre><code>并发度 = 吞吐量 × 平均执行时间
+4      = 8.2    × t
+t      = 4 / 8.2 = 0.488 h ≈ 29 分钟
+</code></pre>
+<p><strong>平均每个任务执行时间 ≈ 29 分钟</strong>。</p>
+<blockquote>
+<p>注意：这里的&quot;吞吐量&quot;是指<strong>系统实际处理速率</strong>，不是单 worker 的速率。
+<code>并发度 = 吞吐量 × 平均执行时间</code> 的物理含义是：
+任意时刻，同时在执行的任务数 = 每小时处理几个 × 每个任务占几小时。
+单位必须对齐：吞吐量用 个/h，时间就必须用 h。</p>
+</blockquote>
+<p>仍用 Little's Law，已知目标吞吐量 15 个/h，平均执行时间 0.488 h：</p>
+<pre><code>所需并发度 = 15 × 0.488 = 7.32
+</code></pre>
+<p>向上取整 → <strong>8</strong>（即同时有 8 个任务在跑即可达成目标）。</p>
+<p>Kafka 的关键约束（见上文 Consumer Group 与 Partition 章节）：</p>
+<table>
+<thead>
+<tr>
+<th>约束</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>partition 数 = 一个 group 的最大并行度</code></td>
+<td>8 个 worker 要打满，partition 必须 ≥ 8</td>
+</tr>
+<tr>
+<td><code>partition 数 ≥ worker 数</code></td>
+<td>否则会有 worker 闲置</td>
+</tr>
+<tr>
+<td><code>partition 只能加不能减</code></td>
+<td>必须一次给够，预留扩容空间</td>
+</tr>
+</tbody>
+</table>
+<p>所以这个场景下：</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>取值</th>
+<th>理由</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>topic 数</td>
+<td><strong>1</strong>（任务调度 topic）</td>
+<td>这里的 worker 只消费&quot;任务调度 topic&quot;；高优先级、失败重试等是另外的 topic 和 worker，不算进这次推算</td>
+</tr>
+<tr>
+<td>partition 数</td>
+<td><strong>10</strong></td>
+<td>略大于 worker 数 8，预留 2 个 partition 扩容</td>
+</tr>
+<tr>
+<td>consumer 数</td>
+<td><strong>8</strong></td>
+<td>= worker 数，一个进程 = 一个 consumer + 一个 worker</td>
+</tr>
+<tr>
+<td>worker 数</td>
+<td><strong>8</strong></td>
+<td>上面算出的目标并发度</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p>Consumer / Worker 配比的三种方案</p>
+<p>上面算的是&quot;1 consumer = 1 worker&quot;的简化模型。实际上 consumer 和 worker 的关系可以解耦，三种主流方案各有适用场景。</p>
+<p>如果 partition 内的任务<strong>有顺序依赖</strong>（必须按 offset 顺序执行），那同 partition 内开多个 worker 没意义——还是串行。
+如果任务之间<strong>无依赖</strong>，那 worker 池才有意义。</p>
+<p>方案 A：1 Consumer × 1 Worker（1:1 配比）</p>
+<pre><code>进程 1 (consumer + worker) ← partition 0
+进程 2 (consumer + worker) ← partition 1
+...
+进程 N (consumer + worker) ← partition N-1
+</code></pre>
+<p><strong>总并发度 = partition 数 = 进程数</strong></p>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>优点</td>
+<td>简单清晰、故障定位容易、任务隔离好</td>
+</tr>
+<tr>
+<td>缺点</td>
+<td>进程数多、运维成本高、不适合 I/O 密集型任务</td>
+</tr>
+<tr>
+<td>适用</td>
+<td>CPU 密集型任务（转码、压缩、计算）</td>
+</tr>
+<tr>
+<td>你的场景</td>
+<td><code>partition=8, worker=8</code>，最朴素方案</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p>方案 B：1 Consumer + 进程内 Worker 池</p>
+<pre><code>进程 1 (1 consumer + M workers) ← partition 0
+</code></pre>
+<p><strong>总并发度 = 1 × M = M（受 partition 数 = 1 限制）</strong></p>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>优点</td>
+<td>进程数少、复用连接池、部署简单</td>
+</tr>
+<tr>
+<td>缺点</td>
+<td>并行度上限被 partition=1 锁死，无法水平扩展</td>
+</tr>
+<tr>
+<td>适用</td>
+<td>单分区就够用 + 想省部署成本</td>
+</tr>
+<tr>
+<td>你的场景</td>
+<td>❌ 达不到目标并发度 8</td>
+</tr>
+</tbody>
+</table>
+<p><strong>注意</strong>：这种方案下 worker 池其实没意义——partition 限制了同时只能拉 1 条消息处理。所以实际还是串行。</p>
+<hr>
+<p>方案 C：N Consumer + 进程内 Worker 池（推荐）</p>
+<pre><code>进程 1 (1 consumer + M workers) ← partition 0
+进程 2 (1 consumer + M workers) ← partition 1
+...
+进程 N (1 consumer + M workers) ← partition N-1
+</code></pre>
+<p><strong>总并发度 = 进程数 × 每进程 worker 数 = N × M</strong></p>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>优点</td>
+<td>进程级 + 任务级两层并行，复用连接池，故障影响面可控</td>
+</tr>
+<tr>
+<td>缺点</td>
+<td>单进程内 worker 互相竞争（DB 连接、内存）</td>
+</tr>
+<tr>
+<td>适用</td>
+<td>I/O 密集型任务（HTTP 调用、DB 查询、文件读写）</td>
+</tr>
+<tr>
+<td>你的场景</td>
+<td>✅ <code>partition=4, 进程=4, 每进程 worker=2</code>，总并发度 8</td>
+</tr>
+</tbody>
+</table>
+<p>你的场景应用方案 C 推算</p>
+<p><strong>已知条件：</strong></p>
+<ul>
+<li>目标并发度：8</li>
+<li>任务平均时长：29 分钟（0.488h）</li>
+<li>任务特征：调接口、查库 → I/O 密集</li>
+</ul>
+<p><strong>worker 数公式：</strong></p>
+<pre><code>每进程 worker 数 = 1 + (I/O 等待时间 / CPU 计算时间)
+</code></pre>
+<p>假设单任务 29 分钟中，4 分钟 CPU 计算、25 分钟等 I/O：</p>
+<pre><code>worker 数 = 1 + (25 / 4) = 1 + 6.25 ≈ 7
+</code></pre>
+<p>但实际<strong>不超过 4~8</strong>（worker 多了爆 DB 连接池和内存）。</p>
+<p><strong>折中取 2 worker/进程</strong>（既能填满 I/O 等待，又不会过载）。</p>
+<p><strong>最终配置：</strong></p>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="nt">topic</span><span class="p">:</span><span class="w"> </span><span class="l">task-schedule</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nt">partition</span><span class="p">:</span><span class="w"> </span><span class="m">4</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nt">consumer 进程数</span><span class="p">:</span><span class="w"> </span><span class="m">4</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nt">每进程 worker 数</span><span class="p">:</span><span class="w"> </span><span class="m">2</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nt">总并发度</span><span class="p">:</span><span class="w"> </span><span class="m">4</span><span class="w"> </span><span class="l">× 2 = 8 ✅</span><span class="w">
+</span></span></span></code></pre><p><strong>相比方案 A 的优势：</strong></p>
+<ul>
+<li>进程数 4 vs 8：部署成本减半</li>
+<li>每进程 2 worker：任务有 I/O 等待时互相补位</li>
+<li>partition 4 vs 8：Kafka 资源减半</li>
+<li>单进程故障影响 25% 流量（vs 方案 A 的 12.5%）</li>
+</ul>
+<p><strong>注意事项：</strong></p>
+<ul>
+<li>每 worker 占一份 DB 连接/HTTP 客户端 → 2 worker = 2 倍资源占用，需评估下游容量</li>
+<li>worker 池需要任务队列（channel）+ 优雅退出机制</li>
+<li>同 partition 内任务如果有时序要求，worker 池无效</li>
+</ul>
+<hr>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>方案 A</th>
+<th>方案 B</th>
+<th>方案 C</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>架构</td>
+<td>N 进程 × (1c+1w)</td>
+<td>1 进程 × (1c+Mw)</td>
+<td>N 进程 × (1c+Mw)</td>
+</tr>
+<tr>
+<td>总并发度</td>
+<td>N</td>
+<td>1（受 partition 限）</td>
+<td>N × M</td>
+</tr>
+<tr>
+<td>进程数</td>
+<td>多</td>
+<td>少</td>
+<td>中</td>
+</tr>
+<tr>
+<td>适合任务类型</td>
+<td>CPU 密集</td>
+<td>—</td>
+<td>I/O 密集</td>
+</tr>
+<tr>
+<td>你的场景</td>
+<td>partition=8, worker=8</td>
+<td>❌</td>
+<td>partition=4, worker=2×4</td>
+</tr>
+<tr>
+<td>复杂度</td>
+<td>低</td>
+<td>低</td>
+<td>中</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="heading-2">幂等设计</h2>
 <p>每次 schedule 时为 task 生成新的 effective_id（UUID）并写入 DB，同时把 effective_id 一起发到消息里。worker 侧用 UPDATE ... WHERE id=? AND status='running' 原子抢占执行权，抢不到的 worker（affected_rows=0）说明任务已被其他 worker 抢占或已完成，直接 ack 消息不执行。effective_id 主要用于 日志/排查 （区分是哪次调度触发的执行），不是幂等的核心机制。</p>
 <pre><code>A:10:00 -&gt; update task set status='running', effective_id=? where id=? and status='pending' -&gt; affected_rows=1 -&gt; 执行任务
 B:10:00 -&gt; update task set status='running', effective_id=? where id=? and status='pending' -&gt; affected_rows=0 -&gt; 拒绝执行
