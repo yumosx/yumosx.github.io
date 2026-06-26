@@ -12,3 +12,8 @@ desc = "Unicode 编码与解码转换工具"
 name = "工具箱"
 url = "https://www.json.cn/often/"
 desc = "常用开发工具集合"
+
+[[links]]
+name = "dave golang"
+url = "https://dave.cheney.net"
+desc = "go 博客"
