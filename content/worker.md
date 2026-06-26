@@ -111,6 +111,184 @@ Kafka topic（4 个 partition）
    ↑ 4 个任务真正并发
 ```
 
+下面我用一个真实场景来推算参数。
+
+**场景目标**：48 小时内跑完 720 个任务。
+```
+目标吞吐量 = 720 个 / 48 h = 15 个/h
+```
+即每个小时要处理完 15 个任务。
+
+**已知现状**：并发度（worker 数）= 4 时，48h 跑完 392 个任务。
+
+```
+当前吞吐量 = 392 / 48 = 8.17 个/h  ≈ 8.2 个/h
+```
+
+套 Little's Law：
+
+```
+并发度 = 吞吐量 × 平均执行时间
+4      = 8.2    × t
+t      = 4 / 8.2 = 0.488 h ≈ 29 分钟
+```
+
+**平均每个任务执行时间 ≈ 29 分钟**。
+
+> 注意：这里的"吞吐量"是指**系统实际处理速率**，不是单 worker 的速率。
+> `并发度 = 吞吐量 × 平均执行时间` 的物理含义是：
+> 任意时刻，同时在执行的任务数 = 每小时处理几个 × 每个任务占几小时。
+> 单位必须对齐：吞吐量用 个/h，时间就必须用 h。
+
+
+仍用 Little's Law，已知目标吞吐量 15 个/h，平均执行时间 0.488 h：
+
+```
+所需并发度 = 15 × 0.488 = 7.32
+```
+
+向上取整 → **8**（即同时有 8 个任务在跑即可达成目标）。
+
+Kafka 的关键约束（见上文 Consumer Group 与 Partition 章节）：
+
+| 约束 | 含义 |
+| --- | --- |
+| `partition 数 = 一个 group 的最大并行度` | 8 个 worker 要打满，partition 必须 ≥ 8 |
+| `partition 数 ≥ worker 数` | 否则会有 worker 闲置 |
+| `partition 只能加不能减` | 必须一次给够，预留扩容空间 |
+
+所以这个场景下：
+
+| 参数 | 取值 | 理由 |
+| --- | --- | --- |
+| topic 数 | **1**（任务调度 topic） | 这里的 worker 只消费"任务调度 topic"；高优先级、失败重试等是另外的 topic 和 worker，不算进这次推算 |
+| partition 数 | **10** | 略大于 worker 数 8，预留 2 个 partition 扩容 |
+| consumer 数 | **8** | = worker 数，一个进程 = 一个 consumer + 一个 worker |
+| worker 数 | **8** | 上面算出的目标并发度 |
+
+---
+
+Consumer / Worker 配比的三种方案
+
+上面算的是"1 consumer = 1 worker"的简化模型。实际上 consumer 和 worker 的关系可以解耦，三种主流方案各有适用场景。
+
+如果 partition 内的任务**有顺序依赖**（必须按 offset 顺序执行），那同 partition 内开多个 worker 没意义——还是串行。
+如果任务之间**无依赖**，那 worker 池才有意义。
+
+方案 A：1 Consumer × 1 Worker（1:1 配比）
+
+```
+进程 1 (consumer + worker) ← partition 0
+进程 2 (consumer + worker) ← partition 1
+...
+进程 N (consumer + worker) ← partition N-1
+```
+
+**总并发度 = partition 数 = 进程数**
+
+| 项 | 说明 |
+| --- | --- |
+| 优点 | 简单清晰、故障定位容易、任务隔离好 |
+| 缺点 | 进程数多、运维成本高、不适合 I/O 密集型任务 |
+| 适用 | CPU 密集型任务（转码、压缩、计算） |
+| 你的场景 | `partition=8, worker=8`，最朴素方案 |
+
+---
+
+方案 B：1 Consumer + 进程内 Worker 池
+
+```
+进程 1 (1 consumer + M workers) ← partition 0
+```
+
+**总并发度 = 1 × M = M（受 partition 数 = 1 限制）**
+
+| 项 | 说明 |
+| --- | --- |
+| 优点 | 进程数少、复用连接池、部署简单 |
+| 缺点 | 并行度上限被 partition=1 锁死，无法水平扩展 |
+| 适用 | 单分区就够用 + 想省部署成本 |
+| 你的场景 | ❌ 达不到目标并发度 8 |
+
+**注意**：这种方案下 worker 池其实没意义——partition 限制了同时只能拉 1 条消息处理。所以实际还是串行。
+
+---
+
+方案 C：N Consumer + 进程内 Worker 池（推荐）
+
+```
+进程 1 (1 consumer + M workers) ← partition 0
+进程 2 (1 consumer + M workers) ← partition 1
+...
+进程 N (1 consumer + M workers) ← partition N-1
+```
+
+**总并发度 = 进程数 × 每进程 worker 数 = N × M**
+
+| 项 | 说明 |
+| --- | --- |
+| 优点 | 进程级 + 任务级两层并行，复用连接池，故障影响面可控 |
+| 缺点 | 单进程内 worker 互相竞争（DB 连接、内存） |
+| 适用 | I/O 密集型任务（HTTP 调用、DB 查询、文件读写） |
+| 你的场景 | ✅ `partition=4, 进程=4, 每进程 worker=2`，总并发度 8 |
+
+你的场景应用方案 C 推算
+
+**已知条件：**
+- 目标并发度：8
+- 任务平均时长：29 分钟（0.488h）
+- 任务特征：调接口、查库 → I/O 密集
+
+**worker 数公式：**
+
+```
+每进程 worker 数 = 1 + (I/O 等待时间 / CPU 计算时间)
+```
+
+假设单任务 29 分钟中，4 分钟 CPU 计算、25 分钟等 I/O：
+
+```
+worker 数 = 1 + (25 / 4) = 1 + 6.25 ≈ 7
+```
+
+但实际**不超过 4~8**（worker 多了爆 DB 连接池和内存）。
+
+**折中取 2 worker/进程**（既能填满 I/O 等待，又不会过载）。
+
+**最终配置：**
+
+```yaml
+topic: task-schedule
+partition: 4
+consumer 进程数: 4
+每进程 worker 数: 2
+总并发度: 4 × 2 = 8 ✅
+```
+
+**相比方案 A 的优势：**
+- 进程数 4 vs 8：部署成本减半
+- 每进程 2 worker：任务有 I/O 等待时互相补位
+- partition 4 vs 8：Kafka 资源减半
+- 单进程故障影响 25% 流量（vs 方案 A 的 12.5%）
+
+**注意事项：**
+- 每 worker 占一份 DB 连接/HTTP 客户端 → 2 worker = 2 倍资源占用，需评估下游容量
+- worker 池需要任务队列（channel）+ 优雅退出机制
+- 同 partition 内任务如果有时序要求，worker 池无效
+
+---
+
+| 维度 | 方案 A | 方案 B | 方案 C |
+| --- | --- | --- | --- |
+| 架构 | N 进程 × (1c+1w) | 1 进程 × (1c+Mw) | N 进程 × (1c+Mw) |
+| 总并发度 | N | 1（受 partition 限）| N × M |
+| 进程数 | 多 | 少 | 中 |
+| 适合任务类型 | CPU 密集 | — | I/O 密集 |
+| 你的场景 | partition=8, worker=8 | ❌ | partition=4, worker=2×4 |
+| 复杂度 | 低 | 低 | 中 |
+
+---
+
 ## 幂等设计
 
 每次 schedule 时为 task 生成新的 effective_id（UUID）并写入 DB，同时把 effective_id 一起发到消息里。worker 侧用 UPDATE ... WHERE id=? AND status='pending' 原子抢占执行权，抢不到的 worker（affected_rows=0）说明任务已被其他 worker 抢占或已完成，直接 ack 消息不执行。effective_id 主要用于 日志/排查 （区分是哪次调度触发的执行），不是幂等的核心机制。
@@ -125,6 +303,8 @@ L1 WARNING      - 预警：降低单次投递量，告警
 L2 DEGRADED     - 降级：限制并发，缩小允许的 task kind
 L3 CIRCUIT_OPEN - 熔断：暂停普通任务，仅保留重试
 L4 EMERGENCY    - 紧急：完全停止调度，等待人工恢复
+
+
 
 ## 失败任务重新调度
 
