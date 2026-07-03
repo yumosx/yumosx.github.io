@@ -69,6 +69,12 @@
 		<ul class="post-list">
 		
 			<li>
+				<a href="/posts/swift.html">cs193p ios 学习笔记</a>
+				<span class="post-date">2026-07-01</span>
+				<p>学到和 swift一些语法， - 最后一个函数参数是 lambda 表达式且没有参数的时候的时候可以直接写成 VStack{} - some View 标识编译器自动推断，不需要手动指定类型 - @ViewBuilder 修饰的函数，返回值是 some View 类型，不需要手动指定类型 - @Vi...</p>
+			</li>
+		
+			<li>
 				<a href="/posts/lib-api-sche.html">APSchduler 库学习 </a>
 				<span class="post-date">2025-10-22</span>
 				<p>**在你当前的代码中使用 `AsyncIOScheduler` 时，默认情况下会等到上一个 `self.run()` 执行完毕之后，才会开启下一个 job**。 这正是 APScheduler 的 **interval trigger**（间隔触发器）的默认行为，具体由参数 `coalesce` 和...</p>
@@ -81,15 +87,15 @@
 			</li>
 		
 			<li>
-				<a href="/posts/rbac.html">RBAC 权限控制系统设计 </a>
-				<span class="post-date">2025-10-02</span>
-				<p>role -&gt; permission -&gt; resource 经过这个链路去控制用户对应资源的访问权限，实现 RBAC 权限控制。 所以至少需要 5 张表: </p>
-			</li>
-		
-			<li>
 				<a href="/posts/gopher-lua.html">Gopher Lua 编写</a>
 				<span class="post-date">2025-10-02</span>
 				<p>package main </p>
+			</li>
+		
+			<li>
+				<a href="/posts/rbac.html">RBAC 权限控制系统设计 </a>
+				<span class="post-date">2025-10-02</span>
+				<p>role -&gt; permission -&gt; resource 经过这个链路去控制用户对应资源的访问权限，实现 RBAC 权限控制。 所以至少需要 5 张表: </p>
 			</li>
 		
 			<li>
@@ -111,33 +117,27 @@
 			</li>
 		
 			<li>
-				<a href="/posts/impl.html">Go 代码大全</a>
-				<span class="post-date">2023-11-15</span>
-				<p>在 Go 语言中，与 Java 或 Python 等语言不同，结构体（struct）无需显式声明对某个接口的实现。 例如，在 Java 中我们常会写 class Student implements Person 来明确指定接口实现，这种方式具有一定的优势。 如果采用隐式实现机制，当接口中的方法发生...</p>
-			</li>
-		
-			<li>
 				<a href="/posts/alembic.html">Alembic 数据库迁移工具</a>
 				<span class="post-date">2023-11-15</span>
 				<p>Alembic 是一个 Python 环境中的数据库迁移工具，类似于 Go 语言中 GORM 的数据库迁移功能。它是 SQLAlchemy 的迁移工具扩展，用于管理数据库架构变更的版本控制。 在 Alembic 中最简单的命令就是初始化项目： alembic init migrations </p>
 			</li>
 		
 			<li>
-				<a href="/posts/qps.html">分布式系统指标计算</a>
-				<span class="post-date">2025-9-23</span>
-				<p>在日常工作中经常需要去做一些系统优化相关的容量评估，核心是用 **Little 定律** 把吞吐量、响应时间和并发数联系起来： 并发数 = 系统吞吐量 * 任务平均执行时间 </p>
+				<a href="/posts/impl.html">Go 代码大全</a>
+				<span class="post-date">2023-11-15</span>
+				<p>在 Go 语言中，与 Java 或 Python 等语言不同，结构体（struct）无需显式声明对某个接口的实现。 例如，在 Java 中我们常会写 class Student implements Person 来明确指定接口实现，这种方式具有一定的优势。 如果采用隐式实现机制，当接口中的方法发生...</p>
+			</li>
+		
+			<li>
+				<a href="/posts/rabbitmq.html">RabbitMQ 与 Aio-Pika</a>
+				<span class="post-date">2025-9-21</span>
+				<p>整个 rabbitmq 分成了 四个部分 1. producer: 用来生成对应的消息, 将消息发送出去 2. exchange: 用来按照对应的 router 把消息转发到对应的 queue 上面去 3. queue： 负责持久化对应的消息，兔子mq 的消息持久化机制是通过 Erlang 的 分布...</p>
 			</li>
 		
 			<li>
 				<a href="/posts/db.html">各种数据库选型场景</a>
 				<span class="post-date">2025-9-28</span>
 				<p>mysql 不适合查询场景。 </p>
-			</li>
-		
-			<li>
-				<a href="/posts/group.html">消息队列踩坑记录</a>
-				<span class="post-date">2025-9-22</span>
-				<p>在 Java 应用中，使用 spring-kafka 只需配置 `group_id` 和 `topic` 就能消费消息，但这会埋下安全隐患：消费速度过慢时触发 rebalance，消息被分配给另一个消费者，新消费者同样消费过慢，再次 rebalance，形成恶性循环。 </p>
 			</li>
 		
 			<li>
@@ -153,9 +153,9 @@
 			</li>
 		
 			<li>
-				<a href="/posts/iac.html">基础设施相关</a>
-				<span class="post-date">2023-9-24</span>
-				<p>1. **锁定依赖与基础镜像**    - 在 Dockerfile 或 `docker-compose.yml` 中明确指定 RabbitMQ 等中间件的版本号，使用固定的镜像 digest，确保环境一致性。 </p>
+				<a href="/posts/language-ranking-anxiety.html">编程语言排行榜就是制造焦虑的烂玩意</a>
+				<span class="post-date">2025-1-27</span>
+				<p>每隔几个月，就有各种&#34;编程语言排行榜&#34;刷屏——TIOBE、PYPL、Stack Overflow 开发者调查、GitHub Octoverse……它们被包装成&#34;权威数据&#34;，被媒体转载，被培训机构引用，甚至被一些管理者用来做技术选型决策。 但真相是：**这些排行榜本质上就是制造焦虑的营销工具，对真正的...</p>
 			</li>
 		
 			<li>
@@ -171,15 +171,15 @@
 			</li>
 		
 			<li>
-				<a href="/posts/grpc.html">微服务框架选型: gRPC 高级篇 </a>
-				<span class="post-date">2025-9-24</span>
-				<p>type UnaryServerInterceptor func(ctx context.Context, req any, info *UnaryServerInfo, handler UnaryHandler) (resp any, err error) </p>
+				<a href="/posts/qps.html">分布式系统指标计算</a>
+				<span class="post-date">2025-9-23</span>
+				<p>在日常工作中经常需要去做一些系统优化相关的容量评估，核心是用 **Little 定律** 把吞吐量、响应时间和并发数联系起来： 并发数 = 系统吞吐量 * 任务平均执行时间 </p>
 			</li>
 		
 			<li>
-				<a href="/posts/rabbitmq.html">RabbitMQ 与 Aio-Pika</a>
-				<span class="post-date">2025-9-21</span>
-				<p>整个 rabbitmq 分成了 四个部分 1. producer: 用来生成对应的消息, 将消息发送出去 2. exchange: 用来按照对应的 router 把消息转发到对应的 queue 上面去 3. queue： 负责持久化对应的消息，兔子mq 的消息持久化机制是通过 Erlang 的 分布...</p>
+				<a href="/posts/iac.html">基础设施相关</a>
+				<span class="post-date">2023-9-24</span>
+				<p>1. **锁定依赖与基础镜像**    - 在 Dockerfile 或 `docker-compose.yml` 中明确指定 RabbitMQ 等中间件的版本号，使用固定的镜像 digest，确保环境一致性。 </p>
 			</li>
 		
 			<li>
@@ -189,15 +189,15 @@
 			</li>
 		
 			<li>
-				<a href="/posts/language-ranking-anxiety.html">编程语言排行榜就是制造焦虑的烂玩意</a>
-				<span class="post-date">2025-1-27</span>
-				<p>每隔几个月，就有各种&#34;编程语言排行榜&#34;刷屏——TIOBE、PYPL、Stack Overflow 开发者调查、GitHub Octoverse……它们被包装成&#34;权威数据&#34;，被媒体转载，被培训机构引用，甚至被一些管理者用来做技术选型决策。 但真相是：**这些排行榜本质上就是制造焦虑的营销工具，对真正的...</p>
+				<a href="/posts/group.html">消息队列踩坑记录</a>
+				<span class="post-date">2025-9-22</span>
+				<p>在 Java 应用中，使用 spring-kafka 只需配置 `group_id` 和 `topic` 就能消费消息，但这会埋下安全隐患：消费速度过慢时触发 rebalance，消息被分配给另一个消费者，新消费者同样消费过慢，再次 rebalance，形成恶性循环。 </p>
 			</li>
 		
 			<li>
-				<a href="/posts/data.html">异地多活数据存储策略设计</a>
-				<span class="post-date">2025-9-25</span>
-				<p>当用户量上去的时候，我们必须要考虑到数据的分离存储，比如将主要的数据放在一个机房中， ![arch](/static/images/db-two.png) 在这个方案中，数据库主库集中在一个机房，其他机房的数据库都是从库。当有数据修改请求时，核心机房的主库先完成修改，然后通过数据库主从同步把修改后的...</p>
+				<a href="/posts/grpc.html">微服务框架选型: gRPC 高级篇 </a>
+				<span class="post-date">2025-9-24</span>
+				<p>type UnaryServerInterceptor func(ctx context.Context, req any, info *UnaryServerInfo, handler UnaryHandler) (resp any, err error) </p>
 			</li>
 		
 			<li>
@@ -216,6 +216,12 @@
 				<a href="/posts/sharding.html">高性能系统设计之数据库设计</a>
 				<span class="post-date">2025-9-22</span>
 				<p>在高性能系统中，往往数据库的读写性能非常重要，但是数据库的性能瓶颈往往和很多东西有关， 1. 数据量有关系，数据量会影响B&#43; 数的高度 2. 索引建立的好不好，比如一些高频数据库查询 3. 数据迁移，往往之前的表设计的不好，需要把表的数据迁移到新的表上面 4. 分库分表，分库分表通常分为垂直拆分和水...</p>
+			</li>
+		
+			<li>
+				<a href="/posts/data.html">异地多活数据存储策略设计</a>
+				<span class="post-date">2025-9-25</span>
+				<p>当用户量上去的时候，我们必须要考虑到数据的分离存储，比如将主要的数据放在一个机房中， ![arch](/static/images/db-two.png) 在这个方案中，数据库主库集中在一个机房，其他机房的数据库都是从库。当有数据修改请求时，核心机房的主库先完成修改，然后通过数据库主从同步把修改后的...</p>
 			</li>
 		
 			<li>
