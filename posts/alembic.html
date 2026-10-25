@@ -2,30 +2,21 @@
 <html lang="zh-CN">
 <head>
 	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>yumosx&#39;s 写字的地方 - Alembic 数据库迁移工具</title>
-	<link rel="preconnect" href="https://fonts.googleapis.com">
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-	<link rel="stylesheet" href="/static/style.css">
-	<link rel="alternate" type="application/rss+xml" href="/feed.xml" title="yumosx&#39;s 写字的地方 RSS Feed">
-	<script>(function(){try{var t=localStorage.getItem('blog-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.setAttribute('data-theme','dark')}catch(e){}})();</script>
+	<meta name="viewport" content="width=device-width, initial-scale=0.5">
+	<title>Alembic 数据库迁移工具 - yumosx&#39;s 写字的地方</title>
+	
+	<link rel="stylesheet" href="/static/css/highlight/xcode.css">
+	<link rel="stylesheet" href="/static/css/post.css">
+	
 </head>
 <body>
-	<header class="site-header">
-		<h1><a href="/">yumosx&#39;s 写字的地方</a></h1>
-		<nav class="site-nav">
-			<a href="/">首页</a>
-			<a href="/links.html">友链</a>
-		</nav>
-		<button id="theme-toggle" class="theme-toggle" aria-label="切换主题">🌙</button>
-	</header>
-	<main>
-		
-	<article class="post">
-		<h2>Alembic 数据库迁移工具</h2>
-		<div class="post-meta">2023-11-15</div>
-		<div class="post-content"><p>Alembic 是一个 Python 环境中的数据库迁移工具，类似于 Go 语言中 GORM 的数据库迁移功能。它是 SQLAlchemy 的迁移工具扩展，用于管理数据库架构变更的版本控制。</p>
+	<script>if (/mobile/i.test(navigator.userAgent) || /android/i.test(navigator.userAgent)) document.body.classList.add('mobile');</script>
+	
+	
+	<div class="inner">
+		<h1>Alembic 数据库迁移工具</h1>
+		<div class="time">2023-11-15</div>
+		<p>Alembic 是一个 Python 环境中的数据库迁移工具，类似于 Go 语言中 GORM 的数据库迁移功能。它是 SQLAlchemy 的迁移工具扩展，用于管理数据库架构变更的版本控制。</p>
 <p>在 Alembic 中最简单的命令就是初始化项目：</p>
 <pre class="chroma"><code><span class="line"><span class="cl">alembic init migrations
 </span></span></code></pre><p>执行完成这个命令之后会在当前目录下生成：</p>
@@ -150,14 +141,11 @@
 </span></span></code></pre><p>使用 <code>revision --autogenerate</code> 命令自动生成迁移脚本：</p>
 <pre class="chroma"><code><span class="line"><span class="cl">alembic revision --autogenerate -m <span class="s2">&#34;add user table&#34;</span>
 </span></span></code></pre><p>Alembic 会自动检测模型变更并生成相应的迁移代码。这对于大型项目特别有用，可以减少手动编写迁移脚本的工作量。</p>
-</div>
-	</article>
 
-	</main>
-	<footer>
-		<p>© 2026 yumosx&#39;s 写字的地方</p>
-	</footer>
-	<script src="/static/theme.js"></script>
-	<script src="/static/profile.js"></script>
+		<hr>
+		<p><span>↶ </span><a href="/">返回首页</a></p>
+	</div>
+
 </body>
 </html>
+

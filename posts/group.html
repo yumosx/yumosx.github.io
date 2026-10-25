@@ -2,30 +2,21 @@
 <html lang="zh-CN">
 <head>
 	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>yumosx&#39;s 写字的地方 - 消息队列踩坑记录</title>
-	<link rel="preconnect" href="https://fonts.googleapis.com">
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-	<link rel="stylesheet" href="/static/style.css">
-	<link rel="alternate" type="application/rss+xml" href="/feed.xml" title="yumosx&#39;s 写字的地方 RSS Feed">
-	<script>(function(){try{var t=localStorage.getItem('blog-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.setAttribute('data-theme','dark')}catch(e){}})();</script>
+	<meta name="viewport" content="width=device-width, initial-scale=0.5">
+	<title>消息队列踩坑记录 - yumosx&#39;s 写字的地方</title>
+	
+	<link rel="stylesheet" href="/static/css/highlight/xcode.css">
+	<link rel="stylesheet" href="/static/css/post.css">
+	
 </head>
 <body>
-	<header class="site-header">
-		<h1><a href="/">yumosx&#39;s 写字的地方</a></h1>
-		<nav class="site-nav">
-			<a href="/">首页</a>
-			<a href="/links.html">友链</a>
-		</nav>
-		<button id="theme-toggle" class="theme-toggle" aria-label="切换主题">🌙</button>
-	</header>
-	<main>
-		
-	<article class="post">
-		<h2>消息队列踩坑记录</h2>
-		<div class="post-meta">2025-9-22</div>
-		<div class="post-content"><h1 id="kafka">Kafka</h1>
+	<script>if (/mobile/i.test(navigator.userAgent) || /android/i.test(navigator.userAgent)) document.body.classList.add('mobile');</script>
+	
+	
+	<div class="inner">
+		<h1>消息队列踩坑记录</h1>
+		<div class="time">2025-09-22</div>
+		<h1 id="kafka">Kafka</h1>
 <h2 id="consumer-rebalance">Consumer 重平衡（Rebalance）</h2>
 <p>在 Java 应用中，使用 spring-kafka 只需配置 <code>group_id</code> 和 <code>topic</code> 就能消费消息，但这会埋下安全隐患：消费速度过慢时触发 rebalance，消息被分配给另一个消费者，新消费者同样消费过慢，再次 rebalance，形成恶性循环。</p>
 <p><strong>典型症状</strong>：日志出现 <code>CommitFailedException</code>，并附带以下信息：</p>
@@ -301,14 +292,11 @@
 </tbody>
 </table>
 <p><strong>一句话</strong>：文档在 RabbitMQ 4.3 的 <a href="https://www.rabbitmq.com/docs/deprecated-features" target="_blank" rel="noopener noreferrer">deprecated features</a> 和 <a href="https://github.com/rabbitmq/rabbitmq-server/blob/main/consumer_timeouts.md" target="_blank" rel="noopener noreferrer">consumer timeout 说明</a>；线上有的服务还能跑，多半是 <strong>旧队列还在 + 没重新 declare</strong>，或 <strong>RabbitMQ 版本/配置更宽松</strong>；scheduler 每次启动都要 declare，所以最先暴露问题。</p>
-</div>
-	</article>
 
-	</main>
-	<footer>
-		<p>© 2026 yumosx&#39;s 写字的地方</p>
-	</footer>
-	<script src="/static/theme.js"></script>
-	<script src="/static/profile.js"></script>
+		<hr>
+		<p><span>↶ </span><a href="/">返回首页</a></p>
+	</div>
+
 </body>
 </html>
+

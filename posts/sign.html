@@ -2,30 +2,21 @@
 <html lang="zh-CN">
 <head>
 	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>yumosx&#39;s 写字的地方 - 如何给 commit sign 一下</title>
-	<link rel="preconnect" href="https://fonts.googleapis.com">
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-	<link rel="stylesheet" href="/static/style.css">
-	<link rel="alternate" type="application/rss+xml" href="/feed.xml" title="yumosx&#39;s 写字的地方 RSS Feed">
-	<script>(function(){try{var t=localStorage.getItem('blog-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.setAttribute('data-theme','dark')}catch(e){}})();</script>
+	<meta name="viewport" content="width=device-width, initial-scale=0.5">
+	<title>如何给 commit sign 一下 - yumosx&#39;s 写字的地方</title>
+	
+	<link rel="stylesheet" href="/static/css/highlight/xcode.css">
+	<link rel="stylesheet" href="/static/css/post.css">
+	
 </head>
 <body>
-	<header class="site-header">
-		<h1><a href="/">yumosx&#39;s 写字的地方</a></h1>
-		<nav class="site-nav">
-			<a href="/">首页</a>
-			<a href="/links.html">友链</a>
-		</nav>
-		<button id="theme-toggle" class="theme-toggle" aria-label="切换主题">🌙</button>
-	</header>
-	<main>
-		
-	<article class="post">
-		<h2>如何给 commit sign 一下</h2>
-		<div class="post-meta">2023-11-16</div>
-		<div class="post-content"><p>最近在参加开源项目的时候，其中 Approver 要求我去给我的 commit sign 一下，也就是给对应的 commit 加上一个签名，这种签名有两种方式
+	<script>if (/mobile/i.test(navigator.userAgent) || /android/i.test(navigator.userAgent)) document.body.classList.add('mobile');</script>
+	
+	
+	<div class="inner">
+		<h1>如何给 commit sign 一下</h1>
+		<div class="time">2023-11-16</div>
+		<p>最近在参加开源项目的时候，其中 Approver 要求我去给我的 commit sign 一下，也就是给对应的 commit 加上一个签名，这种签名有两种方式
 Signed-off-by（您提供的这种)：是一文本记录，用于表明责任和许可同意。它很容易被任何人复制和添加。</p>
 <ul>
 <li>GPG 签名（git commit -S）：使用非对称加密技术为整个提交创建一个密码学上的数字签名。它可以验证提交确实来自其声称的作者，并且在传输过程中没有被篡改。这在安全性要求极高的项目中是强制要求的。
@@ -71,14 +62,11 @@ gpg --list-secret-keys
 <p>这个命令会生成一个 my_public_key.asc 的文本文件，您可以用邮件把它发送给您的联系人。文件内容是以 -----BEGIN PGP PUBLIC KEY BLOCK----- 开头的文本块。
 3. 上传到密钥服务器（可选）：正如您上一个问题提到的，您可以选择将公钥上传到密钥服务器（如 keys.openpgp.org），方便他人查找。
 务必做好私钥的备份！ 可以在 GPG Keychain 中选中密钥，然后选择菜单栏中的 密钥 -&gt; 导出...，勾选 允许导出私钥，将其保存到一个安全的地方（如加密的U盘或密码管理器）。私钥丢失将无法解密别人发给您的信息。</p>
-</div>
-	</article>
 
-	</main>
-	<footer>
-		<p>© 2026 yumosx&#39;s 写字的地方</p>
-	</footer>
-	<script src="/static/theme.js"></script>
-	<script src="/static/profile.js"></script>
+		<hr>
+		<p><span>↶ </span><a href="/">返回首页</a></p>
+	</div>
+
 </body>
 </html>
+

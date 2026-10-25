@@ -2,30 +2,21 @@
 <html lang="zh-CN">
 <head>
 	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>yumosx&#39;s 写字的地方 - redis 缓存设计方案 </title>
-	<link rel="preconnect" href="https://fonts.googleapis.com">
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-	<link rel="stylesheet" href="/static/style.css">
-	<link rel="alternate" type="application/rss+xml" href="/feed.xml" title="yumosx&#39;s 写字的地方 RSS Feed">
-	<script>(function(){try{var t=localStorage.getItem('blog-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.setAttribute('data-theme','dark')}catch(e){}})();</script>
+	<meta name="viewport" content="width=device-width, initial-scale=0.5">
+	<title>redis 缓存设计方案 - yumosx&#39;s 写字的地方</title>
+	
+	<link rel="stylesheet" href="/static/css/highlight/xcode.css">
+	<link rel="stylesheet" href="/static/css/post.css">
+	
 </head>
 <body>
-	<header class="site-header">
-		<h1><a href="/">yumosx&#39;s 写字的地方</a></h1>
-		<nav class="site-nav">
-			<a href="/">首页</a>
-			<a href="/links.html">友链</a>
-		</nav>
-		<button id="theme-toggle" class="theme-toggle" aria-label="切换主题">🌙</button>
-	</header>
-	<main>
-		
-	<article class="post">
-		<h2>redis 缓存设计方案 </h2>
-		<div class="post-meta">2025-10-02</div>
-		<div class="post-content"><h2 id="heading">预热缓存</h2>
+	<script>if (/mobile/i.test(navigator.userAgent) || /android/i.test(navigator.userAgent)) document.body.classList.add('mobile');</script>
+	
+	
+	<div class="inner">
+		<h1>redis 缓存设计方案</h1>
+		<div class="time">2025-10-02</div>
+		<h2 id="heading">预热缓存</h2>
 <p>在程序启动之前的时候把系统中高频访问的数据刷新到 redis 中去，比如商品列表信息，课程信息，当刷新完毕之后，将对外的api 端口打开
 加载缓存的时候，我们可以在 go 中去嵌入 lua 脚本 对一些数据做清洗</p>
 <p>同样在预热缓存的时候，我们可以先把这些预热缓存的东西刷新到 Rocksdb 中去，避免直接读csv，大json 文件</p>
@@ -165,14 +156,11 @@
 缓存穿透/击穿次数
 Redis 慢查询、大 key 监控
 用 OpenTelemetry + Prometheus + Grafana 形成统一看板，出问题时第一时间定位。</p>
-</div>
-	</article>
 
-	</main>
-	<footer>
-		<p>© 2026 yumosx&#39;s 写字的地方</p>
-	</footer>
-	<script src="/static/theme.js"></script>
-	<script src="/static/profile.js"></script>
+		<hr>
+		<p><span>↶ </span><a href="/">返回首页</a></p>
+	</div>
+
 </body>
 </html>
+

@@ -2,42 +2,30 @@
 <html lang="zh-CN">
 <head>
 	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>yumosx&#39;s 写字的地方 - 异地多活数据存储策略设计</title>
-	<link rel="preconnect" href="https://fonts.googleapis.com">
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-	<link rel="stylesheet" href="/static/style.css">
-	<link rel="alternate" type="application/rss+xml" href="/feed.xml" title="yumosx&#39;s 写字的地方 RSS Feed">
-	<script>(function(){try{var t=localStorage.getItem('blog-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.setAttribute('data-theme','dark')}catch(e){}})();</script>
+	<meta name="viewport" content="width=device-width, initial-scale=0.5">
+	<title>异地多活数据存储策略设计 - yumosx&#39;s 写字的地方</title>
+	
+	<link rel="stylesheet" href="/static/css/highlight/xcode.css">
+	<link rel="stylesheet" href="/static/css/post.css">
+	
 </head>
 <body>
-	<header class="site-header">
-		<h1><a href="/">yumosx&#39;s 写字的地方</a></h1>
-		<nav class="site-nav">
-			<a href="/">首页</a>
-			<a href="/links.html">友链</a>
-		</nav>
-		<button id="theme-toggle" class="theme-toggle" aria-label="切换主题">🌙</button>
-	</header>
-	<main>
-		
-	<article class="post">
-		<h2>异地多活数据存储策略设计</h2>
-		<div class="post-meta">2025-9-25</div>
-		<div class="post-content"><p>当用户量上去的时候，我们必须要考虑到数据的分离存储，比如将主要的数据放在一个机房中，
+	<script>if (/mobile/i.test(navigator.userAgent) || /android/i.test(navigator.userAgent)) document.body.classList.add('mobile');</script>
+	
+	
+	<div class="inner">
+		<h1>异地多活数据存储策略设计</h1>
+		<div class="time">2025-09-25</div>
+		<p>当用户量上去的时候，我们必须要考虑到数据的分离存储，比如将主要的数据放在一个机房中，
 <img src="/static/images/db-two.png" alt="arch"></p>
 <p>在这个方案中，数据库主库集中在一个机房，其他机房的数据库都是从库。当有数据修改请求时，核心机房的主库先完成修改，然后通过数据库主从同步把修改后的数据传给备份机房的从库。由于用户平时访问的信息都是从缓存中获取的，为了降低主从延迟，备份机房会把修改后的数据先更新到本地缓存。</p>
 <p>与此同时，客户端会在本地记录下数据修改的最后时间戳（如果没有就取当前时间）。当客户端请求服务端时，服务端会自动对比缓存中对应数据的更新时间，是否小于客户端本地记录的修改时间。</p>
 <p>如果缓存更新时间小于客户端内的修改时间，服务端会触发同步指令尝试在从库中查找最新数据；如果没有找到，就把从主库获取的最新数据放到被访问机房的缓存中。这种方式可以避免机房之间用户数据更新不及时的问题。</p>
-</div>
-	</article>
 
-	</main>
-	<footer>
-		<p>© 2026 yumosx&#39;s 写字的地方</p>
-	</footer>
-	<script src="/static/theme.js"></script>
-	<script src="/static/profile.js"></script>
+		<hr>
+		<p><span>↶ </span><a href="/">返回首页</a></p>
+	</div>
+
 </body>
 </html>
+

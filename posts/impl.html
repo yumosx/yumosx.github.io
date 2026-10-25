@@ -2,30 +2,21 @@
 <html lang="zh-CN">
 <head>
 	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>yumosx&#39;s 写字的地方 - Go 代码大全</title>
-	<link rel="preconnect" href="https://fonts.googleapis.com">
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-	<link rel="stylesheet" href="/static/style.css">
-	<link rel="alternate" type="application/rss+xml" href="/feed.xml" title="yumosx&#39;s 写字的地方 RSS Feed">
-	<script>(function(){try{var t=localStorage.getItem('blog-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.setAttribute('data-theme','dark')}catch(e){}})();</script>
+	<meta name="viewport" content="width=device-width, initial-scale=0.5">
+	<title>Go 代码大全 - yumosx&#39;s 写字的地方</title>
+	
+	<link rel="stylesheet" href="/static/css/highlight/xcode.css">
+	<link rel="stylesheet" href="/static/css/post.css">
+	
 </head>
 <body>
-	<header class="site-header">
-		<h1><a href="/">yumosx&#39;s 写字的地方</a></h1>
-		<nav class="site-nav">
-			<a href="/">首页</a>
-			<a href="/links.html">友链</a>
-		</nav>
-		<button id="theme-toggle" class="theme-toggle" aria-label="切换主题">🌙</button>
-	</header>
-	<main>
-		
-	<article class="post">
-		<h2>Go 代码大全</h2>
-		<div class="post-meta">2023-11-15</div>
-		<div class="post-content"><h2 id="heading">接口的显式实现</h2>
+	<script>if (/mobile/i.test(navigator.userAgent) || /android/i.test(navigator.userAgent)) document.body.classList.add('mobile');</script>
+	
+	
+	<div class="inner">
+		<h1>Go 代码大全</h1>
+		<div class="time">2023-11-15</div>
+		<h2 id="heading">接口的显式实现</h2>
 <p>在 Go 语言中，与 Java 或 Python 等语言不同，结构体（struct）无需显式声明对某个接口的实现。
 例如，在 Java 中我们常会写 class Student implements Person 来明确指定接口实现，这种方式具有一定的优势。
 如果采用隐式实现机制，当接口中的方法发生变更时，之前实现该接口的结构体可能会因缺少某个方法而不再符合接口要求。
@@ -333,14 +324,11 @@ defer cancelFunc()
 <h2 id="mutex">mutex</h2>
 <p>在 Go 语言中实现并发同步的方式就是使用 sync.Mutex 来实现互斥锁，来保护共享资源的访问。sync.Mutex 里面包含了一个状态变量，来记录当前是否有 goroutine 正在持有锁。所以这个 sync.Mutex 是不能被拷贝的，否则会导致锁的释放问题。</p>
 <p>其次go 语言的互斥锁其实不是 可以重新进入的，也就是相同的 goroutine 不能重新进入锁，否则会导致死锁。</p>
-</div>
-	</article>
 
-	</main>
-	<footer>
-		<p>© 2026 yumosx&#39;s 写字的地方</p>
-	</footer>
-	<script src="/static/theme.js"></script>
-	<script src="/static/profile.js"></script>
+		<hr>
+		<p><span>↶ </span><a href="/">返回首页</a></p>
+	</div>
+
 </body>
 </html>
+
