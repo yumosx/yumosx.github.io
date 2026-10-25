@@ -1,7 +1,9 @@
 {{define "content"}}
-	<article class="post">
-		<h2>{{.Title}}</h2>
-		<div class="post-meta">{{.Date}}</div>
-		<div class="post-content">{{.Content}}</div>
-	</article>
+	<div class="inner">
+		<h1>{{.Title}}</h1>
+		<div class="time">{{.Date}}</div>
+		{{.Content}}
+		<hr>
+		<p><span>↶ </span><a href="/">返回首页</a></p>
+	</div>
 {{end}}

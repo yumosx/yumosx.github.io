@@ -1,0 +1,119 @@
+* {
+    box-sizing: border-box;
+}
+
+/* reset CSS */
+table {	
+    font-size: 100%;
+}
+/* end reset CSS */
+
+body {
+    font-family: STFangSong, Helvetica, Arial, Vernada, Tahoma, STXihei, "Microsoft YaHei", "Songti SC", SimSun, Heiti, sans-serif;
+    font-size: 21px;
+}
+
+body.mobile {
+    font-size: 32px;
+}
+
+.navbar-brand {
+    font-family: "Palatino Linotype", "Book Antiqua", Palatino, Helvetica, STKaiti, SimSun, serif;
+    font-size: 100%;
+}
+
+.title {
+    cursor: pointer;
+    padding: 15px 20px;
+}
+
+.title a {
+    display: inline-block;
+}
+
+li.title:hover {
+    background-color: #eee;
+}
+
+.navbar-default {
+    background-image: none;
+    background-color: #fff;
+    box-shadow: none;
+    font-size: 100%;
+}
+
+.navbar-brand, .navbar-nav {
+    font-size: 24px;
+}
+
+.navbar-nav.navbar-right:last-child {
+    margin-right: -30px;
+}
+
+body.mobile .navbar {
+    padding: 20px 20px;
+    margin: 4% 4% 0% 4%;
+    border-radius: 20px;
+}
+
+body.mobile #navbar-bs {
+    margin-top: 20px;
+    padding-top: 15px;
+}
+
+body.mobile .nav>li {
+    padding: 5px 0;
+}
+
+body.mobile .navbar-brand {
+    font-size: 36px;
+}
+
+body.mobile .navbar-nav {
+    font-size: 32px;
+}
+
+body.mobile div.outer {
+    margin: 40px 4% 60px 4%;
+}
+
+body.mobile .navbar-nav>li>a {
+    line-height: 40px;
+}
+
+div.outer {
+    margin: 50px 10% 70px 10%;
+}
+
+.list-group {
+    box-shadow: 0 0px 0px rgba(0,0,0,0);
+}
+
+div.date {
+    font-size: 80%;
+    color: darkgray;
+}
+
+div.word-count {
+    float: right;
+    color: darkgray;
+    line-height: 100%;
+    min-width: 60px;
+    font-size: 85%;
+}
+
+@media screen and (max-width: 860px) { 
+    div.word-count {
+        display: none;
+    } 
+    ul.tags {
+        display: none;
+    }
+} 
+
+/* footer */
+.footer {
+    margin-top: 35px;
+    margin-bottom: 25px;
+}
+
