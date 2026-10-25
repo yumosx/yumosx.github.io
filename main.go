@@ -97,7 +97,7 @@ func (g *Generator) Run() error {
 	if err != nil {
 		return fmt.Errorf("加载文章: %w", err)
 	}
-	sort.Slice(posts, func(i, j int) bool {
+	sort.SliceStable(posts, func(i, j int) bool {
 		timeI, _ := time.Parse("2006-01-02", posts[i].Date)
 		timeJ, _ := time.Parse("2006-01-02", posts[j].Date)
 		return timeI.After(timeJ)
@@ -439,7 +439,11 @@ func (g *Generator) renderAbout(site *Site) error {
 	return nil
 }
 
+// writeGitignore 只在缺少 .gitignore 时补一份默认值，避免覆盖使用者自己维护的文件。
 func (g *Generator) writeGitignore() error {
+	if _, err := os.Stat(".gitignore"); err == nil {
+		return nil
+	}
 	gitignore := `# Binaries
 *.exe
 *.exe~
